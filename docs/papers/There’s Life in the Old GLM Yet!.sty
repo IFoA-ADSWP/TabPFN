@@ -11,10 +11,30 @@ When TabPFN emerged as a breakthrough in tabular machine learning, the hype was 
 
 We set out to answer this with genuine rigor, testing TabPFN v2.0 via API-based inference (without GPU). Using the eudirectlapse dataset (23,060 motor insurance policies, 13% lapse rate, 18 heterogeneous features across demographics, policy terms, premiums, and vehicles) we benchmarked TabPFN against not just GLM, but CatBoost, XGBoost and RandomForest. Modelling policyholder lapse rates is a typical task encountered by actuaries, often involving binary classification on imbalanced datasets with subtle behavioural-contractual interactions where interpretability matters as much as raw predictive power.
 Methodological Note: All models were trained on identical 70:30 train/test splits with stratification (seed 45). Performance was evaluated on held-out test data using standardized metrics (ROC AUC, Brier score, F1). Data is publicly available via the CASdatasets package in R.
+
+[BOXOUT] Metrics Explained in Plain Language
+- ROC AUC (Area Under the ROC Curve): how well the model ranks lapse cases above non-lapse cases (0.5 = random, 1.0 = perfect).
+- Brier score: how accurate predicted probabilities are, on average (lower is better).
+- F1 score: a threshold-based balance of precision and recall, useful for imbalanced lapse data.
+
+Why these metrics: ROC AUC captures ranking, Brier captures probability quality, and F1 captures practical threshold performance.
+
 The results were somewhat surprising; TabPFN didn't outperform on raw discrimination, and neither did the deep learning models!
 
 How TabPFN Works: The Foundation Model Approach
 TabPFN is pre-trained on millions of synthetic tabular datasets to learn general prediction strategies (Hollmann et al., 2023). When applied to new data, TabPFN takes the entire training sample as context and produces predictions in a single forward pass, without the need for hyperparameter tuning or cross-validation. This presents an appealing option for industry practitioners, bypassing the need for time consuming feature selection and grid search algorithms. We can just apply and get results straight away. Success depends on whether the pre-training distribution aligns with the specific problem at hand. On well-structured insurance problems with known patterns, this advantage diminishes. On novel problems with complex interactions, this pre-training has the potential to unlock hidden signal.
+
+[BOXOUT] What Is TabPFN, and Why Do Actuaries Use It?
+TabPFN (Tabular Prior-Data Fitted Network) is a pre-trained model for tabular data that can be applied quickly with little tuning.
+
+Why actuaries use it:
+- Fast baseline results and less setup work.
+- Less manual feature engineering in early exploration.
+
+Why GLMs remain important:
+- Easier to explain for governance and regulation.
+- Often very strong when effects are mostly additive.
+
 What We Actually Discovered
 Reflecting more deeply on our analysis reveals the reasons for the somewhat surprising results - simple, intuitive patterns dominate the signal for this particular dataset, so there is little need for more complex modelling:
 Age effect: Lapse rates declined sharply with policyholder age, from approximately 18% at age 25 to 8% at age 60. This reveals a monotonic trend perfectly suited to the structure of the GLM.
@@ -26,6 +46,12 @@ Why did tree-based models underperform? Tree ensembles excel at capturing non-li
 Is there potential for TabPFN to add value in this scenario? The answer is yes but in a subtle yet valuable way!
 The Calibration Insight
 Probability calibration (i.e. how well predicted probabilities align with actual outcomes) matters to actuaries (Guo et al., 2017; Niculescu-Mizil & Caruana, 2005). Pricing models must estimate true lapse probabilities; reserving models must reflect actual frequencies. Without calibration, probabilities can systematically under/overestimate true outcomes. Raw TabPFN was overconfident (Brier score 0.1108), a known neural network trait (Guo et al., 2017). Brier score measures calibration quality as mean squared difference between predicted and observed outcomes (0 = perfect, 0.25 = worst). Post-hoc isotonic calibration (Zadrozny & Elkan, 2002) improved this +0.87% to 0.1080, outperforming GLM's 0.1098. Recent enterprise-scale analysis confirms that temperature scaling and isotonic regression perform similarly on large datasets, with temperature scaling offering computational advantages (Manokhin & Grønhaug, 2026).
+
+[BOXOUT] What Is Post-Hoc Isotonic Calibration?
+Post-hoc isotonic calibration is a probability-adjustment step applied after training. It does not retrain the model; it learns a non-decreasing mapping from raw scores to better-calibrated probabilities on a separate calibration sample.
+
+Why it matters: if the model predicts 0.20, we want about 20% of those cases to lapse in reality. This improves pricing and reserving decisions that depend on probability levels.
+
 Why This Matters: The Real Value Proposition
 TabPFN isn't just about winning on raw accuracy. It's about three things:
 Workflow Efficiency: GLM required 8–12 hours of binning, grouping, testing interactions. This requires considerable domain knowledge and expert judgement from the analyst. TabPFN accepted raw data and delivered results in minutes. For quarterly pricing cycles or exploratory phases, this speed is material.
