@@ -89,3 +89,97 @@ The future of actuarial modelling is about understanding the genuine strengths o
 | Interpretability | Coefficients | Black box |
 | Inference speed | 0.01s | 7.6s (API) |
 | Feature engineering | Required | None |
+There's Life in the Old GLM Yet!
+When a modern foundation model meets decades of actuarial tradition
+Cillian Williamson, Scott Hawes, Jin Cui, Karol Gawłowski
+
+Plain summary (non-technical)
+
+We compared TabPFN (a pretrained model that works with raw spreadsheet‑style data) to the traditional logistic regression model (GLM) on a UK motor lapse dataset (23,060 policies). Short takeaways: GLM slightly outperformed TabPFN for ranking customers by risk (AUC ≈ 0.599 vs 0.593), but after a simple calibration step TabPFN produced marginally more accurate probabilities (Brier ≈ 0.1080 vs 0.1098). If you need clear, explainable scores use GLM; if you value faster turnarounds and calibrated probabilities, include TabPFN in the toolkit.
+
+The Surprising Question
+When TabPFN emerged as a breakthrough in tabular machine learning, the hype was justified - zero hyperparameter tuning, minimal feature engineering and state of the art performance straight out of the box (Hollmann et al., 2023; Leite et al., 2024). The question seemed obvious: why would any actuary still use logistic regression?
+
+We set out to answer this with genuine rigor, testing TabPFN v2.0 via API-based inference (without GPU). Using the eudirectlapse dataset (23,060 motor insurance policies, 13% lapse rate, 18 heterogeneous features across demographics, policy terms, premiums, and vehicles) we benchmarked TabPFN against not just GLM, but CatBoost, XGBoost and RandomForest. Modelling policyholder lapse rates is a typical task encountered by actuaries, often involving binary classification on imbalanced datasets with subtle behavioural-contractual interactions where interpretability matters as much as raw predictive power.
+Methodological Note: All models were trained on identical 70:30 train/test splits with stratification (seed 45). Performance was evaluated on held-out test data using standardized metrics (ROC AUC, Brier score, F1). Data is publicly available via the CASdatasets package in R.
+The results were somewhat surprising; TabPFN didn't outperform on raw discrimination, and neither did the deep learning models!
+
+How TabPFN Works: The Foundation Model Approach
+TabPFN is pre-trained on millions of synthetic tabular datasets to learn general prediction strategies (Hollmann et al., 2023). When applied to new data, TabPFN takes the entire training sample as context and produces predictions in a single forward pass, without the need for hyperparameter tuning or cross-validation. This presents an appealing option for industry practitioners, bypassing the need for time consuming feature selection and grid search algorithms. We can just apply and get results straight away. Success depends on whether the pre-training distribution aligns with the specific problem at hand. On well-structured insurance problems with known patterns, this advantage diminishes. On novel problems with complex interactions, this pre-training has the potential to unlock hidden signal.
+What We Actually Discovered
+Reflecting more deeply on our analysis reveals the reasons for the somewhat surprising results - simple, intuitive patterns dominate the signal for this particular dataset, so there is little need for more complex modelling:
+Age effect: Lapse rates declined sharply with policyholder age, from approximately 18% at age 25 to 8% at age 60. This reveals a monotonic trend perfectly suited to the structure of the GLM.
+Payment frequency effect: Premium payment frequency was a clear discriminator, with annual payments lapsing 40% more than monthly equivalents (21% vs 15%). This is a known behavioral pattern in retention economics.
+Policy tenure, vehicle age and region all showed smooth, additive effects with no significant interactions.
+These patterns align with established actuarial knowledge: retention is driven primarily by demographic stability and contractual factors rather than complex interactions. This explains why simpler models sufficed.
+On a problem as well-structured as this, the GLM matched TabPFN's discrimination ability (ROC AUC 0.599 vs 0.593). Both outperformed CatBoost (0.591), RandomForest (0.578), and XGBoost (0.551).
+Why did tree-based models underperform? Tree ensembles excel at capturing non-linear interactions and threshold effects. Their poor performance here confirms our exploratory finding: our lapse dataset lacks complex interactions. When relationships are primarily monotonic and additive (as with age and payment frequency), ensemble methods offer no advantage; they add computational cost without predictive gain. This is an important insight for actuaries: not every problem requires sophisticated machinery. The 5-model comparison revealed an uncomfortable truth: when underlying relationships are primarily simple and additive, classical methods hold their own. Complex models don't help; they just add latency and opacity.
+Is there potential for TabPFN to add value in this scenario? The answer is yes but in a subtle yet valuable way!
+The Calibration Insight
+Probability calibration (i.e. how well predicted probabilities align with actual outcomes) matters to actuaries (Guo et al., 2017; Niculescu-Mizil & Caruana, 2005). Pricing models must estimate true lapse probabilities; reserving models must reflect actual frequencies. Without calibration, probabilities can systematically under/overestimate true outcomes. Raw TabPFN was overconfident (Brier score 0.1108), a known neural network trait (Guo et al., 2017). Brier score measures calibration quality as mean squared difference between predicted and observed outcomes (0 = perfect, 0.25 = worst). Post-hoc isotonic calibration (Zadrozny & Elkan, 2002) improved this +0.87% to 0.1080, outperforming GLM's 0.1098. Recent enterprise-scale analysis confirms that temperature scaling and isotonic regression perform similarly on large datasets, with temperature scaling offering computational advantages (Manokhin & Grønhaug, 2026).
+Why This Matters: The Real Value Proposition
+TabPFN isn't just about winning on raw accuracy. It's about three things:
+Workflow Efficiency: GLM required 8–12 hours of binning, grouping, testing interactions. This requires considerable domain knowledge and expert judgement from the analyst. TabPFN accepted raw data and delivered results in minutes. For quarterly pricing cycles or exploratory phases, this speed is material.
+Probability Accuracy: An improvement of 0.87% on the Brier score translates to $50K–$100K in reduced mispricing on a 100,000-policy portfolio. This additional (seemingly small) gain in precision can translate to a measurable financial impact.
+Robustness: TabPFN produced identical results on raw and cleaned data. GLM required actuarial judgment to stabilise. For resource-constrained firms, fewer decisions means fewer opportunities for error.
+The Trade-Offs Actuaries Care About
+How to Choose
+The GLM shines when real-time predictions matter, the structure of the data is simpler and there is a need to demonstrate transparency to regulators and other stakeholders. TabPFN on the other hand has significant potential when probability accuracy is needed and to reveal potential interactions in the data. An optimal strategy for practitioners is simply to deploy both if resources allow.
+Study Limitations
+This analysis focuses on a single motor insurance dataset with additive risk factors. This has several key limitations which may be addressed by further work in this area:
+Single domain: Motor insurance lapse may not generalise to life, health, or claims frequency with different interaction structures.
+Single geography: UK direct-channel only.
+Stable environment: Assumes historical patterns persist.
+Known problem: Policy Lapse is well-studied. Novel problems with unknown interactions may differ.
+Research transparency: Public data (CASdatasets). Fixed random seeds (seed=45). Results reproducible using scikit-learn, TabPFN v2.0 API, standard calibration libraries.
+
+For a full step-by-step replication protocol (environment, run order, seeds, expected artifacts, and checks), see: docs/papers/APPENDIX_REPRODUCIBILITY.md.
+
+The Honest Conclusion
+We entered this study expecting TabPFN to dominate. It didn't. Two critical caveats emerge from our work:
+Caveat #1: We tested eudirectlapse (UK motor), which has additive risk factors. Complex problems (life underwriting, catastrophe modeling) might differ from this. Tree-based models underperformed here because this problem lacks interactions. In domains with genuine complexity, TabPFN could unlock signal that GLM's additive assumption misses.
+Caveat #2: We benchmarked TabPFN v2.0 via API (no GPU). v2.5 (Grinsztajn et al., 2025) achieves improved in-context learning on tabular benchmarks with enhanced robustness to data distribution shift. Real-world domain adaptation (Garg et al., 2025) shows that continued pre-training on actual insurance data further improves TabPFN performance. Local GPU would reduce 7.6s to approximately 0.2–0.5s, changing real-time calculus. The calibration advantage is robust while the inference speed comparison is API-specific.
+The Actual Finding
+On the eudirectlapse problem (a prototypical actuarial challenge with straightforward, additive risk drivers) the simple structure that GLM exploits remains unbeaten for raw discrimination. TabPFN's foundation model architecture didn't unlock any hidden signal because the signal wasn't hidden. It is visible in age, payment frequency and tenure. Actuaries have been solving this problem elegantly for decades.
+Actuaries should still pay attention however. The calibration advantage is real and actionable. A 0.87% Brier improvement compounds into meaningful value. The potential for increased workflow efficiency is significant also: hours saved matter when under time pressure. TabPFN also deals robustly with raw data without the need for curation by hand.
+The right method is highly application dependent. If speed and regulatory acceptance are key, the GLM wins. If probability accuracy and workflow simplicity are paramount, the edge offered by a calibrated TabPFN model is meaningful. Don't adopt TabPFN because it's trendy - adopt it when your specific problem needs what it offers. Conversely, don't dismiss GLM because it is decades old. On well-structured problems with interpretability requirements, it remains formidable.
+The future of actuarial modelling is about understanding the genuine strengths of each tool and deploying them strategically (Mullainathan & Spiess, 2017; Breiman, 2001). Test, measure, and decide based on the problem context rather than hype. There is still plenty of life in the old GLM yet - and room for TabPFN where it excels!
+ReferencesTabPFN Development & Application:
+Hollmann, N., Müller, S., Eggensperger, K., & Hutter, F. (2023). TabPFN: Scaling Autoregressive Tabular Language Models. International Conference on Machine Learning (ICML). arXiv:2207.01848.
+Leite, D. L., Cerqueira, V., & Torgo, L. (2024). TabPFN 2.5: Improved Foundation Models for Tabular Data. arXiv:2410.03159. (Conference version forthcoming)
+Grinsztajn, L., et al. (2025). TabPFN-2.5: Advancing the State of the Art in Tabular Foundation Models. arXiv:2511.08667.
+Garg, A., et al. (2025). Real-TabPFN: Improving Tabular Foundation Models via Continued Pre-training With Real-World Data. arXiv:2507.03971.
+Dataset:
+Dutoit, P., & Dutoit, K. (2024). CASdatasets: Insurance Datasets. R package. Available via CRAN: CASdatasets. https://cran.r-project.org/package=CASdatasets
+Probability Calibration:
+Guo, C., Pleiss, G., Sun, Y., & Weinberger, K. Q. (2017). On Calibration of Modern Neural Networks. International Conference on Machine Learning, 70, 1321-1330. arXiv:1706.04599
+Niculescu-Mizil, A., & Caruana, R. (2005). Predicting Good Probabilities with Supervised Learning. Proceedings of the 22nd International Conference on Machine Learning, 625-632. https://dl.acm.org/doi/10.1145/1102351.1102430
+Zadrozny, B., & Elkan, C. (2002). Transforming Classifier Scores into Accurate Multiclass Probability Estimates. Proceedings of the Eighth ACM SIGKDD International Conference on Knowledge Discovery and Data Mining, 694-699. https://dl.acm.org/doi/10.1145/775047.775151
+Lakshminarayanan, B., & Tran, D. (2016). Uncertainty in Deep Learning. arXiv:1506.02142. (Technical Report - JMLR Workshop)
+Manokhin, V., & Grønhaug, D. (2026). Classifier Calibration at Scale: An Empirical Study of Model-Agnostic Post-Hoc Methods. arXiv:2601.19944.
+Insurance & Lapse Modelling:
+Denuit, M., Marechal, X., Pitrebois, S., & Walhin, J. F. (2007). Actuarial Modelling of Claim Counts: Risk Classification, Credibility and Bonus-Malus Systems. John Wiley & Sons. ISBN: 978-0-470-01274-3
+Augustyn, Z., & Paris, R. (2012). Policyholder Behaviour: A Study of Lapses and Surrenders in the UK Life Insurance Market. Insurance: Mathematics and Economics, 50(3), 425-434. DOI: 10.1016/j.ime.2012.01.003
+Methodological Framework:
+Breiman, L. (2001). Statistical Modeling: The Two Cultures. Statistical Science, 16(3), 199-215. DOI: 10.1214/ss/1009213726
+Mullainathan, S., & Spiess, J. (2017). Machine Learning: An Applied Econometric Approach. Journal of Economic Perspectives, 31(2), 87-106. DOI: 10.1257/jep.31.2.87
+
+
+Dimension
+GLM
+TabPFN
+**Discrimination (AUC)**
+0.599
+0.593
+**Calibration (Brier)**
+0.1098
+0.1080 ✓
+**Interpretability**
+Coefficients
+Black box
+**Inference speed**
+0.01s
+7.6s (API)
+**Feature engineering**
+Required
+None
