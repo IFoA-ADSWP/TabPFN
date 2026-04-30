@@ -19,6 +19,10 @@ Primary evidence sources:
 - outputs/current/tables/domain_finetune_study_runs.csv
 - outputs/current/logs/domain_finetune_logbook.md
 
+Regressor extension evidence sources (separate from Stage A/B classifier matrix):
+- outputs/current/tables/tabpfn_finetune_regressor_trial_results.csv
+- outputs/current/logs/tabpfn_finetune_regressor_logbook.md
+
 ## Key Findings
 
 ### 1. Feasibility and pipeline integrity (Stage A objective)
@@ -83,6 +87,41 @@ Interpretation:
 ## Bottom Line
 
 Stage A and Stage B are complete, the experimentation framework is reliable, and current evidence does not yet support replacing raw TabPFN with domain-finetuned TabPFN as a universal default. The recommended next step is Stage C with multi-seed uncertainty estimates, followed by targeted Stage D ablations.
+
+## Regressor Track Note (Current Status)
+
+- Stage A/B conclusions above remain classification-only and unchanged.
+- Regressor testing is now integrated into project logging standards (CSV + markdown logbook per run).
+- Regressor methodology now includes explicit viability counters (`finetune_steps_executed` and skip counters) in addition to MSE/MAE/R2.
+- Current pilot pattern to monitor in next runs: claim-target transforms can show non-finite-loss behavior while continuous-control targets execute finite steps.
+
+**Stage R1 Completion (2026-04-02): Continuous Target Stability Matrix**
+- Completed 3×2 multi-seed matrix (seeds 42, 1337, 2025 × contexts 64, 256) on Exposure (continuous target).
+- All 9 runs executed fine-tuning steps (1 step per run) with zero non-finite losses.
+- Key findings:
+  - **MSE changes**: 6 of 9 runs improved (negative delta), 3 regressed slightly (positive delta <0.001)
+  - **R² changes**: 5 of 9 runs improved, 4 regressed, all deltas <±0.004 (high stability)
+  - **Timing robust**: context=64 runs ~25-35 sec, context=256 runs ~65-130 sec
+  - **Consistency**: No seed-specific patterns; context size dominates runtime (~5x difference)
+- Conclusion: TabPFN regressor fine-tuning is **operationally viable** on continuous targets with stable, small metric changes across seeds.
+
+**Stage R2 Ablation Result (2026-04-02):**
+- Hypothesis: Zero-inflation in claim-frequency targets is the primary cause of non-finite losses.
+- Design: Restrict fine-tune training pool to ClaimNb > 0 rows only.
+- Result: **Hypothesis REJECTED**
+  - Baseline (all train rows, seed 1337): finetune_steps_executed=0, skipped_nonfinite_loss=14
+  - Ablation (positive-claims-only pool, 167/3500 rows, seed 1337): finetune_steps_executed=0, skipped_nonfinite_loss=1
+  - **Even with 95.2% data reduction (only positive-claim rows), non-finite loss persists and no steps execute.**
+  - Exposure control (seed 2025): finetune_steps_executed=1, skipped_nonfinite_loss=0 ✓
+- Conclusion: Root cause is **not zero-inflation**, but likely inherent numerical instability in TabPFN's regressor forward/loss function when applied to frequency-transformed targets. Alternative hypotheses:
+  1. Target transform (log1p of claimfreq) produces numerically unstable standardization.
+  2. Forward pass produces unbounded predictions for count-based targets.
+  3. Loss function (normalized_bardist) has asymmetric behavior on sparse/heavy-tailed distributions.
+
+Immediate regressor next steps:
+- Stage R3: Test alternative target transforms (raw claimfreq without log, direct ClaimNb, Exposure as control).
+- Stage R4: Investigate preprocessing target standardization and forward pass bounds.
+- Decision gate: If alternatives also fail, consider whether TabPFN regressor is viable for insurance count targets pending upstream development.
 
 ## Reproducibility Note (How This Was Executed)
 
