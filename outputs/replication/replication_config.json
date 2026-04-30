@@ -1,0 +1,15 @@
+{
+  "Notebook": "REPLICATION_There_Is_Life_in_the_Old_GLM_Yet",
+  "Dataset": "eudirectlapse",
+  "Paper_Title": "There's Life in the Old GLM Yet!",
+  "Authors": "Cillian Williamson, Scott Hawes, Jin Cui, Karol Gaw\u0142owski",
+  "Seed": 45,
+  "Train_Test_Split": "70.0%/30.0%",
+  "Stratified": true,
+  "Samples_Train": 16142,
+  "Samples_Test": 6918,
+  "Features": 18,
+  "Target_Lapse_Rate": 0.12810060711188204,
+  "Device": "cpu",
+  "Timestamp": "2026-04-30T23:16:27.636509"
+}

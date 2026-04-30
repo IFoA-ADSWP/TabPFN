@@ -1,0 +1,17 @@
+Model,ROC_AUC,Brier,F1,Interpretability,Inference Speed
+TabPFN (Raw),0.6339,0.109,0.0,Black box,7.6s (API)
+TabPFN (Calibrated),0.6319,0.1096,0.0342,Black box,7.6s (API)
+GLM,0.6205,0.1092,0.0,Coefficients,0.01s
+CatBoost,0.6216,0.1088,0.0,Black box,~0.1s
+XGBoost,0.5833,0.1146,0.0381,Black box,~0.05s
+RandomForest,0.5884,0.1122,0.0,Black box,~0.1s
+GLM,0.6205,0.1092,0.0,Coefficients,0.01s
+CatBoost,0.6216,0.1088,0.0,Black box,~0.1s
+XGBoost,0.5833,0.1146,0.0381,Black box,~0.05s
+RandomForest,0.5884,0.1122,0.0,Black box,~0.1s
+TabPFN (Raw),0.6339,0.109,0.0,Black box,7.6s (API)
+TabPFN (Calibrated),0.6319,0.1096,0.0342,Black box,7.6s (API)
+GLM,0.6205,0.1092,0.0,Coefficients,0.01s
+CatBoost,0.6216,0.1088,0.0,Black box,~0.1s
+XGBoost,0.5833,0.1146,0.0381,Black box,~0.05s
+RandomForest,0.5884,0.1122,0.0,Black box,~0.1s
