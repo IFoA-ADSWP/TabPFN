@@ -1,0 +1,37 @@
+#,Title,Tier,Effort,Status
+1,Add LICENSE file,T1,5 min,not_started
+2,Untrack .venv/ and .venv312/,T1,5 min,not_started
+3,Add pyproject.toml and pinned requirements.txt,T1,2 h,not_started
+4,Rewrite broken CI workflow,T1,1 h,not_started
+5,Add tests/ directory with smoke test,T1,15 min,not_started
+6,Fix .gitignore to match README claims,T1,30 min,not_started
+7,Fix or remove empty 05_regression_finetuning.ipynb,T1,30 min,not_started
+8,Rewrite README directory tree to match reality,T1,1 h,not_started
+9,Rotate TABPFN_API_KEY,T1,5 min,not_started
+10,Add CHANGELOG.md,T1,5 min,not_started
+11,Add notebooks/README.md index,T2,1 h,not_started
+12,Add docs/README.md landing page,T2,1 h,not_started
+13,Move root-level audit .md files to docs/status/,T2,30 min,not_started
+14,Dedup src/data_loader.py vs src/data_loader_class.py,T2,1 h,not_started
+15,Make hardcoded TabPFN-upstream/ path optional,T2,1 h,not_started
+16,Add scripts/README.md index,T2,1 h,not_started
+17,Extend replication_config.json with versions/SHA/hardware,T2,30 min,not_started
+18,Standardize random seed defaults via baseline_config.py,T2,30 min,not_started
+19,Unify output naming conventions,T2,1 h,not_started
+20,Move data/processed/ outputs to outputs/,T2,15 min,not_started
+21,Add module docstrings to 5 scripts,T2,20 min,not_started
+22,Add CONTRIBUTING.md, CODE_OF_CONDUCT.md, SECURITY.md,T2,30 min,not_started
+23,Add data/README.md with per-CSV schema,T2,1 h,not_started
+24,Populate src/__init__.py,T2,10 min,not_started
+25,Delete dead BaselineConfig wrapper,T2,5 min,not_started
+26,Add CITATION.cff and citation block to README,T3,1 h,not_started
+27,Add .python-version and Dockerfile,T3,2 h,not_started
+28,Add Makefile for one-button reproduction,T3,1 h,not_started
+29,Add pytest-cov and coverage reporting,T3,1 h,not_started
+30,Parameterize the REPLICATION notebook,T3,2 h,not_started
+31,Add notebook smoke test,T3,2 h,not_started
+32,Enable Dependabot auto-merge for patch updates,T3,1 h,not_started
+33,Move import-time I/O under __main__ guard,T3,10 min,not_started
+34,Move admin docs to docs/admin/,T3,10 min,not_started
+35,Delete superseded TabPFN_Classifier_on_eudirectlapse_v1_0.ipynb,T3,5 min,not_started
+36,Gitignore catboost_info/,T3,10 min,not_started
