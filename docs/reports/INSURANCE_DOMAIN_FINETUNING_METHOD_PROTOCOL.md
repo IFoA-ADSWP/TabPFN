@@ -2,7 +2,9 @@
 
 Date: 2026-04-02
 
-Scope note: this protocol is for insurance classification tasks and uses `TabPFNClassifier` for raw and domain-finetuned TabPFN arms.
+Scope note: this protocol covers both insurance classification and insurance regression tracks.
+- Classification track uses `TabPFNClassifier` for raw and domain-finetuned TabPFN arms.
+- Regression track uses `TabPFNRegressor` for raw and fine-tuned smoke/stability testing.
 
 ## 1. Research Question
 
@@ -107,6 +109,19 @@ Reason: current project evidence indicates calibration and prior mismatch are ce
 - Peak memory (RSS)
 - Inference latency per 1k rows
 
+### 6.4 Regression Endpoints (Regressor Track)
+
+- MSE (lower is better)
+- MAE (lower is better)
+- R2 (higher is better)
+- Fine-tune-step viability indicators:
+   - `finetune_steps_executed`
+   - `skipped_preprocess_errors`
+   - `skipped_nonfinite_target`
+   - `skipped_nonfinite_loss`
+
+Reason: current regressor pilot behavior shows non-finite loss/logit risk in some target regimes, so viability counters are required alongside predictive metrics.
+
 ## 7. Statistical Analysis
 
 For each target dataset and each seed:
@@ -134,6 +149,11 @@ Store all outputs in the existing project structure:
 - Aggregate summary: outputs/current/tables/domain_finetune_study_summary.csv
 - Saved models: outputs/current/models/domain_finetune/
 - Figure assets: outputs/current/plots/domain_finetune/
+
+Regressor track artifacts:
+- Trial table: outputs/current/tables/tabpfn_finetune_regressor_trial_results.csv
+- Narrative logbook: outputs/current/logs/tabpfn_finetune_regressor_logbook.md
+- Saved models: outputs/current/models/*tabpfn_finetune_regressor*.tabpfn_fit
 
 Minimum logged fields per run:
 - dataset, seed, model_family, model_variant,
@@ -163,6 +183,33 @@ Stage D (ablation):
   - closest-domain-only subset,
   - no fine-tune (raw baseline).
 
+Stage R1 (regressor smoke/stability):
+- Run regressor smoke matrix with fixed feature encoding and deterministic seeds.
+- Required seeds: 42, 1337, 2025.
+- Required target variants:
+   - Claim count target (`ClaimNb`),
+   - transformed frequency targets (`claimfreq_raw`, `claimfreq_log1p`),
+   - continuous-control target (`Exposure`) for pipeline-health comparison.
+- Record both metric outcomes and viability counters.
+
+Stage R2 (regressor hardening/ablation):
+- Completed 2026-04-02: **Positive-claims-only fine-tune pool ablation test**.
+  - Objective: Test hypothesis that zero-inflation in ClaimNb causes non-finite losses.
+  - Design: Restrict fine-tune training pool to ClaimNb > 0 rows only; evaluate on full held-out test set.
+  - Configuration: seed 1337, target ClaimNb, claimfreq_log1p, rows=5000, context=256, steps=1.
+  - Result: **Hypothesis REJECTED** — even with 95.2% training pool reduction (3500→167 rows), finetune_steps_executed remained 0 with non-finite loss. Zero-inflation is not the primary blocker.
+  - Exposure control (seed 2025): finetune_steps_executed=1, confirming script/framework are operational on viable targets.
+- Next ablation (Stage R3):
+  - Test alternative target transforms on claim data to isolate the numerical instability source:
+    1. Raw `ClaimNb` without transforms.
+    2. Raw `claimfreq` (without log1p).
+    3. Alternate context sizes (64 vs 256).
+  - Maintain identical split seed and evaluation discipline.
+   - Readiness gate before calling a configuration “ready” for Stage R3 reruns: evaluate a small seed panel using the latest logged rows for the exact config and require `finetune_steps_executed >= 1` for every seed, finite `last_step_loss` values for every seed, `abs(last_step_loss) <= 1e6` for every seed, and cross-seed `last_step_loss` range `<= 100`.
+   - Default claim-target seed panel: `42`, `1337`, `2025`.
+   - Command shape: `python scripts/evaluate_regressor_stability_gate.py --target-col ClaimNb --target-transform none --rows 5000 --context-samples 64 --device cpu --seeds 42 1337 2025 --strict-exit`
+   - Decision gate: if the stability gate fails, do not call the config ready for Stage R3 reruns. If all claim-frequency variants remain blocked (`steps_executed=0`) or fail the stability gate, regressor fine-tuning is not yet viable for insurance count targets and further engineering is required.
+
 ## 11. Decision Rules
 
 Conclude domain-specific fine-tuning is supported only if:
@@ -182,6 +229,14 @@ Report in this exact order:
 4. Statistical significance summary (paired deltas + CI)
 5. Operational cost table (time/memory/latency)
 6. Final recommendation with deployment guidance
+
+Regressor addendum format:
+1. What was run (target transform, rows, device, context, steps, seed)
+2. Viability table (`finetune_steps_executed`, skip counters)
+3. Regression metric table (MSE/MAE/R2)
+4. Stability-gate result (seed panel, thresholds, pass/fail, loss range)
+5. Decision (ready to scale or blocked)
+6. One next ablation
 
 ## 13. Minimal Command Shape (Project-Consistent)
 

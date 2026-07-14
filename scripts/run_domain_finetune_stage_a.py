@@ -36,6 +36,9 @@ class DatasetSpec:
     name: str
     path: Path
     target_col: str
+    line_of_business: str
+    exposure_structure: str
+    claim_process: str
 
 
 DATASETS = {
@@ -43,21 +46,33 @@ DATASETS = {
         name="eudirectlapse",
         path=Path("data/raw/eudirectlapse.csv"),
         target_col="lapse",
+        line_of_business="retail_policy_lapse",
+        exposure_structure="policy_level",
+        claim_process="renewal_or_cancellation",
     ),
     "coil2000": DatasetSpec(
         name="coil2000",
         path=Path("data/raw/coil2000.csv"),
         target_col="CARAVAN",
+        line_of_business="cross_sell_marketing",
+        exposure_structure="household_level",
+        claim_process="product_purchase",
     ),
     "ausprivauto0405": DatasetSpec(
         name="ausprivauto0405",
         path=Path("data/raw/ausprivauto0405.csv"),
         target_col="ClaimOcc",
+        line_of_business="motor",
+        exposure_structure="policy_year",
+        claim_process="claim_occurrence",
     ),
     "freMTPL2freq_binary": DatasetSpec(
         name="freMTPL2freq_binary",
         path=Path("data/raw/freMTPL2freq_binary.csv"),
         target_col="ClaimIndicator",
+        line_of_business="motor",
+        exposure_structure="exposure_fraction",
+        claim_process="claim_occurrence",
     ),
 }
 
@@ -73,6 +88,27 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--target-rows", type=int, default=4000)
     parser.add_argument("--pool-rows-per-dataset", type=int, default=2000)
+    parser.add_argument(
+        "--pool-policy",
+        choices=["all", "homogeneous", "heterogeneous", "similarity_topk", "mixed_baseline"],
+        default="all",
+        help=(
+            "How to choose domain fine-tune pool datasets from non-target datasets: "
+            "all=use all candidates, homogeneous=closest label prevalence, "
+            "heterogeneous=most distant label prevalence, "
+            "similarity_topk=closest by composite similarity, "
+            "mixed_baseline=current baseline pool"
+        ),
+    )
+    parser.add_argument(
+        "--pool-k",
+        type=int,
+        default=2,
+        help="Number of pool datasets to keep when pool-policy uses top-k selection",
+    )
+    parser.add_argument("--sim-weight-feature", type=float, default=0.45)
+    parser.add_argument("--sim-weight-target", type=float, default=0.35)
+    parser.add_argument("--sim-weight-context", type=float, default=0.20)
     parser.add_argument("--test-size", type=float, default=0.3)
     parser.add_argument("--tabpfn-device", type=str, default="cpu")
     parser.add_argument("--tabpfn-context-samples", type=int, default=64)
@@ -178,6 +214,125 @@ def ensure_binary_int(y: pd.Series | np.ndarray) -> np.ndarray:
     return np.array([mapper[v] for v in vals], dtype=int)
 
 
+def positive_rate(y: np.ndarray) -> float:
+    return float(np.mean(y == 1))
+
+
+def binary_entropy(y: np.ndarray) -> float:
+    p = float(np.clip(positive_rate(y), 1e-8, 1.0 - 1e-8))
+    return float(-(p * np.log(p) + (1 - p) * np.log(1 - p)))
+
+
+def feature_profile(frame: pd.DataFrame, target_col: str) -> dict[str, float]:
+    X = frame.drop(columns=[target_col])
+    n_rows = max(1, len(X))
+    n_cols = max(1, X.shape[1])
+
+    numeric = X.select_dtypes(include=[np.number])
+    numeric_ratio = float(numeric.shape[1] / n_cols)
+    missing_rate = float(X.isna().mean().mean())
+    unique_ratio = float(X.nunique(dropna=False).mean() / n_rows)
+
+    # Simple value scale profile for numeric columns, robust to outliers.
+    if numeric.shape[1] > 0:
+        q25 = numeric.quantile(0.25)
+        q75 = numeric.quantile(0.75)
+        iqr_mean = float((q75 - q25).replace([np.inf, -np.inf], np.nan).fillna(0.0).mean())
+    else:
+        iqr_mean = 0.0
+
+    return {
+        "log_n_rows": float(np.log1p(n_rows)),
+        "log_n_cols": float(np.log1p(n_cols)),
+        "numeric_ratio": numeric_ratio,
+        "missing_rate": missing_rate,
+        "unique_ratio": unique_ratio,
+        "log_iqr_mean": float(np.log1p(max(0.0, iqr_mean))),
+    }
+
+
+def feature_space_distance(a: dict[str, float], b: dict[str, float]) -> float:
+    keys = [
+        "log_n_rows",
+        "log_n_cols",
+        "numeric_ratio",
+        "missing_rate",
+        "unique_ratio",
+        "log_iqr_mean",
+    ]
+    return float(np.mean([abs(a[k] - b[k]) for k in keys]))
+
+
+def target_behavior_distance(y_target: np.ndarray, y_pool: np.ndarray) -> float:
+    p_dist = abs(positive_rate(y_target) - positive_rate(y_pool))
+    h_dist = abs(binary_entropy(y_target) - binary_entropy(y_pool))
+    return float(0.6 * p_dist + 0.4 * h_dist)
+
+
+def context_distance(target_spec: DatasetSpec, pool_spec: DatasetSpec) -> float:
+    mismatch = 0
+    mismatch += int(target_spec.line_of_business != pool_spec.line_of_business)
+    mismatch += int(target_spec.exposure_structure != pool_spec.exposure_structure)
+    mismatch += int(target_spec.claim_process != pool_spec.claim_process)
+    return float(mismatch / 3.0)
+
+
+def normalize_weights(w_feature: float, w_target: float, w_context: float) -> tuple[float, float, float]:
+    total = float(w_feature + w_target + w_context)
+    if total <= 0:
+        return 0.45, 0.35, 0.20
+    return w_feature / total, w_target / total, w_context / total
+
+
+def choose_pool_specs(
+    target_spec: DatasetSpec,
+    target_frame: pd.DataFrame,
+    target_y: np.ndarray,
+    pool_specs: list[DatasetSpec],
+    pool_frames: list[pd.DataFrame],
+    policy: str,
+    pool_k: int,
+    sim_weight_feature: float,
+    sim_weight_target: float,
+    sim_weight_context: float,
+) -> tuple[list[DatasetSpec], list[pd.DataFrame], float | None, float | None]:
+    if policy in {"all", "mixed_baseline"}:
+        return pool_specs, pool_frames, None, None
+
+    target_prev = positive_rate(target_y)
+    target_profile = feature_profile(target_frame, target_spec.target_col)
+
+    scored: list[tuple[float, float, DatasetSpec, pd.DataFrame]] = []
+    w_f, w_t, w_c = normalize_weights(sim_weight_feature, sim_weight_target, sim_weight_context)
+
+    for spec, frame in zip(pool_specs, pool_frames):
+        y_pool = ensure_binary_int(frame[spec.target_col])
+        prev_dist = abs(positive_rate(y_pool) - target_prev)
+        if policy == "similarity_topk":
+            f_dist = feature_space_distance(target_profile, feature_profile(frame, spec.target_col))
+            t_dist = target_behavior_distance(target_y, y_pool)
+            c_dist = context_distance(target_spec, spec)
+            sim_dist = w_f * f_dist + w_t * t_dist + w_c * c_dist
+        else:
+            sim_dist = np.nan
+        scored.append((prev_dist, sim_dist, spec, frame))
+
+    if policy == "similarity_topk":
+        scored = sorted(scored, key=lambda x: x[1])
+    else:
+        scored = sorted(scored, key=lambda x: x[0], reverse=(policy == "heterogeneous"))
+
+    k = max(1, min(pool_k, len(scored)))
+    chosen = scored[:k]
+    chosen_specs = [item[2] for item in chosen]
+    chosen_frames = [item[3] for item in chosen]
+    mean_prev_dist = float(np.mean([item[0] for item in chosen])) if chosen else None
+    mean_sim_dist = None
+    if policy == "similarity_topk" and chosen:
+        mean_sim_dist = float(np.mean([item[1] for item in chosen]))
+    return chosen_specs, chosen_frames, mean_prev_dist, mean_sim_dist
+
+
 def evaluate_probs(y_true: np.ndarray, y_prob: np.ndarray) -> dict[str, float]:
     y_prob = np.clip(y_prob, 1e-8, 1.0 - 1e-8)
     return {
@@ -263,6 +418,8 @@ def append_logbook_entry(
         f"- Seed: {args.seed}",
         f"- Target rows: {args.target_rows}",
         f"- Pool rows per dataset: {args.pool_rows_per_dataset}",
+        f"- Pool policy: {args.pool_policy}",
+        f"- Pool k: {args.pool_k}",
         f"- Device/context/steps: {args.tabpfn_device}/{args.tabpfn_context_samples}/{args.tabpfn_max_finetune_steps}",
         "",
         "### Results",
@@ -341,7 +498,7 @@ def run_tabpfn_finetuned(
     from torch.utils.data import DataLoader
 
     from tabpfn import TabPFNClassifier
-    from tabpfn.finetune_utils import clone_model_for_evaluation
+    from tabpfn.finetune_utils import clone_model_for_evaluation  # type: ignore[import-not-found]
     from tabpfn.utils import meta_dataset_collator
 
     cfg = {
@@ -393,19 +550,34 @@ def main() -> None:
     upstream_src = configure_import_path(args.prefer_upstream_src)
 
     target_spec = DATASETS[args.target_dataset]
-    pool_specs = [spec for key, spec in DATASETS.items() if key != args.target_dataset]
+    pool_specs_all = [spec for key, spec in DATASETS.items() if key != args.target_dataset]
 
     target_df = read_and_sample(target_spec, args.target_rows, args.seed)
-    pool_frames = [read_and_sample(spec, args.pool_rows_per_dataset, args.seed) for spec in pool_specs]
+    pool_frames_all = [read_and_sample(spec, args.pool_rows_per_dataset, args.seed) for spec in pool_specs_all]
 
     y_target = ensure_binary_int(target_df[target_spec.target_col])
     X_target_df = target_df.drop(columns=[target_spec.target_col])
+
+    pool_specs, pool_frames, selected_pool_mean_prev_distance, selected_pool_mean_similarity_distance = choose_pool_specs(
+        target_spec=target_spec,
+        target_frame=target_df,
+        target_y=y_target,
+        pool_specs=pool_specs_all,
+        pool_frames=pool_frames_all,
+        policy=args.pool_policy,
+        pool_k=args.pool_k,
+        sim_weight_feature=args.sim_weight_feature,
+        sim_weight_target=args.sim_weight_target,
+        sim_weight_context=args.sim_weight_context,
+    )
 
     X_pool_frames = []
     y_pool_parts = []
     for spec, frame in zip(pool_specs, pool_frames):
         y_pool_parts.append(ensure_binary_int(frame[spec.target_col]))
         X_pool_frames.append(frame.drop(columns=[spec.target_col]))
+
+    selected_pool_names = ";".join(spec.name for spec in pool_specs)
 
     # Fit encoder on pooled domain + target train universe to keep feature alignment.
     joint_df = pd.concat([X_target_df] + X_pool_frames, axis=0, ignore_index=True)
@@ -441,6 +613,12 @@ def main() -> None:
             "tabpfn_device": args.tabpfn_device,
             "tabpfn_context_samples": args.tabpfn_context_samples,
             "tabpfn_max_finetune_steps": args.tabpfn_max_finetune_steps,
+            "pool_policy": args.pool_policy,
+            "pool_k": args.pool_k,
+            "selected_pool_datasets": selected_pool_names,
+            "selected_pool_mean_prev_distance": (
+                f"{selected_pool_mean_prev_distance:.6f}" if selected_pool_mean_prev_distance is not None else ""
+            ),
             "fine_tune_steps_executed": "",
             **glm_metrics,
             "fit_predict_wall_time_sec": f"{time.perf_counter() - t0:.6f}",
@@ -470,6 +648,12 @@ def main() -> None:
             "tabpfn_device": args.tabpfn_device,
             "tabpfn_context_samples": args.tabpfn_context_samples,
             "tabpfn_max_finetune_steps": args.tabpfn_max_finetune_steps,
+            "pool_policy": args.pool_policy,
+            "pool_k": args.pool_k,
+            "selected_pool_datasets": selected_pool_names,
+            "selected_pool_mean_prev_distance": (
+                f"{selected_pool_mean_prev_distance:.6f}" if selected_pool_mean_prev_distance is not None else ""
+            ),
             "fine_tune_steps_executed": "",
             **rf_metrics,
             "fit_predict_wall_time_sec": f"{time.perf_counter() - t0:.6f}",
@@ -508,6 +692,12 @@ def main() -> None:
                 "tabpfn_device": args.tabpfn_device,
                 "tabpfn_context_samples": args.tabpfn_context_samples,
                 "tabpfn_max_finetune_steps": args.tabpfn_max_finetune_steps,
+                "pool_policy": args.pool_policy,
+                "pool_k": args.pool_k,
+                "selected_pool_datasets": selected_pool_names,
+                "selected_pool_mean_prev_distance": (
+                    f"{selected_pool_mean_prev_distance:.6f}" if selected_pool_mean_prev_distance is not None else ""
+                ),
                 "fine_tune_steps_executed": "",
                 **cb_metrics,
                 "fit_predict_wall_time_sec": f"{time.perf_counter() - t0:.6f}",
@@ -531,6 +721,12 @@ def main() -> None:
                 "tabpfn_device": args.tabpfn_device,
                 "tabpfn_context_samples": args.tabpfn_context_samples,
                 "tabpfn_max_finetune_steps": args.tabpfn_max_finetune_steps,
+                "pool_policy": args.pool_policy,
+                "pool_k": args.pool_k,
+                "selected_pool_datasets": selected_pool_names,
+                "selected_pool_mean_prev_distance": (
+                    f"{selected_pool_mean_prev_distance:.6f}" if selected_pool_mean_prev_distance is not None else ""
+                ),
                 "fine_tune_steps_executed": "",
                 "roc_auc": "",
                 "pr_auc": "",
@@ -569,6 +765,12 @@ def main() -> None:
             "tabpfn_device": args.tabpfn_device,
             "tabpfn_context_samples": args.tabpfn_context_samples,
             "tabpfn_max_finetune_steps": args.tabpfn_max_finetune_steps,
+            "pool_policy": args.pool_policy,
+            "pool_k": args.pool_k,
+            "selected_pool_datasets": selected_pool_names,
+            "selected_pool_mean_prev_distance": (
+                f"{selected_pool_mean_prev_distance:.6f}" if selected_pool_mean_prev_distance is not None else ""
+            ),
             "fine_tune_steps_executed": "",
             **raw_metrics,
             "fit_predict_wall_time_sec": f"{time.perf_counter() - t0:.6f}",
@@ -607,6 +809,12 @@ def main() -> None:
             "tabpfn_device": args.tabpfn_device,
             "tabpfn_context_samples": args.tabpfn_context_samples,
             "tabpfn_max_finetune_steps": args.tabpfn_max_finetune_steps,
+            "pool_policy": args.pool_policy,
+            "pool_k": args.pool_k,
+            "selected_pool_datasets": selected_pool_names,
+            "selected_pool_mean_prev_distance": (
+                f"{selected_pool_mean_prev_distance:.6f}" if selected_pool_mean_prev_distance is not None else ""
+            ),
             "fine_tune_steps_executed": steps,
             **tuned_metrics,
             "fit_predict_wall_time_sec": f"{time.perf_counter() - t0:.6f}",
@@ -617,6 +825,15 @@ def main() -> None:
 
     max_rss_bytes = int(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss)
     for row in run_rows:
+        row["pool_policy"] = args.pool_policy
+        row["pool_k"] = args.pool_k
+        row["selected_pool_datasets"] = selected_pool_names
+        row["selected_pool_mean_prev_distance"] = (
+            f"{selected_pool_mean_prev_distance:.6f}" if selected_pool_mean_prev_distance is not None else ""
+        )
+        row["selected_pool_mean_similarity_distance"] = (
+            f"{selected_pool_mean_similarity_distance:.6f}" if selected_pool_mean_similarity_distance is not None else ""
+        )
         row["max_rss_bytes"] = max_rss_bytes
         row["total_run_wall_time_sec"] = f"{time.perf_counter() - start:.6f}"
 
@@ -632,6 +849,9 @@ def main() -> None:
     print("=== Domain Fine-Tuning Stage A Pilot ===")
     print(f"target_dataset={target_spec.name}")
     print(f"target_rows={len(X_target_df)} pool_rows={len(X_pool_enc)}")
+    print(f"pool_policy={args.pool_policy} pool_k={args.pool_k} selected_pool_datasets={selected_pool_names}")
+    if selected_pool_mean_similarity_distance is not None:
+        print(f"selected_pool_mean_similarity_distance={selected_pool_mean_similarity_distance:.6f}")
     print(f"train_rows={len(X_train)} test_rows={len(X_test)}")
     print(f"tabpfn_device={args.tabpfn_device} context={args.tabpfn_context_samples} finetune_steps={args.tabpfn_max_finetune_steps}")
     print(f"log_path={log_path}")
