@@ -3,6 +3,9 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# Build artifact: wiki content staging dir (synced to GitHub Wiki by scripts/push_wiki.sh)
+.wiki-content/
+
 # C extensions
 *.so
 
