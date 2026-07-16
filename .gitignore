@@ -125,11 +125,27 @@ celerybeat.pid
 # Environments
 .env
 .venv
+.venv*/
 env/
 venv/
 ENV/
 env.bak/
 venv.bak/
+
+# Output artifacts (wiki Tier 1 issue #6)
+outputs/archive/
+*.pkl
+*.joblib
+*.npy
+*.npz
+*.tabpfn_fit
+
+# OS / editor junk
+**/.DS_Store
+**/Thumbs.db
+
+# CatBoost auto-generated training metadata
+**/catboost_info/
 
 # Spyder project settings
 .spyderproject
