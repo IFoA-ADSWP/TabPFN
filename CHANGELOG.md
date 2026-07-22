@@ -18,7 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - `.gitignore` now excludes `.venv*/`, `outputs/archive/`, `*.pkl`, `*.tabpfn_fit`, `**/.DS_Store`, `**/catboost_info/`
-- README install instructions still reference the broken `pip install -r requirements.txt` — will be fixed when `pyproject.toml` lands
+- README install instructions now point to the working `requirements.txt` file
 
 ### Removed
 - `.venv/` and `.venv312/` untracked from git (628+ files)

@@ -1,228 +1,126 @@
-# TabPFN Work Repository
+# TabPFN for Actuarial Tasks — Research Repository
 
-Repository for ADSWP (Actuarial Data Science Working Party) TabPFN analysis and baseline experiments.
+**Can a transformer-based foundation model (TabPFN) compete with traditional actuarial models (GLM, CatBoost, XGBoost) on insurance tasks like lapse prediction and claim frequency modeling?**
+
+This repo contains experiments by the **IFoA Actuarial Data Science Working Party (ADSWP)** comparing [TabPFN](https://github.com/PriorLabs/TabPFN) — a pretrained in-context learning model for tabular data — against industry-standard baselines. The primary result is the paper **"There's Life in the Old GLM Yet!"**.
+
+## Quick Start
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+jupyter notebook notebooks/adswp_project/01_TabPFN_classifier_eudirectlapse.ipynb
+```
+
+See [`CONTRIBUTING.md`](CONTRIBUTING.md) for detailed setup and contribution guide.
 
 ## Directory Structure
 
 ```
-TabPFN-work-scott/
-├── data/                           # All data files
-│   └── raw/                        # Raw input datasets
-│       ├── eudirectlapse.csv       # EU direct lapse data
-│       └── freMTPL2freq.csv        # French MTPL frequency data
+├── data/                           # Datasets
+│   ├── raw/                        #   eudirectlapse.csv, freMTPL2freq.csv, ...
+│   └── processed/                  #   Intermediate benchmark results (CSV)
 │
-├── src/                            # Python source code
-│   ├── __init__.py
-│   ├── data_loader.py              # Data loading utilities
-│   ├── evaluation_metrics.py       # Evaluation functions
-│   ├── model_training.py           # Model training pipeline
-│   └── cleanup_outputs.py          # Output cleanup utilities
+├── src/                            # Shared Python modules
+│   ├── data_loader.py              #   Load CSVs, train/test split
+│   ├── data_loader_class.py        #   OOP wrapper for notebook use
+│   ├── evaluation_metrics.py       #   AUC, accuracy, F1, RMSE, MAE
+│   ├── model_training.py           #   Baseline models + train/predict pipeline
+│   ├── baseline_config.py          #   Centralised config (seeds, paths, params)
+│   ├── baseline_utils.py           #   Preprocessing, metrics, scaling helpers
+│   └── cleanup_outputs.py          #   Output directory maintenance
 │
-├── notebooks/                      # Jupyter notebooks (organized by project)
-│   ├── adswp_project/              # ADSWP domain-specific applications
+├── notebooks/
+│   ├── adswp_project/              # Domain-specific TabPFN applications
 │   │   ├── 01_TabPFN_classifier_eudirectlapse.ipynb
 │   │   ├── 02_TabPFN_freMTPL.ipynb
 │   │   ├── 03_usautoBI_fit.ipynb
-│   │   └── 04_tabpfn_embedding_workflow.ipynb
+│   │   ├── 04_tabpfn_embedding_workflow.ipynb
+│   │   └── REPLICATION_There_Is_Life_in_the_Old_GLM_Yet.ipynb
 │   │
-│   └── baseline_experiments/       # Baseline experiments and analysis
-│       ├── 01_baseline_claim_classification.ipynb
-│       ├── 02_baselining_notebook.ipynb
-│       ├── 03_finetuning_notebook.ipynb
-│       ├── 04_finetuning_regression.ipynb
-│       └── 05_data_generation_exploration.ipynb
+│   └── baseline_experiments/       # Head-to-head model comparisons
+│       ├── 01_claims_classification_baseline.ipynb
+│       ├── 02_tabpfn_vs_glm_lapse.ipynb
+│       ├── 03_tabpfn_vs_glm_summary.ipynb
+│       ├── 04_probability_calibration.ipynb
+│       ├── 05_regression_finetuning.ipynb
+│       ├── 06_synthetic_data_exploration.ipynb
+│       ├── 07_multi_dataset_benchmark.ipynb
+│       └── 08_multi_dataset_regression_benchmark.ipynb
 │
-├── outputs/                        # Model outputs and results
-│   ├── current/                    # Latest results
-│   │   ├── figures/                # PNG figures (Figure1, Figure2, etc.)
-│   │   └── tables/                 # Summary tables (CSV format)
-│   ├── archive/                    # Historical/versioned results
-│   ├── shap/                       # SHAP analysis outputs
-│   └── catboost_info/              # CatBoost training metadata
+├── outputs/
+│   ├── current/                    # Latest figures + tables
+│   │   ├── figures/                #   Figure1–Figure6 PNGs
+│   │   ├── tables/                 #   Table1–Table4 CSVs
+│   │   └── logs/                   #   Finetuning logbooks
+│   ├── archive/                    # Historical experiment outputs (gitignored)
+│   └── replication/                # Paper replication outputs (config, tables, figures)
 │
-├── docs/                           # Documentation
-│   ├── papers/                     # Paper templates and style files
-│   │   ├── The_humble_logistic_regression_model.sty
-│   │   └── Theres_Life_in_the_Old_GLM_Yet.sty
-│   ├── reports/                    # Analysis reports
-│   │   ├── ARTICLE_REVISED_COMPLETE.md
-│   │   ├── TECHNICAL_COMPANION.md
-│   │   ├── FINETUNING_SUMMARY.md
-│   │   ├── UNIFIED_PAPER_FINAL.md
-│   │   └── BEFORE_AFTER_COMPARISON.md
-│   ├── analyses/                   # Analysis summaries
-│   │   ├── class_imbalance_analysis_summary.md
-│   │   └── baselining_notebook_summary.md
-│   └── status/                     # Status and historical docs
-│       ├── STATUS_REPORT_FINAL.md
-│       ├── SECURITY_INCIDENT_RESOLVED.md
-│       └── CLEANUP_COMPLETE.md
+├── docs/
+│   ├── reports/                    # Analysis reports (see REGISTRY.md)
+│   ├── analyses/                   # Methodology docs and analysis summaries
+│   ├── papers/                     # Paper content + LaTeX style files
+│   ├── status/                     # Project status and security record
+│   └── REPLICATION_SETUP_GUIDE.md  # Step-by-step replication instructions
 │
-├── legacy/                         # Deprecated/archived items
-│   ├── adswp_project_scripts/      # Legacy R analysis scripts
-│   │   ├── TabPFN_ausprivauto0405.R
-│   │   └── TabPFN_freMTPL.R
-│   └── archived_results/           # Historical experiment outputs
-│
-└── README.md                       # This file
+├── scripts/                        # One-off experiment scripts
+├── legacy/                         # Deprecated R analysis scripts
+├── tests/                          # Smoke tests
+├── requirements.txt
+├── CONTRIBUTING.md
+└── CHANGELOG.md
 ```
 
-## Getting Started
+## Notebooks at a Glance
 
-### 1. Data Setup
-All datasets are in `data/raw/`:
-- `eudirectlapse.csv` - EU direct lapse dataset
-- `freMTPL2freq.csv` - French MTPL frequency data
+| Notebook | What it does |
+|----------|-------------|
+| `adswp_project/01` | TabPFN classifier on eudirectlapse (lapse prediction) |
+| `adswp_project/02` | TabPFN on freMTPL (claim frequency regression) |
+| `adswp_project/03` | US Auto BI fitting |
+| `adswp_project/04` | TabPFN embedding workflow |
+| `adswp_project/REPLICATION` | Full paper replication — TabPFN vs GLM |
+| `baseline_experiments/01` | Claim classification baseline |
+| `baseline_experiments/02` | TabPFN vs GLM lapse prediction |
+| `baseline_experiments/03` | TabPFN vs GLM summary comparison |
+| `baseline_experiments/04` | Probability calibration analysis |
+| `baseline_experiments/05` | Regression finetuning |
+| `baseline_experiments/06` | Synthetic data exploration |
+| `baseline_experiments/07` | Multi-dataset benchmark (classification) |
+| `baseline_experiments/08` | Multi-dataset benchmark (regression) |
 
-### 2. Python Environment
-Install dependencies and set up your environment:
-```bash
-pip install -r requirements.txt
-```
+## Key Findings
 
-### 3. Run Notebooks
-Start with numbered notebooks in order:
-```bash
-# ADSWP Project applications
-jupyter notebook notebooks/adswp_project/01_TabPFN_classifier_eudirectlapse.ipynb
+On the eudirectlapse lapse-prediction task (13% lapse rate):
 
-# Baseline experiments
-jupyter notebook notebooks/baseline_experiments/01_baseline_claim_classification.ipynb
-```
+| Aspect | Result |
+|--------|--------|
+| **Discrimination (ROC AUC)** | GLM 0.599, TabPFN 0.593 — near tie |
+| **Calibration (Brier)** | TabPFN after isotonic calibration **0.1080** vs GLM 0.1098 |
+| **Bottom line** | TabPFN matches a tuned GLM out-of-the-box with no traditional training. Post-hoc calibration gives it a small edge on probability accuracy — relevant for pricing and reserving. |
 
-## Project Organization
+See [`docs/reports/TECHNICAL_COMPANION.md`](docs/reports/TECHNICAL_COMPANION.md) for a walkthrough of every metric.
 
-### ADSWP Project (`notebooks/adswp_project/`)
-Domain-specific TabPFN applications:
-- **01**: TabPFN classifier on eudirectlapse data
-- **02**: TabPFN on freMTPL dataset
-- **03**: US Auto BI fitting
-- **04**: Embedding workflow analysis
+## Documentation Index
 
-### Baseline Experiments (`notebooks/baseline_experiments/`)
-Experimental framework for baseline model comparison:
-- **01**: Claim classification baseline
-- **02**: Comprehensive baselining analysis
-- **03**: Model finetuning (primary)
-- **04**: Regression finetuning
-- **05**: Data generation exploration
+The docs are extensive. Start here:
 
-## Output Files
+- **`docs/reports/REPORT_REGISTRY.md`** — maps every report to its source notebook and evidence files
+- **`docs/reports/TECHNICAL_COMPANION.md`** — explains all metrics in actuarial context (best first read)
+- **`docs/REPLICATION_SETUP_GUIDE.md`** — step-by-step to reproduce the paper results
+- **`docs/status/STATUS_REPORT_FINAL.md`** — summary of validated findings and recommendations
 
-### Current Results (`outputs/current/`)
-- **figures/**: PNG exports of analysis (Figures 1-6)
-- **tables/**: Summary tables (Table1-Table4)
+## Dependencies
 
-### Archive (`outputs/archive/`)
-Historical versioned results from experiments. Use only for reference.
-
-### SHAP Analysis (`outputs/shap/`)
-Model interpretability outputs:
-- `tabpfn_shap_inputs.parquet`
-- `tabpfn_shap_values.npy`
-
-## Python Modules (`src/`)
-
-### data_loader.py
-Load and preprocess datasets.
-
-### evaluation_metrics.py
-Compute evaluation metrics (AUC, accuracy, calibration, etc.).
-
-### model_training.py
-Primary model training pipeline.
-
-### cleanup_outputs.py
-Utilities for cleaning up experimental outputs.
-
-## Documentation
-
-### Reports (`docs/reports/`)
-Read these for comprehensive analysis:
-- `ARTICLE_REVISED_COMPLETE.md` - Full article
-- `TECHNICAL_COMPANION.md` - Technical details
-- `FINETUNING_SUMMARY.md` - Finetuning results
-
-### Analyses (`docs/analyses/`)
-Specific analysis summaries (class imbalance, baselining approach)
-
-### Status (`docs/status/`)
-Project status, incidents, and historical information
-
-## Naming Conventions
-
-### Notebooks
-- Format: `NN_description_of_notebook.ipynb`
-- Use underscores instead of spaces
-- Number sequentially within each project
-
-### Python Modules
-- Use snake_case for file/function names
-- Include docstrings
-
-### CSV/Data Files
-- Use underscores and dates: `model_comparison_YYYYMMDD_HHMMSS.csv`
-- Keep only essential versions (archive old runs)
-
-### Figures
-- Format: `FigureN_Description.png`
-- Example: `Figure1_Model_Performance_Comparison.png`
-
-### Tables
-- Format: `TableN_Description.csv`
-- Example: `Table1_Model_Performance.csv`
-
-## .gitignore Strategy
-
-The `.gitignore` file excludes:
-- `__pycache__/` and `.pyc` files
-- `*.pkl` and `*.pickle` files (non-reproducible models)
-- `outputs/archive/` (versioned experimental runs)
-- `.env` files with credentials
-- IDE configuration files
-
-Keep in version control:
-- Source code (`src/`, `notebooks/`)
-- Data (`data/raw/`)
-- Current outputs (`outputs/current/`)
-- Documentation (`docs/`)
-
-## Contributing
-
-When adding new work:
-1. Create notebooks in appropriate `notebooks/` subdirectory
-2. Use consistent naming: `NN_description.ipynb`
-3. Add summary documentation in `docs/` if significant
-4. Archive old experiment outputs to `outputs/archive/`
-5. Keep latest results in `outputs/current/`
-
-## Cleanup & Maintenance
-
-### Remove Old Outputs
-```bash
-# Archive versioned experimental runs
-mv outputs/*.csv outputs/archive/
-mv outputs/*.pkl outputs/archive/
-```
-
-### Clean Cache Files
-```bash
-find . -type d -name __pycache__ -exec rm -r {} +
-find . -type f -name "*.pyc" -delete
-```
+Python 3.9+. Core stack: numpy, pandas, scikit-learn, torch, TabPFN, matplotlib, seaborn. Optional: XGBoost, LightGBM, CatBoost.
 
 ## References
 
-- Original TabPFN code: See `TabPFN-upstream/` repository
-- Legacy R scripts: See `legacy/adswp_project_scripts/`
-- Historical results: See `outputs/archive/`
+- [TabPFN upstream](https://github.com/PriorLabs/TabPFN) — the foundation model
+- [CASdatasets](https://CRAN.R-project.org/package=CASdatasets) — R package supplying the datasets
+- `legacy/adswp_project_scripts/` — original R analysis scripts
 
-## Contact & Status
+## License
 
-- Repository: TabPFN-work-scott (forked from upstream)
-- Branch: Based on work from eda/baselining_notebook
-- Last organized: March 29, 2026
-
----
-
-**Note**: This repository contains ONLY custom work and new analyses. Original TabPFN code is maintained separately in `TabPFN-upstream/`.
+MIT — see [`LICENSE`](LICENSE).
