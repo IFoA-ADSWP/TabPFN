@@ -1,11 +1,8 @@
 """Smoke tests — fail loudly if the package is broken.
 
-These tests do not exercise domain logic; they only assert that the
-public surface of `src/` imports cleanly and that critical constants
-in `baseline_config.py` are present and of the expected type.
-
-Add real unit tests for `data_loader`, `evaluation_metrics`, and
-`model_training` in separate test modules.
+These tests assert that the public surface of `src/` imports cleanly
+and that critical constants in `baseline_config.py` are present and
+of the expected type.
 """
 
 from __future__ import annotations
