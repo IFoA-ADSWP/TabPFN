@@ -80,6 +80,8 @@ Install dependencies and set up your environment:
 pip install -r requirements.txt
 ```
 
+See `CONTRIBUTING.md` for detailed setup and contribution guidelines.
+
 ### 3. Run Notebooks
 Start with numbered notebooks in order:
 ```bash
@@ -98,14 +100,18 @@ Domain-specific TabPFN applications:
 - **02**: TabPFN on freMTPL dataset
 - **03**: US Auto BI fitting
 - **04**: Embedding workflow analysis
+- **REPLICATION**: Replication notebook for "There's Life in the Old GLM Yet!" paper
 
 ### Baseline Experiments (`notebooks/baseline_experiments/`)
 Experimental framework for baseline model comparison:
-- **01**: Claim classification baseline
-- **02**: Comprehensive baselining analysis
-- **03**: Model finetuning (primary)
-- **04**: Regression finetuning
-- **05**: Data generation exploration
+- **01**: Claims classification baseline
+- **02**: TabPFN vs GLM lapse prediction
+- **03**: TabPFN vs GLM summary comparison
+- **04**: Probability calibration analysis
+- **05**: Regression finetuning
+- **06**: Synthetic data exploration
+- **07**: Multi-dataset benchmark (classification)
+- **08**: Multi-dataset benchmark (regression)
 
 ## Output Files
 
