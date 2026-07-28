@@ -36,6 +36,13 @@ One-off experiment scripts, infrastructure, and debug tools. Ordered by purpose.
 | `finetune_pilot.py` | Fine-tuning pilot — time per sample under different configs |
 | `debug_preprocess.py` | Debug TabPFN preprocessing pipeline |
 
+## Benchmark (TabArena)
+
+| Script | Purpose |
+|--------|---------|
+| `run_tabarena_insurance_benchmark.py` | Run TabArena benchmark on 7 insurance datasets across foundation / tree / statistical model families |
+| `run_smoke_tabarena.py` | Smoke test — single dataset (coil2000), 3 models, validates TabArena setup end-to-end in ~2 min |
+
 ## Analysis
 
 | Script | Purpose |
