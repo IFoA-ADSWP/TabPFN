@@ -1,0 +1,4 @@
+method,method_type,method_subtype,config_type,ta_name,ta_suite,ag_key,model_key,config_default,can_hpo,compute,is_bag,has_raw,has_processed,has_results,name,name_suffix,cache_type,cache_kwargs,date,date_introduced,reference_url,display_name,verified
+[Smoke] GBM (default),config,default,[Smoke] GBM,[Smoke] LightGBM,[Smoke] LightGBM,GBM,[Smoke] GBM,LightGBM_c1_default_BAG_L1,False,cpu,True,True,True,True,,,local,{},,,,[Smoke] GBM,True
+[Smoke] LR (default),config,default,[Smoke] LR,[Smoke] LinearModel,[Smoke] LinearModel,LR,[Smoke] LR,LinearModel_c1_default_BAG_L1,False,cpu,True,True,True,True,,,local,{},,,,[Smoke] LR,True
+[Smoke] TabPFNSmoke (default),config,default,[Smoke] TabPFNSmoke,[Smoke] TabPFNSmoke,[Smoke] TabPFNSmoke,TabPFNSmoke,[Smoke] TabPFNSmoke,TabPFNSmoke_c1_default_BAG_L1,False,gpu,True,True,True,True,,,local,{},,,,[Smoke] TabPFNSmoke,True

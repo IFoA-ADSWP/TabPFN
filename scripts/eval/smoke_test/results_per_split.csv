@@ -1,0 +1,7 @@
+dataset,fold,method,metric_error,time_train_s,time_infer_s,metric,problem_type,metric_error_val,method_type,method_subtype,config_type,imputed,ta_name,ta_suite
+coil2000_smoke-e8b3f3ed52e9,0,[Smoke] TabPFNSmoke (default),0.23893334732616245,50.37552285194397,29.183674097061157,roc_auc,binary,0.22226167970118405,config,default,[Smoke] TabPFNSmoke,False,[Smoke] TabPFNSmoke,[Smoke] TabPFNSmoke
+coil2000_smoke-e8b3f3ed52e9,1,[Smoke] TabPFNSmoke (default),0.24590007641858458,116.15734100341797,55.64469909667969,roc_auc,binary,0.2306595943754739,config,default,[Smoke] TabPFNSmoke,False,[Smoke] TabPFNSmoke,[Smoke] TabPFNSmoke
+coil2000_smoke-e8b3f3ed52e9,0,[Smoke] GBM (default),0.26162907571943594,13.808921813964844,0.03351187705993652,roc_auc,binary,0.24949781017150574,config,default,[Smoke] GBM,False,[Smoke] LightGBM,[Smoke] LightGBM
+coil2000_smoke-e8b3f3ed52e9,1,[Smoke] GBM (default),0.2759294761409945,14.475402116775513,0.03941798210144043,roc_auc,binary,0.2461602247918444,config,default,[Smoke] GBM,False,[Smoke] LightGBM,[Smoke] LightGBM
+coil2000_smoke-e8b3f3ed52e9,0,[Smoke] LR (default),0.26702863258033194,1.571152925491333,0.15404009819030762,roc_auc,binary,0.28194503774368584,config,default,[Smoke] LR,False,[Smoke] LinearModel,[Smoke] LinearModel
+coil2000_smoke-e8b3f3ed52e9,1,[Smoke] LR (default),0.2734735868104775,1.6937739849090576,0.16552495956420898,roc_auc,binary,0.2666842316089142,config,default,[Smoke] LR,False,[Smoke] LinearModel,[Smoke] LinearModel

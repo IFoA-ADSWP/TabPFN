@@ -1,0 +1,4 @@
+method,variant,family,x_infer,x_train,imp,elo,imputed,imputed_pct
+[Smoke] TabPFNSmoke,Default,Other,8.636568233938185,16.95508693294257,0.0,2190.2,False,0.0
+[Smoke] GBM,Default,Other,0.00742515365112777,2.8796908909326366,9.778885558654926,404.9,False,0.0
+[Smoke] LR,Default,Other,0.03253564017048632,0.3324095815923835,10.302073221922981,404.9,False,0.0
