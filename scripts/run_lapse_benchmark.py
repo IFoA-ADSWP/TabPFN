@@ -141,20 +141,27 @@ if __name__ == "__main__":
     for task, meta in zip(tasks, meta_list):
         task.with_task_metadata(meta).load().validate_metadata()
 
-    # Models — all 3 families
+    # Models — trimmed for a first pass on an 8-core M1: TabPFN is a hosted-API
+    # call (server-side compute), LightGBM + Linear are the cheapest strong baselines.
+    # Full 7-model panel is deferred to the GPU run.
     experiments = TabArenaV0pt1ExperimentBundle(
         models=[
             # --- Foundation ---
             (TabPFNClientModel.config_generator(), 0),
             # --- Tree-based ---
             ("LightGBM", 0, {"device_type": "cpu"}),
-            ("XGBoost", 0),
-            ("CatBoost", 0),
-            ("RandomForest", 0),
             # --- Statistical ---
-            (LogisticGlmModel.config_generator(), 0),
             ("Linear", 0),
+            # --- Deferred to GPU run ---
+            # ("XGBoost", 0),
+            # ("CatBoost", 0),
+            # ("RandomForest", 0),
+            # (LogisticGlmModel.config_generator(), 0),
         ],
+        # ponytail: holdout = no bagging (1 fit per model per CV split). The default
+        # 8 bagged folds x 2 CV splits x 7 models x 2 tasks = 224 fits is too heavy for
+        # CPU. Point estimates suffice for a first pass; re-enable bagging on GPU.
+        holdout_experiments=True,
     ).build_experiments(num_gpus=0)
 
     context = AbstractArenaContext(task_metadata=task_collection, methods=[])

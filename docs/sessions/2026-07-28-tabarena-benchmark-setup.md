@@ -55,7 +55,7 @@ Results saved to `scripts/eval/smoke_test/`
 TabArena's default uses 8 bagged folds per model × 2 CV splits × 7 models × 2 tasks = 224 model fits. On this 8-core Mac (no GPU), each tree-based model fit takes 2-5 minutes, making a full run exceed reasonable timeouts.
 
 **Possible mitigations:**
-- Set `num_bag_folds` to 3 in the bundle config
+- Set `holdout_experiments=True` on the bundle — 1 fit per model per CV split, no bagging (the only reachable knob; `num_bag_folds` is a dedicated constructor arg not exposed by the bundle and rejects `fit_kwargs` overrides)
 - Reduce CV splits to 2
 - Run only on a subset of models for quick comparisons
 - Use a GPU machine for full benchmark
