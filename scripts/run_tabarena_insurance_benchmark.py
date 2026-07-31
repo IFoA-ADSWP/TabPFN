@@ -148,6 +148,9 @@ def _load_raw(info: dict) -> pd.DataFrame:
     target = info["target"]
     if target not in df.columns:
         raise KeyError(f"Target column '{target}' not found in {path}")
+    # Convert object columns to categorical (TabArena metadata requires non-object dtypes)
+    for col in df.select_dtypes(include=["object"]).columns:
+        df[col] = df[col].astype("category")
     return df.dropna(subset=[target])
 
 
@@ -413,7 +416,7 @@ if __name__ == "__main__":
             # --- Foundation (PyTorch, small subsets only) ---
             ("TabFM", 0),
             # --- Tree-based (registry, all CPU) ---
-            ("LightGBM", 0),
+            ("LightGBM", 0, {"device_type": "cpu"}),
             ("XGBoost", 0),
             ("CatBoost", 0),
             ("RandomForest", 0),
@@ -423,6 +426,10 @@ if __name__ == "__main__":
             (TweedieGlmModel.config_generator(), 0),
             ("Linear", 0),
         ],
+        # ponytail: holdout = no bagging (1 fit per model per split). The default
+        # 8-bag folds would be hundreds of fits across 7 datasets on an 8-core M1;
+        # point estimates for this first full pass, re-enable bagging on GPU.
+        holdout_experiments=True,
     ).build_experiments(num_gpus=0)
 
     # ---- 4. Run benchmark ----
