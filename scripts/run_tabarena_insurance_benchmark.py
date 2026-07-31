@@ -336,7 +336,7 @@ class TweedieGlmModel(AbstractModel):
     @classmethod
     def config_generator(cls) -> ConfigGenerator:
         from tabarena.utils.config_utils import ConfigGenerator
-        return ConfigGenerator(model_cls=cls, manual_configs=[{"tweedie_p": 1.5}])
+        return ConfigGenerator(search_space={}, model_cls=cls, manual_configs=[{"tweedie_p": 1.5}])
 
 
 class LogisticGlmModel(AbstractModel):
