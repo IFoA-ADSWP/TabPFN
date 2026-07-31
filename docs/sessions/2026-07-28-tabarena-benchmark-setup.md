@@ -41,13 +41,27 @@ Results saved to `scripts/eval/smoke_test/`
 
 ## Lapse Benchmark Status
 
-**Classification** (target=`lapse`, 23K rows, 12.8% positive rate):
-- TabPFN achieved 0.6039 ROC-AUC (single fold on 11,530 training rows)
-- Full 2-fold × 8-bag benchmark could not complete due to runtime constraints
-- Models: TabPFN Client, LightGBM, XGBoost, CatBoost, RandomForest, Logistic GLM, Linear
+**Completed 31 Jul 2026** — both tasks ran to completion in ~2.5 min (holdout mode, 3-model panel, see below).
 
-**Regression** (target=`prem_pure`):
-- Not run — Poisson GLM and Tweedie GLM were dropped from the lapse-only script as they're specialized for count/premium targets in the full benchmark
+**Classification** (target=`lapse`, 23K rows, 12.8% positive, ROC-AUC; `metric_error = 1 − AUC`):
+
+| Model | Fold 0 | Fold 1 | Avg AUC |
+|-------|--------|--------|---------|
+| LR (Linear) | 0.375 | 0.369 | **0.628** |
+| TabPFN (hosted API) | 0.395 | 0.394 | **0.6055** |
+| LightGBM | 0.400 | 0.389 | **0.6054** |
+
+**Regression** (target=`prem_pure`, RMSE):
+
+| Model | Fold 0 | Fold 1 | Avg RMSE |
+|-------|--------|--------|----------|
+| **TabPFN (hosted API)** | 19.19 | 18.94 | **19.07** |
+| LightGBM | 28.61 | 24.07 | 26.34 |
+| LR (Linear) | 80.90 | 82.79 | 81.84 |
+
+Takeaways: linear wins lapse classification (small dataset, strong linear signal); TabPFN dominates premium regression. TabPFN #1 on the TabArena leaderboard overall (ELO 1059.6) driven by its regression win.
+
+Results: `scripts/eval/lapse_benchmark_v1/`
 
 ## Issues Found
 
@@ -62,6 +76,20 @@ TabArena's default uses 8 bagged folds per model × 2 CV splits × 7 models × 2
 
 ### LightGBM GPU auto-detection
 On Apple Silicon, LightGBM auto-detects Metal GPU and trains in GPU-emulation mode, which is slower than CPU. Fixed via `device_type: "cpu"` in per-model hyperparameters and `num_gpus=0` in `build_experiments()`.
+
+### macOS libomp conflict (SIGSEGV) — FIXED
+
+**Symptom:** SIGSEGV ~1 min into the run, no Python traceback; crash report shows the fault in `libomp.dylib` (`__kmp_hyper_barrier_release` / `__kmp_suspend_initialize_thread`) — a worker thread dying in OpenMP barrier state.
+
+**Root cause:** three `libomp.dylib` copies loaded into one process — two bundled in the venv's wheels (LightGBM 4.7.0 / scipy) plus Homebrew's at `/opt/homebrew/opt/libomp/lib`. Multiple OpenMP runtimes sharing `__kmp_*` symbols corrupt barrier state. Raw LightGBM fit alone does not crash (fewer libs loaded); AutoGluon's full fit does. `num_threads=1` and `KMP_DUPLICATE_LIB_OK=TRUE` do NOT fix it.
+
+**Fix:** force every `libomp.dylib` lookup to one copy:
+
+```bash
+DYLD_LIBRARY_PATH=/opt/homebrew/opt/libomp/lib python scripts/run_lapse_benchmark.py
+```
+
+Verified: repro fits exit 0, deterministic AUC across runs.
 
 ### TabArena API instability
 - `ConfigGenerator` API changed (search_space now required)
@@ -83,8 +111,8 @@ A TASKS.md                               (GitHub issue tracker)
 
 ## Remaining Work
 
-1. Run full 7-dataset insurance benchmark (needs more time or GPU machine)
-2. Complete lapse regression benchmark
+1. Run full 7-dataset insurance benchmark (needs more time or GPU machine; holdout mode makes it feasible on CPU)
+2. Expand lapse model panel (XGBoost, CatBoost, RandomForest, Logistic GLM) — commented out in `run_lapse_benchmark.py` for the first pass
 3. Run TabFM locally (requires GPU or heavy CPU time)
 4. Fine-tuning experiments on lapse data
 5. Set up `.opencode/project/CONTEXT.md` for agent orientation

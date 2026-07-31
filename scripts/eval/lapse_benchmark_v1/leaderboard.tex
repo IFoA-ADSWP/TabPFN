@@ -1,0 +1,11 @@
+\begin{tabular}{lcccccrr}
+\toprule
+\textbf{Model} & \textbf{Elo ($\uparrow$)} & \textbf{Improva-} & \textbf{Avg.} & \textbf{Harm.} & \textbf{\#wins ($\uparrow$)} & \textbf{Train time} & \textbf{Predict time} \\
+ &  & \textbf{bility ($\downarrow$)} & \textbf{rank ($\downarrow$)} & \textbf{mean} &  & \textbf{per 1K [s]} & \textbf{per 1K [s]} \\
+ &  &  &  & \textbf{rank ($\downarrow$)} &  &  &  \\
+\midrule
+[Lapse] TabPFNClient (D) & \textcolor{gold}{\textbf{1060${}_{-724,+1508}$}} & \textcolor{gold}{\textbf{2.8\%}} & \textcolor{gold}{\textbf{1.8}} & \textcolor{gold}{\textbf{1.4}} & \textcolor{gold}{\textbf{1.0}} & 0.57 & 0.30 \\
+[Lapse] LR (D) & \textcolor{silver}{\textbf{1000${}_{-1567,+1327}$}} & \textcolor{bronze}{\textbf{38.3\%}} & \textcolor{silver}{\textbf{2.0}} & \textcolor{silver}{\textbf{1.5}} & \textcolor{gold}{\textbf{1.0}} & 0.02 & 0.00 \\
+[Lapse] GBM (D) & \textcolor{bronze}{\textbf{940${}_{-604,+60}$}} & \textcolor{silver}{\textbf{16.4\%}} & \textcolor{bronze}{\textbf{2.2}} & \textcolor{bronze}{\textbf{2.2}} & \textcolor{bronze}{\textbf{0.0}} & 0.19 & 0.00 \\
+\bottomrule
+\end{tabular}
