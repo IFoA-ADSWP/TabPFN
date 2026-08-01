@@ -1,0 +1,223 @@
+# TabPFN vs GBDT Baselines on Insurance Datasets, and Domain Fine-Tuning Effectiveness
+
+Technical research report — engineering/data-science audience.
+Branch: `feat/tabarena-benchmark`. Date: 2026-08-01.
+
+## 1. Objective
+
+Answer two questions with reproducible evidence:
+
+1. **Does default-config TabPFN beat GBDT baselines on insurance datasets?**
+   (Baseline benchmark, authoritative, holdout mode, CPU, default configs only.)
+2. **Does domain fine-tuning make TabPFN materially better, and can it close the gap?**
+   (Earlier fine-tuning studies — different protocol, synthesized here, not re-run.)
+
+Cross-checked against `docs/reports/REPORT_REGISTRY.md`: no existing report covers the
+`insurance_benchmark_v1` GBDT comparison (`results_per_split.csv` is not referenced by any
+registry entry). Fine-tuning evidence overlaps with
+`docs/reports/COMBINED_TABPFN_CLASSIFIER_REGRESSOR_ANALYSIS.md` and
+`docs/reports/STAGE_A_B_FINDINGS_AND_RECOMMENDATIONS.md`; this report cross-references them
+rather than duplicating their content.
+
+## 2. Experimental Setup
+
+### 2.1 Baseline benchmark (newest, authoritative)
+- Source: `scripts/eval/insurance_benchmark_v1/results_per_split.csv` + `method_info.csv`
+- 9 CASdatasets tasks (7 datasets, 2 with dual targets), holdout split, CPU, 3–5 folds.
+- 8 methods, all **default config** (`config_type=default`, `can_hpo=False`):
+  TabPFNClient, CAT (CatBoost), GBM (LightGBM), XGB (XGBoost), RF, LR, LogisticGLM,
+  PoissonGLM, TweedieGLM. GLM variants only run on tasks matching their family.
+- Metric: `metric_error` = **error metric, lower is better** — RMSE for regression,
+  **1 − ROC AUC** for binary tasks (ROC AUC stored as error).
+- Harness drops only the target column from features (`run_tabarena_insurance_benchmark.py:184`).
+
+### 2.2 Domain fine-tuning study (earlier, different protocol)
+- Source: `outputs/current/tables/domain_finetune_study_runs.csv`,
+  `outputs/current/logs/domain_finetune_logbook.md`
+- Stage A protocol: 2,500-row subsets, `cpu/64/1..5` (and `cpu/128/5`), seed 42, single
+  train/test split (1,750/750). Models: logistic regression, random forest, raw TabPFN,
+  domain-finetuned TabPFN.
+- **Not directly comparable to the benchmark**: different targets, splits, row counts, and
+  protocol. The benchmark measured only **raw default** TabPFN — no fine-tuned arm ran inside
+  the benchmark harness.
+
+### 2.3 Small-finetune trials (protocol validation)
+- Source: `outputs/current/tables/tabpfn_finetune_trial_results.csv`
+- coil2000 (target `CARAVAN`), rows 300–3,000, 1–3 steps, ctx 64/128, seed 42.
+
+## 3. Data and Targets
+
+| Task (id suffix) | Metric | Task type | Folds |
+| --- | --- | --- | --- |
+| ausautoBI8999 | RMSE | regression (BI severity) | 3 |
+| ausprivauto0405 | 1−AUC | binary (claim occurrence, 6.8% pos) | 5 |
+| ausprivauto0405_vehvalue | RMSE | regression (vehicle value) | 3 |
+| bemtl16 | 1−AUC | binary (liability claims, 36% pos) | 5 |
+| bemtl97 | 1−AUC | binary (claim, 11.2% pos) — **EXCLUDED, leak** | 5 |
+| bemtl97_amount | RMSE | regression (severity, log1p zero-inflated) | 3 |
+| coil2000 | 1−AUC | binary (caravan purchase) | 5 |
+| norauto | 1−AUC | binary (claims, 4.6% pos) | 5 |
+| uslapseagent | 1−AUC | binary (lapse) | 5 |
+
+## 4. Results — Baseline Benchmark
+
+Mean `metric_error` across folds, per task. Lower is better; best baseline in **bold**;
+TabPFN rank within the task's method pool.
+
+| Task | Metric | Best baseline (err) | TabPFN (err) | Δ vs best | Rank |
+| --- | --- | --- | --- | --- | --- |
+| bemtl16 | 1−AUC | TabPFN **0.04394** | **0.04394** | 0% | 1/7 |
+| coil2000 | 1−AUC | TabPFN **0.22738** | **0.22738** | 0% | 1/7 |
+| ausprivauto0405 | 1−AUC | CAT 0.34006 | 0.34240 | +0.7% | 3/7 |
+| uslapseagent | 1−AUC | CAT 0.05550 | 0.05688 | +2.5% | 3/7 |
+| ausautoBI8999 | RMSE | CAT 0.97588 | 1.01273 | +3.8% | 5/8 |
+| norauto | 1−AUC | CAT 0.29947 | 0.31564 | +5.4% | 6/7 |
+| bemtl97_amount | RMSE | CAT 0.48201 | 0.71485 | **+48.3%** | 8/8 |
+| ausprivauto0405_vehvalue | RMSE | XGB 0.71722 | 1.19891 | **+67.2%** | 8/8 |
+| bemtl97 | 1−AUC | GBM 0.00000 | 0.00000 | — | **EXCLUDED** |
+
+### 4.1 Per-dataset verdicts (TabPFN vs best baseline)
+
+- **WIN** — bemtl16, coil2000: TabPFN is the best method (rank 1 of 7). Both are small-ish
+  classification tasks with strong categorical structure.
+- **TIE** — ausprivauto0405 (claim occurrence): within 0.7% of best (CAT), rank 3/7.
+- **LOSE (close)** — uslapseagent (+2.5%), ausautoBI8999 (+3.8%).
+- **LOSE (clear)** — norauto (+5.4%, rank 6/7).
+- **LOSE (decisive)** — both severity regressions: bemtl97_amount (+48.3%) and
+  ausprivauto0405_vehvalue (+67.2%), TabPFN rank 8/8. GBDTs and even linear models crush
+  TabPFN on these; TabPFN's zero-shot regression transfer does not fit insurance severity
+  targets under default config.
+
+**Tally on 8 valid tasks: 2 wins, 1 tie, 5 losses (2 of them large).** GBDTs (CAT/GBM/XGB)
+hold the aggregate lead; TabPFN wins only where default GBDTs are weakest.
+
+### 4.2 Compute cost (engineering)
+
+Train time summed over folds; inference mean per fold.
+
+| Task | TabPFN train (s) | GBM/XGB/CAT train (s) | TabPFN infer/fold (s) | GBDT infer/fold (s) |
+| --- | ---: | ---: | ---: | ---: |
+| norauto (184K rows) | 190.1 | 5.7–75.1 | **239.9** | <0.05 |
+| bemtl97 (163K rows) | 157.9 | 6.7–135.6 | 34.1 | ~0.06 |
+| bemtl97_amount | 75.1 | 3.1–15.5 | 30.2 | ~0.05 |
+| ausprivauto0405 | 55.1 | 2.7–27.8 | 9.1 | <0.02 |
+
+TabPFN is ~5–50× slower than GBDTs for train and 100–1000×+ for inference on this hardware
+(CPU, local Mac). Worst single fold: norauto fold 0 inference took **1,030 s** (vs ~42 s on
+other folds — memory/context pressure on the 184K-row task). For production batch scoring of
+100K+ row insurance portfolios, raw TabPFN inference is the binding constraint.
+
+## 5. Domain Fine-Tuning Effectiveness
+
+### 5.1 Domain fine-tuning (Stage A protocol) — raw vs tuned TabPFN, ROC AUC
+
+| Target | Raw | Tuned (1 step) | Tuned (3 steps) | Tuned (5 steps) | Verdict |
+| --- | ---: | ---: | ---: | ---: | --- |
+| eudirectlapse | 0.5763 | 0.5334 | 0.5339 | 0.5337 | Degrades |
+| coil2000 | 0.7566 | 0.5541 | 0.5532 | 0.5527 | **Severe degradation (−0.20)** |
+| ausprivauto0405 | 0.6486 | 0.5525 | 0.5505 | 0.5508 | Degrades |
+| freMTPL2freq_binary | 0.5412 | 0.5819 | 0.5888 | 0.5909 | Improves (+0.05) |
+
+- Only **freMTPL2freq_binary** improved; the other 3 targets degraded at **every** step count
+  (1, 3, 5) and context (64, 128 — see `domain_finetune_logbook.md` runs 2026-04-02T01:2x).
+- Aggregate deltas (logbook): ROC AUC **−0.0752**, PR AUC −0.0314, Brier +0.0017,
+  LogLoss +0.0106 — net degradation under this low-budget protocol.
+- Finding consistent with prior report
+  `docs/reports/COMBINED_TABPFN_CLASSIFIER_REGRESSOR_ANALYSIS.md`: single-step/3-step/5-step
+  domain adaptation is currently **misaligned or too weak** for stable cross-dataset uplift.
+
+### 5.2 Small-finetune trials (coil2000) — negligible
+
+`tabpfn_finetune_trial_results.csv`, all rows/contexts/steps: largest gain was
+**+0.0047 ROC AUC** (0.708 → 0.713 at 300 rows); several runs moved −0.002 to −0.008.
+Conclusion: one- to three-step fine-tune on the target's own data produces **no material
+gain**; step counts are not the lever.
+
+### 5.3 Net assessment
+
+Neither fine-tuning path currently closes the gap to GBDTs. Worse, the benchmark's two
+decisive TabPFN losses (severity regressions) are exactly the tasks where the fine-tuning
+evidence is thinnest (all finetune studies were classification targets). **Fine-tuning, as
+configured today, does not change the "do not deploy TabPFN for severity" verdict.**
+
+## 6. Data Anomaly — bemtl97 (must not be used)
+
+`bemtl97` (`target=claim`) is **excluded from all conclusions** due to confirmed label
+leakage:
+
+- The prepared dataset (`prepare_insurance_datasets.py:44-52`) keeps `nclaims` and `amount`
+  as **features** alongside the `claim` target.
+- Inspection of `data/raw/bemtl97.csv` (163,212 rows):
+  - rows with `claim==1` but `nclaims==0`: **0**
+  - rows with `claim==0` but `nclaims>0`: **0**
+  - rows with `amount>0` where `nclaims==0`: **0** (0 mismatches total)
+  - i.e. `claim == (nclaims > 0) == (amount > 0)` **exactly**, for every row.
+- The harness only drops the target column from features
+  (`run_tabarena_insurance_benchmark.py:184`), so `nclaims`/`amount` stayed in the feature
+  matrix. Every method trivially reaches AUC = 1.0 → `metric_error = 0.0000` on all folds.
+  CAT shows floating-point residue `1.11e-16`; LogisticGLM shows `4.55e-05` on fold 3 —
+  numerically zero.
+- **Characterization: hard label leakage** (target derivable from a single feature column),
+  not a trivial/near-constant target — the positive rate is a healthy 11.2%.
+- **Fix options**: drop `nclaims`/`amount` from the feature set (they are post-hoc outcomes
+  of the claim event), or drop the task. Note `bemtl97_amount` (target=`amount`) also keeps
+  `nclaims` as a feature, which encodes `amount>0` exactly — a partial target proxy; flag for
+  the same cleanup.
+
+## 7. Limitations and Risks
+
+1. **Default configs only** — `can_hpo=False` for all methods; HPO-tuned TabPFN (e.g. TabPFN's
+   `auto` mode) could change rankings, as could tuned GBDTs.
+2. **Fine-tuning protocol mismatch** — finetune studies used 2,500-row subsets and different
+   targets; they never ran inside the benchmark harness. A direct "fine-tuned TabPFN vs GBDT"
+   head-to-head is still missing.
+3. **CPU only, small hardware** — TabPFN inference outliers (norauto fold 0: 1,030 s) suggest
+   memory/context pressure; GPU (MPS) was available but unused for the benchmark.
+4. **Single seed in finetune studies** (seed 42); the benchmark is fold-based so more robust.
+5. **bemtl97 exclusion** removes one of the two large classification datasets; the effective
+   evidence base is 8 tasks.
+6. **Severity regressions may need transforms** (log/Tweedie-family modeling); default
+   TabPFN made no such assumption, while GBDTs and GLMs benefited from harness-level setup.
+
+## 8. Recommendation (engineering-facing)
+
+- **Do not adopt default-config TabPFN as a general insurance modeling engine today.** On 8
+  valid CASdatasets tasks: GBDTs win the aggregate; TabPFN loses decisively on both severity
+  regressions and costs 5–50× in train and 100–1000× in inference.
+- **Keep TabPFN on the bench for niche value**: small-data / few-shot classification
+  (bemtl16, coil2000 wins) and cold-start or proxy-model contexts where a GBDT has no
+  training signal.
+- **Fix the fine-tuning protocol before re-testing** — current domain/self fine-tune
+  degrades AUC on 3/4 targets; step-count sweeps (1→5) and context (64→128) do not recover
+  it. A working fine-tune is a precondition for any "TabPFN closes the gap" claim.
+- **Repair the benchmark**: remove `nclaims`/`amount` from bemtl97 features (also
+  `bemtl97_amount`), then re-run bemtl97.
+- **What would change the answer**: (a) HPO-enabled TabPFN in the harness; (b) a
+  fine-tuned-TabPFN arm inside the benchmark on the same folds; (c) GPU inference for the
+  100K+ row tasks; (d) severity-specific transforms in the TabPFN arm. Without at least (a)
+  or (b), the verdict stands.
+
+## 9. Source Workbooks
+
+- `scripts/run_tabarena_insurance_benchmark.py` — benchmark runner (task registry, target
+  definitions, feature handling at line 184).
+- `scripts/prepare_insurance_datasets.py` — dataset prep (`make_bemtl97` at line 43).
+- `outputs/current/logs/domain_finetune_logbook.md` — domain fine-tune runs and
+  interpretation blocks (protocol runs 2026-04-02).
+- Prior write-ups: `docs/reports/COMBINED_TABPFN_CLASSIFIER_REGRESSOR_ANALYSIS.md`,
+  `docs/reports/STAGE_A_B_FINDINGS_AND_RECOMMENDATIONS.md`,
+  `docs/analyses/tabpfn_small_finetune_methodology.md`.
+
+## 10. Evidence Files
+
+- `scripts/eval/insurance_benchmark_v1/results_per_split.csv` — per-split benchmark metrics
+  (282 rows; primary evidence for §4).
+- `scripts/eval/insurance_benchmark_v1/method_info.csv` — method registry (default config,
+  CPU, `can_hpo=False`).
+- `outputs/current/tables/domain_finetune_study_runs.csv` — Stage A runs (§5.1).
+- `outputs/current/logs/domain_finetune_logbook.md` — raw-vs-tuned summary and step/context
+  sweeps (§5.1).
+- `outputs/current/tables/tabpfn_finetune_trial_results.csv` — coil2000 small-finetune
+  trials (§5.2).
+- `data/raw/bemtl97.csv` — leak inspection (§6; 163,212 rows, `claim`/`nclaims`/`amount`
+  collinearity check).
