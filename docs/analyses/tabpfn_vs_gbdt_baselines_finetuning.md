@@ -1,7 +1,7 @@
 # TabPFN vs GBDT Baselines on Insurance Datasets, and Domain Fine-Tuning Effectiveness
 
 Technical research report — engineering/data-science audience.
-Branch: `feat/tabarena-benchmark`. Date: 2026-08-01. Updated: 2026-08-02 (§11).
+Branch: `feat/tabarena-benchmark`. Date: 2026-08-01. Updated: 2026-08-02 (§11, §12).
 
 ## 1. Objective
 
@@ -256,6 +256,75 @@ from GBDTs on these tasks, and the exposed lever moves in the wrong direction.
   "TabPFN cannot compete on insurance probabilities" reading of the v1 results is dropped.
 - Only remaining lever likely to move the aggregate verdict: HPO-enabled TabPFN inside the
   harness (§8(a)). Imbalance/flagship config levers do not.
+
+## 12. Why the v1 results looked the way they did — interpretation and lessons
+
+Sections 1–10 report *what* v1 found; this section explains *why* the numbers were as
+lopsided as they were. It separates genuine TabPFN model limits from setup artifacts, so
+future work does not re-run or re-explain the same results. No new experiments; every
+claim traces to evidence cited above.
+
+### 12.1 Dataset-size mismatch — primary cause of the headline losses
+
+TabPFN is pre-trained on **1,024-sample context windows**. The benchmark's hosted-API
+client (`scripts/run_tabarena_insurance_benchmark.py:23,245`) accepts full-size training
+sets on our 10K–184K-row datasets (norauto 184K rows, §4.2; bemtl97 163,212 rows, §6), but
+each prediction can effectively attend to only ~1K training rows — the local-API
+equivalent of this behavior is `ignore_pretraining_limits=True`. GBDTs, by contrast, see
+every row in training. This is a **capability limit of the model design, not a harness
+bug**. It predicts exactly where TabPFN lost worst: the largest datasets and the
+regression/severity tasks where every row of signal matters — bemtl97_amount +48.3% vs
+CAT (rank 8/8, §4), ausprivauto0405_vehvalue +67.2% vs XGB (rank 8/8, §4), and the
+184K-row norauto classification (+5.4%, rank 6/7, §4). The converse also holds: TabPFN
+won its two smallest classification tasks (bemtl16, coil2000; §4.1), where a ~1K-row
+context captures the learnable signal. The bemtl97 leak (§6) is unaffected by this — a
+single leaking feature is trivially learnable inside any context window, which is why
+exclusion is data-driven, not model-driven.
+
+### 12.2 Metric blindness — 1−AUC cannot see calibration
+
+v1 ranked methods on **1−AUC**, a rank-invariant metric that discards all probability
+calibration (§2.1). TabPFN's comparative strength is calibrated probabilities, which 1−AUC
+is structurally incapable of detecting — §11.2 demonstrates this: `balance_probabilities`
+is a monotone probability transform, so its effects are provably invisible to 1−AUC.
+The §11.3 re-score on insurance-native log loss / Brier (the metrics an insurer pays on)
+shows what 1−AUC hid: default TabPFN is **best on coil2000** (0.2008 vs CAT 0.2032) and
+**0.002 off CAT on uslapseagent** (0.2536 vs 0.2516). Part of the v1 "loss" was therefore
+a **measurement artifact**, not model behavior.
+
+### 12.3 Uneven tuning — TabPFN at its floor vs competitors at standard settings
+
+The harness ran every method at default config with `can_hpo=False`
+(`scripts/eval/insurance_benchmark_v1/method_info.csv`), but "default" is not symmetric
+across libraries. CatBoost/LightGBM/XGBoost ship tuned default hyperparameters; TabPFN ran
+as a bare `TabPFNClassifier(random_state=0)` (`run_tabarena_insurance_benchmark.py:262–
+265`) — pure defaults, no HPO, no ensemble tuning. v1 therefore compared **TabPFN at its
+floor against competitors at their standard settings**. HPO-enabled TabPFN in the harness
+remains the one lever untested (§8(a), §11.5).
+
+### 12.4 Ruled-out suspects (documented so future work does not re-chase them)
+
+- **(a) CPU.** TabPFN executed on Prior Labs' hosted API, not local CPU
+  (`run_tabarena_insurance_benchmark.py:23,245`); local CPU only affected the GBDT/GLM
+  arms and the wall-clock comparison (§4.2). CPU does not explain any accuracy gap.
+- **(b) Imbalance handling** (`balance_probabilities=True`). Tested in §11: actively
+  hurts calibration — rescales predictions toward a 50/50 prior, inflating mean predicted
+  probability on coil2000 from 0.047 to 0.327 vs a 0.06 base rate (§11.4) — and is worse
+  on log loss and Brier in all 5 folds on both datasets (§11.4).
+- **(c) Domain fine-tuning.** Tested in §5: degrades ROC AUC on 3/4 targets (§5.1) and
+  produces no material gain in the coil2000 small-finetune trials (§5.2).
+
+### 12.5 What this means for reading the results
+
+The v1 "TabPFN loses" headline **conflated genuine model limits with setup choices**:
+the context ceiling, the regression/severity gap, and inference cost are model limits;
+dataset scale, the 1−AUC metric, and the tuning asymmetry are setup choices. Correcting
+the setup choices (metric re-score, §11.3) flips classification from losing to
+competitive on calibration — the classification headline was substantially measurement.
+The **regression gap and the inference cost remain genuine TabPFN limits that no setup
+change fixes**: the §8 verdict stands for severity modeling and 100K+-row batch scoring,
+and TabPFN's competitive claim is restricted to calibrated classification on
+small-to-moderate data.
 
 ## 9. Source Workbooks
 
