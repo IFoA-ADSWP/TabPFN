@@ -1,0 +1,51 @@
+dataset,fold,method,metric_error,time_train_s,time_infer_s,metric,problem_type,metric_error_val,method_type,method_subtype,config_type,imputed,balance_probabilities,n_estimators
+coil2000-75f8a6315d24,0,[Insurance] CAT (default),0.2384374884374884,1.0400478839874268,0.0025827884674072,roc_auc,binary,0.3124982005585466,config,default,[Insurance] CAT,False,False,8
+coil2000-75f8a6315d24,0,[Insurance] GBM (default),0.237017612017612,2.000697135925293,0.0023469924926757,roc_auc,binary,0.2824691215846602,config,default,[Insurance] GBM,False,False,8
+coil2000-75f8a6315d24,0,[Insurance] TabPFNClient (default),0.215550653050653,6.50993800163269,3.0560922622680664,roc_auc,binary,0.2867733855411279,config,default,[Insurance] TabPFNClient,False,False,8
+coil2000-75f8a6315d24,0,[Insurance] TabPFNClient-balanced (default),0.215550653050653,6.0744309425354,3.4523611068725586,roc_auc,binary,0.2867733855411279,config,custom,custom,False,True,8
+coil2000-75f8a6315d24,0,[Insurance] XGB (default),0.2373020498020498,0.7811179161071777,0.0040719509124755,roc_auc,binary,0.3049549419860076,config,default,[Insurance] XGB,False,False,8
+coil2000-75f8a6315d24,1,[Insurance] CAT (default),0.2411468895965056,1.6079628467559814,0.0029630661010742,roc_auc,binary,0.2259522644171249,config,default,[Insurance] CAT,False,False,8
+coil2000-75f8a6315d24,1,[Insurance] GBM (default),0.2473181430262543,2.1046557426452637,0.0042340755462646,roc_auc,binary,0.2092822387930786,config,default,[Insurance] GBM,False,False,8
+coil2000-75f8a6315d24,1,[Insurance] TabPFNClient (default),0.2204399254861295,6.700006008148193,3.464531183242798,roc_auc,binary,0.2007888751331585,config,default,[Insurance] TabPFNClient,False,False,8
+coil2000-75f8a6315d24,1,[Insurance] TabPFNClient-balanced (default),0.2204399254861295,6.083794832229614,3.233327865600586,roc_auc,binary,0.2007888751331585,config,custom,custom,False,True,8
+coil2000-75f8a6315d24,1,[Insurance] XGB (default),0.2467491947546639,0.7261710166931152,0.0043163299560546,roc_auc,binary,0.2185241700976017,config,default,[Insurance] XGB,False,False,8
+coil2000-75f8a6315d24,2,[Insurance] CAT (default),0.2712205979666726,1.3906762599945068,0.002835988998413,roc_auc,binary,0.2458900757204963,config,default,[Insurance] CAT,False,False,8
+coil2000-75f8a6315d24,2,[Insurance] GBM (default),0.2656398224887668,2.0250890254974365,0.0032179355621337,roc_auc,binary,0.2617827426366854,config,default,[Insurance] GBM,False,False,8
+coil2000-75f8a6315d24,2,[Insurance] TabPFNClient (default),0.2545523116719651,5.6360392570495605,3.0592269897460938,roc_auc,binary,0.2405061468920046,config,default,[Insurance] TabPFNClient,False,False,8
+coil2000-75f8a6315d24,2,[Insurance] TabPFNClient-balanced (default),0.2545523116719651,6.064487934112549,3.045316219329834,roc_auc,binary,0.2405061468920046,config,custom,custom,False,True,8
+coil2000-75f8a6315d24,2,[Insurance] XGB (default),0.2845755880406665,0.718472957611084,0.0043988227844238,roc_auc,binary,0.2789854029309302,config,default,[Insurance] XGB,False,False,8
+coil2000-75f8a6315d24,3,[Insurance] CAT (default),0.237393509456314,1.4756550788879397,0.0032820701599121,roc_auc,binary,0.1764604266835574,config,default,[Insurance] CAT,False,False,8
+coil2000-75f8a6315d24,3,[Insurance] GBM (default),0.2485041578165563,2.2267367839813232,0.004526138305664,roc_auc,binary,0.1720697895373275,config,default,[Insurance] GBM,False,False,8
+coil2000-75f8a6315d24,3,[Insurance] TabPFNClient (default),0.2153295480312265,6.2821900844573975,3.256080865859986,roc_auc,binary,0.1671609132525264,config,default,[Insurance] TabPFNClient,False,False,8
+coil2000-75f8a6315d24,3,[Insurance] TabPFNClient-balanced (default),0.2153295480312265,6.049433946609497,3.460767984390259,roc_auc,binary,0.1671609132525264,config,custom,custom,False,True,8
+coil2000-75f8a6315d24,3,[Insurance] XGB (default),0.2429326373560266,0.9074878692626952,0.0050830841064453,roc_auc,binary,0.1660668528488756,config,default,[Insurance] XGB,False,False,8
+coil2000-75f8a6315d24,4,[Insurance] CAT (default),0.2514935284290995,1.394115924835205,0.0027289390563964,roc_auc,binary,0.2688509486655341,config,default,[Insurance] CAT,False,False,8
+coil2000-75f8a6315d24,4,[Insurance] GBM (default),0.2645754954904928,2.074849843978882,0.0023930072784423,roc_auc,binary,0.2654679987331931,config,default,[Insurance] GBM,False,False,8
+coil2000-75f8a6315d24,4,[Insurance] TabPFNClient (default),0.2310260575014229,6.3268349170684814,3.2579751014709473,roc_auc,binary,0.2396856015892667,config,default,[Insurance] TabPFNClient,False,False,8
+coil2000-75f8a6315d24,4,[Insurance] TabPFNClient-balanced (default),0.2310260575014229,6.079958200454712,3.251709222793579,roc_auc,binary,0.2396856015892667,config,custom,custom,False,True,8
+coil2000-75f8a6315d24,4,[Insurance] XGB (default),0.2735598036085312,0.8147618770599365,0.004145860671997,roc_auc,binary,0.2556790372268447,config,default,[Insurance] XGB,False,False,8
+uslapseagent-7021b667ce68,0,[Insurance] CAT (default),0.0508011441738115,6.766982078552246,0.0055789947509765,roc_auc,binary,0.0573868621708127,config,default,[Insurance] CAT,False,False,8
+uslapseagent-7021b667ce68,0,[Insurance] GBM (default),0.0520111425915486,1.6441316604614258,0.0093545913696289,roc_auc,binary,0.057743700490614,config,default,[Insurance] GBM,False,False,8
+uslapseagent-7021b667ce68,0,[Insurance] TabPFNClient (default),0.051232187181693,8.068900108337402,3.869625806808472,roc_auc,binary,0.0578742322569483,config,default,[Insurance] TabPFNClient,False,False,8
+uslapseagent-7021b667ce68,0,[Insurance] TabPFNClient-balanced (default),0.051232187181693,7.818395853042603,3.680483818054199,roc_auc,binary,0.0578742322569483,config,custom,custom,False,True,8
+uslapseagent-7021b667ce68,0,[Insurance] XGB (default),0.051337630165841,0.6643807888031006,0.0099809169769287,roc_auc,binary,0.0587474048122195,config,default,[Insurance] XGB,False,False,8
+uslapseagent-7021b667ce68,1,[Insurance] CAT (default),0.0547612513721185,19.218929767608643,0.0207219123840332,roc_auc,binary,0.0537991695399102,config,default,[Insurance] CAT,False,False,8
+uslapseagent-7021b667ce68,1,[Insurance] GBM (default),0.0572658003777653,4.8966169357299805,0.1022069454193115,roc_auc,binary,0.0553809982822328,config,default,[Insurance] GBM,False,False,8
+uslapseagent-7021b667ce68,1,[Insurance] TabPFNClient (default),0.0555181416323019,6.505626916885376,41.104203939437866,roc_auc,binary,0.057326616740197,config,default,[Insurance] TabPFNClient,False,False,8
+uslapseagent-7021b667ce68,1,[Insurance] TabPFNClient-balanced (default),0.0555181416323018,11.187306880950928,3.6530439853668217,roc_auc,binary,0.057326616740197,config,custom,custom,False,True,8
+uslapseagent-7021b667ce68,1,[Insurance] XGB (default),0.0559043126551359,2.422178030014038,0.0184400081634521,roc_auc,binary,0.0539884019822292,config,default,[Insurance] XGB,False,False,8
+uslapseagent-7021b667ce68,2,[Insurance] CAT (default),0.0590499365684653,11.471153259277344,0.0077950954437255,roc_auc,binary,0.0531604134999197,config,default,[Insurance] CAT,False,False,8
+uslapseagent-7021b667ce68,2,[Insurance] GBM (default),0.0608007953053244,2.609011173248291,0.0261831283569335,roc_auc,binary,0.0546147999851702,config,default,[Insurance] GBM,False,False,8
+uslapseagent-7021b667ce68,2,[Insurance] TabPFNClient (default),0.0611003949324013,8.30538010597229,4.273533821105957,roc_auc,binary,0.0537049395074086,config,default,[Insurance] TabPFNClient,False,False,8
+uslapseagent-7021b667ce68,2,[Insurance] TabPFNClient-balanced (default),0.0611003949324013,7.086054801940918,3.668355941772461,roc_auc,binary,0.0537049395074086,config,custom,custom,False,True,8
+uslapseagent-7021b667ce68,2,[Insurance] XGB (default),0.0612751098614398,0.9951298236846924,0.014542818069458,roc_auc,binary,0.0534956252548846,config,default,[Insurance] XGB,False,False,8
+uslapseagent-7021b667ce68,3,[Insurance] CAT (default),0.0595471625404586,17.637967824935913,0.0086870193481445,roc_auc,binary,0.0465936615627973,config,default,[Insurance] CAT,False,False,8
+uslapseagent-7021b667ce68,3,[Insurance] GBM (default),0.061423112635165,3.331860065460205,0.0250697135925292,roc_auc,binary,0.0492019797575353,config,default,[Insurance] GBM,False,False,8
+uslapseagent-7021b667ce68,3,[Insurance] TabPFNClient (default),0.0625969263555096,8.26724100112915,4.077406167984009,roc_auc,binary,0.0490196987110568,config,default,[Insurance] TabPFNClient,False,False,8
+uslapseagent-7021b667ce68,3,[Insurance] TabPFNClient-balanced (default),0.0625969263555096,6.638838052749634,4.07062292098999,roc_auc,binary,0.0490196987110568,config,custom,custom,False,True,8
+uslapseagent-7021b667ce68,3,[Insurance] XGB (default),0.0597865258081957,1.3688478469848633,0.0153899192810058,roc_auc,binary,0.0484357814604727,config,default,[Insurance] XGB,False,False,8
+uslapseagent-7021b667ce68,4,[Insurance] CAT (default),0.0533464110226569,9.418413162231444,0.0078299045562744,roc_auc,binary,0.0587609214152423,config,default,[Insurance] CAT,False,False,8
+uslapseagent-7021b667ce68,4,[Insurance] GBM (default),0.0541886036619179,3.1779370307922363,0.0303969383239746,roc_auc,binary,0.0589895451006561,config,default,[Insurance] GBM,False,False,8
+uslapseagent-7021b667ce68,4,[Insurance] TabPFNClient (default),0.0539533833388818,7.636428117752075,3.862856864929199,roc_auc,binary,0.0571026273186766,config,default,[Insurance] TabPFNClient,False,False,8
+uslapseagent-7021b667ce68,4,[Insurance] TabPFNClient-balanced (default),0.0539533833388818,6.661417007446289,3.680544137954712,roc_auc,binary,0.0571026273186766,config,custom,custom,False,True,8
+uslapseagent-7021b667ce68,4,[Insurance] XGB (default),0.0535520123828289,1.5494589805603027,0.01373291015625,roc_auc,binary,0.0591100359618878,config,default,[Insurance] XGB,False,False,8
