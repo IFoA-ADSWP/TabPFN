@@ -11,16 +11,13 @@ Usage:
     python scripts/run_tabarena_insurance_benchmark.py
 
 What it does:
-    Wraps 4 classification + 3 regression insurance datasets from data/raw/
+    Wraps 6 classification + 3 regression insurance datasets from data/raw/
     as TabArena UserTasks, runs 10 models across 3 families, and outputs
     a leaderboard table comparing them.
 
-    Two benchmark tiers:
-        Full datasets  (7) → TabPFN (hosted API), tree-based, statistical
-        Small subsets (1K) → + TabFM (PyTorch on CPU)
-
-    Datasets:   eudirectlapse, coil2000, ausprivauto0405, freMTPL2freq_binary  (class)
-                freMTPL2freq, eudirectlapse-premium, ausprivauto0405-vehvalue  (reg)
+    Datasets:   uslapseagent, coil2000, ausprivauto0405, bemtpl97, bemtpl16,
+                norauto  (class)
+                ausautoBI8999, ausprivauto0405-vehvalue, bemtpl97-amount  (reg)
 
     Models:
         Foundational  -> TabPFN (via tabpfn-client hosted API)   ← no GPU needed
@@ -67,11 +64,11 @@ TASK_CACHE_DIR = HERE / "task_cache" / RUN_NAME
 # Dataset definitions — full
 # ---------------------------------------------------------------------------
 CLASSIFICATION_DATASETS = {
-    "eudirectlapse": {
-        "file": "eudirectlapse.csv",
-        "target": "lapse",
+    "uslapseagent": {
+        "file": "uslapseagent.csv",
+        "target": "surrender",
         "n_splits": 5,
-        "desc": "EU direct insurance lapse prediction, 23K rows, 12.8% positive",
+        "desc": "US life insurance lapse, 29K rows, 37.9% positive",
     },
     "coil2000": {
         "file": "coil2000.csv",
@@ -85,32 +82,44 @@ CLASSIFICATION_DATASETS = {
         "n_splits": 5,
         "desc": "Australian vehicle insurance claim occurrence, 68K rows, 6.8% positive",
     },
-    "freMTPL2freq_binary": {
-        "file": "freMTPL2freq_binary.csv",
-        "target": "ClaimIndicator",
+    "bemtl97": {
+        "file": "bemtl97.csv",
+        "target": "claim",
         "n_splits": 5,
-        "desc": "French motor TPL (binarised), 50K rows, 5.0% positive",
+        "desc": "Belgian motor TPL 1997, 163K rows, 11.2% positive",
+    },
+    "bemtl16": {
+        "file": "bemtl16.csv",
+        "target": "number_of_liability_claims",
+        "n_splits": 5,
+        "desc": "Belgian motor TPL 2016 panel (deduped), 59K rows, 36.0% positive",
+    },
+    "norauto": {
+        "file": "norauto.csv",
+        "target": "NbClaim",
+        "n_splits": 5,
+        "desc": "Norwegian auto claims (binarised), 184K rows, 4.6% positive",
     },
 }
 
 REGRESSION_DATASETS = {
-    "freMTPL2freq": {
-        "file": "freMTPL2freq.csv",
-        "target": "ClaimNb",
+    "ausautoBI8999": {
+        "file": "ausautoBI8999.csv",
+        "target": "AggClaim",
         "n_splits": 3,
-        "desc": "Claim frequency regression, 678K rows, Poisson target",
-    },
-    "eudirectlapse_premium": {
-        "file": "eudirectlapse.csv",
-        "target": "prem_pure",
-        "n_splits": 3,
-        "desc": "Pure premium regression, 23K rows, continuous target",
+        "desc": "Australian auto BI severity, 22K rows, log target",
     },
     "ausprivauto0405_vehvalue": {
         "file": "ausprivauto0405.csv",
         "target": "VehValue",
         "n_splits": 3,
         "desc": "Vehicle value regression, 68K rows, continuous target",
+    },
+    "bemtl97_amount": {
+        "file": "bemtl97.csv",
+        "target": "amount",
+        "n_splits": 3,
+        "desc": "Belgian motor TPL 1997 severity, 163K rows, log1p zero-inflated target",
     },
 }
 
@@ -378,71 +387,87 @@ if __name__ == "__main__":
 
     # ---- 1. Build full-size datasets ----
     print("Building classification tasks...")
-    full_tasks, full_meta = [], []
+    cls_tasks, cls_meta = [], []
     for name, info in CLASSIFICATION_DATASETS.items():
         task, meta = make_classification_task(name, info, TASK_CACHE_DIR)
-        full_tasks.append(task)
-        full_meta.append(meta)
+        cls_tasks.append(task)
+        cls_meta.append(meta)
         print(f"  ✓ {name} ({info['desc']})")
 
     print("Building regression tasks...")
+    reg_tasks, reg_meta = [], []
     for name, info in REGRESSION_DATASETS.items():
         task, meta = make_regression_task(name, info, TASK_CACHE_DIR)
-        full_tasks.append(task)
-        full_meta.append(meta)
+        reg_tasks.append(task)
+        reg_meta.append(meta)
         print(f"  ✓ {name} ({info['desc']})")
 
-    # ---- 2. Build 1K-row subsets for TabFM ----
-    print("Building 1K-row subsets for TabFM...")
+    # ---- 2. Skip 1K-row TabFM subsets (TabFM dropped, see models list) ----
     tabfm_tasks, tabfm_meta = [], []
-    for name, info in TABFM_SMALL_DATASETS.items():
-        task, meta = make_tabfm_task(name, info, TASK_CACHE_DIR)
-        tabfm_tasks.append(task)
-        tabfm_meta.append(meta)
-        print(f"  ✓ {name} ({info['desc']})")
 
-    all_tasks = full_tasks + tabfm_tasks
-    all_meta = full_meta + tabfm_meta
+    all_tasks = cls_tasks + reg_tasks + tabfm_tasks
+    all_meta = cls_meta + reg_meta + tabfm_meta
     task_collection = TaskMetadataCollection.from_source(all_meta)
 
     for task, meta in zip(all_tasks, all_meta):
         task.with_task_metadata(meta).load().validate_metadata()
 
     # ---- 3. Define models ----
-    experiments = TabArenaV0pt1ExperimentBundle(
-        models=[
-            # --- Foundation (hosted API, no GPU) ---
-            (TabPFNClientModel.config_generator(), 0),
-            # --- Foundation (PyTorch, small subsets only) ---
-            ("TabFM", 0),
-            # --- Tree-based (registry, all CPU) ---
-            ("LightGBM", 0, {"device_type": "cpu"}),
-            ("XGBoost", 0),
-            ("CatBoost", 0),
-            ("RandomForest", 0),
-            # --- Statistical (custom GLMs + registry LR, all CPU) ---
-            (LogisticGlmModel.config_generator(), 0),
-            (PoissonGlmModel.config_generator(), 0),
-            (TweedieGlmModel.config_generator(), 0),
-            ("Linear", 0),
-        ],
+    # Split by problem type: the bundle force-fits every model on every task, but the
+    # GLMs are family-specific (Logistic = binary, Poisson/Tweedie = regression) and
+    # autogluon refuses to fit them on mismatched tasks (aborts the whole run).
+    common_models = [
+        # --- Foundation (hosted API, no GPU) ---
+        (TabPFNClientModel.config_generator(), 0),
+        # ponytail: TabFM dropped — 6.1GB checkpoint on an 8GB Mac is
+        # OOM-killed every time. Re-add on a GPU box (needs the 1K subsets).
+        # --- Tree-based (registry, all CPU) ---
+        ("LightGBM", 0, {"device_type": "cpu"}),
+        ("XGBoost", 0),
+        ("CatBoost", 0),
+        ("RandomForest", 0),
+    ]
+    classification_models = common_models + [
+        (LogisticGlmModel.config_generator(), 0),
+        ("Linear", 0),
+    ]
+    regression_models = common_models + [
+        (PoissonGlmModel.config_generator(), 0),
+        (TweedieGlmModel.config_generator(), 0),
+        ("Linear", 0),
+    ]
+    bundle_kwargs = dict(
         # ponytail: holdout = no bagging (1 fit per model per split). The default
         # 8-bag folds would be hundreds of fits across 7 datasets on an 8-core M1;
         # point estimates for this first full pass, re-enable bagging on GPU.
         holdout_experiments=True,
-    ).build_experiments(num_gpus=0)
+    )
 
     # ---- 4. Run benchmark ----
+    # register=False on each panel: register() scopes the context's collection to the
+    # just-run tasks, which would empty the regression panel after classification ran.
+    # Collect all results, then one register() for both panels before compare().
     context = AbstractArenaContext(task_metadata=task_collection, methods=[])
 
-    print(f"\nRunning {len(experiments)} experiments across {len(all_tasks)} datasets...")
-    context.build_and_run_jobs(
-        experiments,
-        expname=RESULTS_DIR,
-        user_tasks=all_tasks,
-        new_result_prefix="[Insurance] ",
-        debug_mode=True,
-    )
+    all_results: list[dict] = []
+    for panel, problem_types, panel_tasks in [
+        (classification_models, ["binary", "multiclass"], cls_tasks),
+        (regression_models, ["regression"], reg_tasks),
+    ]:
+        experiments = TabArenaV0pt1ExperimentBundle(models=panel, **bundle_kwargs).build_experiments(num_gpus=0)
+        print(f"\nRunning {len(experiments)} experiments on {problem_types} tasks...")
+        results = context.build_and_run_jobs(
+            experiments,
+            expname=RESULTS_DIR,
+            user_tasks=panel_tasks,
+            register=False,
+            new_result_prefix="[Insurance] ",
+            debug_mode=True,
+            build_kwargs={"problem_types": problem_types},
+        )
+        all_results.extend(results)
+
+    context.register(all_results, new_result_prefix="[Insurance] ")
 
     # ---- 5. Output leaderboard ----
     leaderboard = context.compare(output_dir=EVAL_DIR)
