@@ -56,7 +56,6 @@ def make_bemtl16(df: pd.DataFrame) -> tuple[pd.DataFrame, list[str]]:
     keep = ["policy_year", "exposure", "insured_birth_year", "vehicle_age",
             "policy_holder_age", "driver_license_age", "vehicle_brand",
             "vehicle_model", "mileage", "vehicle_power", "catalog_value",
-            "number_of_bodily_injury_liability_claims",
             "claim_responsibility_rate", "driving_training_label",
             "number_of_liability_claims"]
     cats = ["vehicle_brand", "vehicle_model", "driving_training_label"]
@@ -79,7 +78,7 @@ def make_ausauto(df: pd.DataFrame) -> tuple[pd.DataFrame, list[str]]:
 
 
 def make_norauto(df: pd.DataFrame) -> tuple[pd.DataFrame, list[str]]:
-    keep = ["Male", "Young", "DistLimit", "GeoRegion", "Expo", "ClaimAmount", "NbClaim"]
+    keep = ["Male", "Young", "DistLimit", "GeoRegion", "Expo", "NbClaim"]
     cats = ["DistLimit", "GeoRegion"]
     df = df[keep].copy()
     # Binarise claim count -> has-claim (4.6% positive)
