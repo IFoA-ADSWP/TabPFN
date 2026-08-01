@@ -1,7 +1,7 @@
 # TabPFN vs GBDT Baselines on Insurance Datasets, and Domain Fine-Tuning Effectiveness
 
 Technical research report — engineering/data-science audience.
-Branch: `feat/tabarena-benchmark`. Date: 2026-08-01.
+Branch: `feat/tabarena-benchmark`. Date: 2026-08-01. Updated: 2026-08-02 (§11).
 
 ## 1. Objective
 
@@ -197,10 +197,74 @@ leakage:
   100K+ row tasks; (d) severity-specific transforms in the TabPFN arm. Without at least (a)
   or (b), the verdict stands.
 
+## 11. Addendum — Imbalance Pilot and Calibration Re-Score (2026-08-02)
+
+Follow-up to the v1 benchmark (sections 1–10). Does not rewrite the v1 conclusions; it
+qualifies the aggregate verdict. Evidence added by commits f1d7cc4 and bb7ab5c.
+
+### 11.1 Hypothesis and pilot
+
+Prior working hypothesis: TabPFN's losses to GBDTs are partly an **imbalance-handling
+deficit** — GBDTs get class-weight handling "for free" while TabPFN defaults to the raw
+prior. Pilot: `TabPFNClassifier(balance_probabilities=True, n_estimators=8)` vs v1 default
+on the two most informative binary tasks, same folds as v1 (`coil2000`, 6% positive;
+`uslapseagent`, 38% positive). Harness: `scripts/run_tabarena_insurance_imbalance_pilot.py`;
+results: `scripts/eval/insurance_benchmark_v1/focused_imbalance_results.csv`.
+
+### 11.2 Null on 1−AUC, and why
+
+`balance_probabilities=True` produced **1−AUC identical to default to ≤1e-16 on every fold**
+of both datasets (exact equality to float64 precision in the CSV, e.g. 0.215550653050653 both
+arms, coil2000 fold 0). Root cause: **ROC-AUC is rank-invariant to monotone probability
+transforms**, and `balance_probabilities` is a monotone calibration rescale. The v1
+benchmark metric is therefore **structurally blind to the lever** — the pilot could never
+have moved 1−AUC. Testing the imbalance hypothesis on 1−AUC is a measurement dead end.
+
+### 11.3 Re-score on insurance-native metrics
+
+Same folds re-scored on log loss + Brier — the metrics an insurer actually pays on
+(`scripts/eval/insurance_benchmark_v1/rescore_focused_imbalance_logloss.py` →
+`focused_imbalance_logloss.csv`). Mean over 5 folds, lower is better:
+
+| dataset | method | log_loss | brier |
+| --- | --- | ---: | ---: |
+| coil2000 (6% pos) | TabPFN default | **0.2008** | **0.0528** |
+| coil2000 | TabPFN balanced | 0.4716 | 0.1572 |
+| coil2000 | CAT | 0.2032 | 0.0531 |
+| uslapseagent (38% pos) | TabPFN default | 0.2536 | 0.0830 |
+| uslapseagent | TabPFN balanced | 0.2669 | 0.0869 |
+| uslapseagent | CAT | **0.2516** | **0.0822** |
+
+### 11.4 The lever works in the wrong direction
+
+`balance_probabilities=True` **actively hurts calibration**: it rescales predictions toward
+a 50/50 prior, inflating mean predicted probability on 6%-positive coil2000 from 0.047 to
+0.327 (base rate 0.06 — roughly a 5× overstatement of purchase risk). It is worse than the
+v1 default on **both log loss and Brier in all 5 folds, both datasets**. The imbalance
+hypothesis is disproven for insurance data: imbalance handling is not what separates TabPFN
+from GBDTs on these tasks, and the exposed lever moves in the wrong direction.
+
+### 11.5 Corrected calibration verdict (nuanced, not reversed)
+
+- **v1-default TabPFN is near-best on log loss**: best on coil2000 (0.2008 vs CAT 0.2032),
+  and 0.002 off CAT on uslapseagent (0.2536 vs 0.2516).
+- The v1 "TabPFN loses" headline (§4 tally) was **partly an artifact of ranking on 1−AUC**,
+  which discards all calibration information. On decision-relevant probabilities TabPFN holds
+  its own on these two tasks.
+- The verdict is **qualified, not reversed**: §8 still stands — not clearly production-worthy
+  on large portfolios (context ceiling + 100–1000× inference cost, §4.2) — but the
+  "TabPFN cannot compete on insurance probabilities" reading of the v1 results is dropped.
+- Only remaining lever likely to move the aggregate verdict: HPO-enabled TabPFN inside the
+  harness (§8(a)). Imbalance/flagship config levers do not.
+
 ## 9. Source Workbooks
 
 - `scripts/run_tabarena_insurance_benchmark.py` — benchmark runner (task registry, target
   definitions, feature handling at line 184).
+- `scripts/run_tabarena_insurance_imbalance_pilot.py` — imbalance pilot (coil2000 +
+  uslapseagent, `balance_probabilities` vs default; §11).
+- `scripts/eval/insurance_benchmark_v1/rescore_focused_imbalance_logloss.py` — log-loss /
+  Brier re-score of pilot folds (§11.3).
 - `scripts/prepare_insurance_datasets.py` — dataset prep (`make_bemtl97` at line 43).
 - `outputs/current/logs/domain_finetune_logbook.md` — domain fine-tune runs and
   interpretation blocks (protocol runs 2026-04-02).
@@ -221,3 +285,7 @@ leakage:
   trials (§5.2).
 - `data/raw/bemtl97.csv` — leak inspection (§6; 163,212 rows, `claim`/`nclaims`/`amount`
   collinearity check).
+- `scripts/eval/insurance_benchmark_v1/focused_imbalance_results.csv` — imbalance pilot,
+  per-fold 1−AUC (null result; §11.2).
+- `scripts/eval/insurance_benchmark_v1/focused_imbalance_logloss.csv` — per-fold log-loss /
+  Brier re-score (§11.3).
