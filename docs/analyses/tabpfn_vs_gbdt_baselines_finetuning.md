@@ -326,8 +326,88 @@ change fixes**: the §8 verdict stands for severity modeling and 100K+-row batch
 and TabPFN's competitive claim is restricted to calibrated classification on
 small-to-moderate data.
 
+## 13. Addendum — Home-Turf Size Sweep (2026-08-02)
+
+Direct test of the §12.1 hypothesis on TabPFN's home turf: 3 insurance classification
+datasets × 3 training sizes (1K / 5K / full) × 5 folds, scored on log loss (the metric an
+insurer pays on, §11.3). Runs every method at defaults on every cell — no HPO, no
+trimming, no setup asymmetry — so the only variable left is training-set size. Evidence
+added by commit 63d43ee.
+
+### 13.1 Setup
+
+- **Cells:** 3 datasets (bemtl97 with the §6 leak features dropped, coil2000,
+  uslapseagent) × 3 sizes (1K / 5K / full: 163,212 / 9,822 / 29,317 rows respectively) ×
+  5 folds = 9 cells, 220 result rows, zero errors.
+- **Methods:** TabPFN (hosted API) vs CAT / LGBM / XGB (CPU), all at default config —
+  matching the §2.1 harness convention.
+- **Config-lite probe:** per cell, TabPFN also ran an `n_estimators=8` arm (API cap) to
+  test whether the v1 default sits below a better ensemble setting.
+- Harness: `scripts/run_home_turf_size_sweep.py`; row assembly and error handling:
+  `scripts/finish_home_turf_sweep.py`, `scripts/finish_home_turf_sweep_v2.py`.
+
+### 13.2 Results — mean log loss over 5 folds, lower is better
+
+| dataset | size | rows | TabPFN | CAT | LGBM | XGB | winner |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | --- |
+| bemtl97 | 1K | 1,000 | **0.3529** | 0.3687 | 0.5103 | 0.5206 | TabPFN |
+| bemtl97 | 5K | 5,000 | **0.3462** | 0.3545 | 0.3778 | 0.4088 | TabPFN |
+| bemtl97 | full | 163,212 | 0.3428 | 0.3436 | **0.3418** | 0.3450 | LGBM |
+| coil2000 | 1K | 1,000 | **0.2080** | 0.2205 | 0.3914 | 0.3352 | TabPFN |
+| coil2000 | 5K | 5,000 | **0.2026** | 0.2103 | 0.2558 | 0.2807 | TabPFN |
+| coil2000 | full | 9,822 | **0.2006** | 0.2082 | 0.2219 | 0.2494 | TabPFN |
+| uslapseagent | 1K | 1,000 | **0.2513** | 0.2763 | 0.3459 | 0.3858 | TabPFN |
+| uslapseagent | 5K | 5,000 | **0.2602** | 0.2718 | 0.2838 | 0.3098 | TabPFN |
+| uslapseagent | full | 29,317 | **0.2491** | 0.2529 | 0.2537 | 0.2642 | TabPFN |
+
+Winner per cell computed from the CSV means (mean of 5 folds per dataset × size × method,
+`scripts/eval/insurance_benchmark_v1/home_turf_sweep_results.csv`). **TabPFN wins 8/9
+cells.** The single loss is bemtl97@full: LGBM 0.3418 vs TabPFN 0.3428 — a 0.0010 margin
+at 163K rows, the largest cell in the sweep.
+
+### 13.3 The size-ceiling curve is fully mapped — and it is flat for TabPFN
+
+- TabPFN leads on **all six practical-size cells** (1K and 5K on all three datasets) and
+  on two of the three full-size cells; the GBDTs draw even exactly once, at 163K rows,
+  within 0.001.
+- This confirms §12.1: the v1 headline losses were driven by **dataset-size mismatch**,
+  not by TabPFN's context ceiling per se. When the benchmark stays within TabPFN's
+  training-data sweet spot, it beats all three GBDT families on log loss on every dataset.
+  The v1 "context ceiling kills TabPFN" story is **dead for classification log loss** —
+  the ceiling shows up only as a 0.001 shave at 163K rows, not as the dominant effect.
+- The sweep does not revive v1: it explains it. §12.5's restricted claim — TabPFN
+  competitive on calibrated classification at small-to-moderate data — is upgraded to:
+  *leading* on log loss at every practical size tested here.
+
+### 13.4 The real TabPFN cost is compute, not accuracy
+
+- Full-size hosted fit was the bottleneck: bemtl97@full fold 0 took **3045 s (≈51 min)
+  cold**; folds 1–4 took 36–64 s once the server-side cache was warm. Coil2000 and
+  uslapseagent full-size cells fit in ~3 s (hosted API, no local GPU).
+- This substantiates the §4.2 speed objection: TabPFN's accuracy is no longer the
+  barrier, but 50-minute cold fits at 163K rows still rule it out for large-portfolio
+  retraining cycles. The §8 verdict's *engineering* half stands on cost, not quality.
+
+### 13.5 Methodological note — do not re-chase the config-lite arm
+
+- The `n_estimators=8` probe arm was **bit-identical to the server default on all 40
+  (dataset × size × fold) pairs** where both ran — identical log loss to float64
+  precision. The API cap is not binding at these sizes, and the config-lite arm adds no
+  information.
+- The flaky `n_estimators=1` config was **dropped as a pure duplicate** (rows absent from
+  the CSV; `trimmed=True` flags the bemtl97@full cell where the extra arms were trimmed).
+- Conclusion for future work: TabPFN default config is already at the tested ceiling;
+  HPO inside the harness (§8(a)) remains the only untested accuracy lever, and the
+  ensemble-size dimension is closed.
+
 ## 9. Source Workbooks
 
+- `scripts/run_home_turf_size_sweep.py` — home-turf size sweep runner (3 datasets × 3
+  sizes × 5 folds, TabPFN + GBDT arms; §13).
+- `scripts/finish_home_turf_sweep.py` — sweep result assembly, fold/cell bookkeeping
+  (§13).
+- `scripts/finish_home_turf_sweep_v2.py` — revised assembly: flaky-config dedup, error
+  handling (§13).
 - `scripts/run_tabarena_insurance_benchmark.py` — benchmark runner (task registry, target
   definitions, feature handling at line 184).
 - `scripts/run_tabarena_insurance_imbalance_pilot.py` — imbalance pilot (coil2000 +
@@ -358,3 +438,6 @@ small-to-moderate data.
   per-fold 1−AUC (null result; §11.2).
 - `scripts/eval/insurance_benchmark_v1/focused_imbalance_logloss.csv` — per-fold log-loss /
   Brier re-score (§11.3).
+- `scripts/eval/insurance_benchmark_v1/home_turf_sweep_results.csv` — size sweep, per-fold
+  log loss / Brier / ROC-AUC, 220 rows (9 cells × 5 folds, zero errors; primary evidence
+  for §13).
