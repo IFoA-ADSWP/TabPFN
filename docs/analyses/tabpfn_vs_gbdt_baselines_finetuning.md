@@ -1,7 +1,7 @@
 # TabPFN vs GBDT Baselines on Insurance Datasets, and Domain Fine-Tuning Effectiveness
 
 Technical research report — engineering/data-science audience.
-Branch: `feat/tabarena-benchmark`. Date: 2026-08-01. Updated: 2026-08-02 (§11, §12, §13, §14).
+Branch: `feat/tabarena-benchmark`. Date: 2026-08-01. Updated: 2026-08-02 (§11, §12, §13, §14); 2026-08-03 (§14.6 norauto first extension).
 
 ## 1. Objective
 
@@ -550,10 +550,12 @@ parsimony again closing but not removing the gap.
   dominated on bemtl97, LGBM/XGBoost on coil2000, XGBoost/RF on uslapseagent — beaten on
   power by TabPFN and on parsimony by the GLMs. Mid-complexity models must earn their
   place by beating the GLMs by more than SE, and mostly they do not.
-- **Where to look next: `norauto` (184K rows)** — the designated first extension per D5
-  and the strongest test of whether TabPFN drops off the frontier at scale (the §12.1
-  size-ceiling hypothesis applied to the frontier axis). Priority beyond `norauto` is
-  open (spec §8). Regression/severity frontiers are deferred to Phase 2 (D4) with an
+- **`norauto` (184K rows) is done (§14.6)** — the designated first extension per D5.
+  LGBM takes the power edge at scale (0.17518 vs TabPFN 0.17619) and TabPFN survives the
+  frontier only on the beyond-SE tie — the §12.1 size-ceiling hypothesis holds on the
+  frontier axis. **Where to look next: the post-`norauto` dataset priority (spec §8)** —
+  `ausprivauto0405`/`bemtl16` are the natural candidates, not scheduled.
+  Regression/severity frontiers are deferred to Phase 2 (D4) with an
   RMSE/Poisson-deviance axis.
 
 ### 14.5 Files & reproducibility
@@ -563,10 +565,11 @@ parsimony again closing but not removing the gap.
 - **Run command:** `source /tmp/tabarena/.venv-ta/bin/activate && python
   scripts/eval/insurance_benchmark_v1/run_frontier_benchmark.py`
 - **Outputs** (same dir as the script): `frontier_results_bemtl97.csv`,
-  `frontier_results_coil2000.csv`, `frontier_results_uslapseagent.csv` (method | mean | se
-  | n_params | on-frontier), `frontier_plot_{dataset}.png` (x = log10(n_params), y = mean
-  log loss, ± SE bars, frontier red / dominated grey), `frontier_benchmark_run.log`
-  (per-fold timings and log loss).
+  `frontier_results_coil2000.csv`, `frontier_results_uslapseagent.csv`,
+  `frontier_results_norauto.csv` (method | mean | se | n_params | on-frontier),
+  `frontier_plot_{dataset}.png` (x = log10(n_params), y = mean
+  log loss, ± SE bars, frontier red / dominated grey), `frontier_benchmark_run.log`,
+  `frontier_norauto_run.log` (per-fold timings and log loss).
 - **Inputs:** `data/raw/{bemtl97,coil2000,uslapseagent}.csv`;
   `home_turf_sweep_results.csv` (reused TabPFN/CAT/LGBM/XGB power, identical folds);
   `method_info.csv` (recorded defaults for the D2 leaf-count refits).
@@ -574,6 +577,37 @@ parsimony again closing but not removing the gap.
   method, no NaNs, unique methods, ≥1 frontier point, no train/test overlap within folds.
 - Regression/severity frontier deliberately **not** in this pass (D4, classification-only
   v1); Phase 2 adds the RMSE/Poisson-deviance axis.
+
+### 14.6 First extension — norauto (184K rows)
+
+`norauto` (184,000 rows; 183,999 after dropna, 4.6% positive, target `NbClaim`, 5
+features — the §6-style leak-fix is already baked into the prepared file, d170afc).
+All 9 methods fit **fresh**: the home-turf sweep did not cover norauto, so there was no
+reusable power (`run_frontier_benchmark.py` falls back to fresh fits per commit e93f3c0;
+TabPFN via the hosted API, 5 folds, 504 s total).
+
+| method | mean log loss | ± SE | n_params | on frontier |
+| --- | ---: | ---: | ---: | --- |
+| lgbm | **0.17518** | 0.00047 | 3,100 | yes |
+| tabpfn | 0.17619 | 0.00061 | 10,000,000 | yes |
+| cat | 0.17676 | 0.00053 | 62,540 | no |
+| xgb | 0.17739 | 0.00055 | 4,517 | no |
+| logisticglm | 0.17846 | 0.00046 | 6 | yes |
+| lr | 0.17846 | 0.00046 | 6 | yes |
+| poissonglm | 0.18131 | 0.00035 | 6 | yes |
+| tweedieglm | 0.18264 | 0.00159 | 6 | yes |
+| rf | 0.73544 | 0.00929 | 593,042 | no |
+
+Frontier = 6: LGBM, TabPFN, and all four 6-param GLMs (logisticglm/lr tied at 0.17846).
+CatBoost and XGBoost are dominated — beaten on power by LGBM/TabPFN and on parsimony by
+the GLMs; RF is catastrophic at scale (0.73544 ± 0.00929, 593,042 params), dominated on
+both axes, consistent with §13 and §14.3. **D5 verdict — the size-ceiling hypothesis
+transfers to the frontier axis:** LGBM takes the power edge at scale (0.17518 vs TabPFN
+0.17619), and TabPFN survives the frontier **only** on the beyond-SE tie
+(`lgbm mean+SE` = 0.17565 vs `tabpfn mean−SE` = 0.17558) — the same fold-noise
+membership as bemtl97 at 163K rows (§14.3). Files:
+`scripts/eval/insurance_benchmark_v1/frontier_results_norauto.csv`,
+`frontier_plot_norauto.png`.
 
 ## 9. Source Workbooks
 
@@ -619,10 +653,12 @@ parsimony again closing but not removing the gap.
 - `scripts/eval/insurance_benchmark_v1/home_turf_sweep_results.csv` — size sweep, per-fold
   log loss / Brier / ROC-AUC, 220 rows (9 cells × 5 folds, zero errors; primary evidence
   for §13).
-- `scripts/eval/insurance_benchmark_v1/frontier_results_{bemtl97,coil2000,uslapseagent}.csv`
+- `scripts/eval/insurance_benchmark_v1/frontier_results_{bemtl97,coil2000,uslapseagent,norauto}.csv`
   — frontier benchmark, per-method mean log loss ± SE, n_params, on-frontier flag
-  (primary evidence for §14.2).
-- `scripts/eval/insurance_benchmark_v1/frontier_plot_{bemtl97,coil2000,uslapseagent}.png`
-  — frontier plots, x = log10(n_params), y = mean log loss ± SE (§14.2).
+  (primary evidence for §14.2, §14.6).
+- `scripts/eval/insurance_benchmark_v1/frontier_plot_{bemtl97,coil2000,uslapseagent,norauto}.png`
+  — frontier plots, x = log10(n_params), y = mean log loss ± SE (§14.2, §14.6).
 - `scripts/eval/insurance_benchmark_v1/frontier_benchmark_run.log` — frontier run log,
   per-fold timings and log loss (§14.1).
+- `scripts/eval/insurance_benchmark_v1/frontier_norauto_run.log` — norauto run log,
+  per-fold timings and log loss (§14.6).
