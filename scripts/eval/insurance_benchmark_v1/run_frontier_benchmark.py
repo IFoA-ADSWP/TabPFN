@@ -7,6 +7,7 @@ home-turf sweep datasets per docs/analyses/insurance_frontier_benchmark_spec.md
   bemtl97       target=claim,    drop=["nclaims","amount"]  (leak-fixed)
   coil2000      target=CARAVAN,  drop=[]
   uslapseagent  target=surrender, drop=[]
+  norauto       target=NbClaim,  drop=[]                    (no sweep rows — fresh power)
 
 Each dataset is an INDEPENDENT frontier (separate table + plot, no cross-dataset
 Pareto comparison).
@@ -27,22 +28,28 @@ Pareto comparison).
 
 TabPFN/CAT/LGBM/XGB log-loss values are REUSED from home_turf_sweep_results.csv
 (identical splits — no re-running), filtered to dataset + full size
-(n_rows == len(X), n_estimators.isna()): 5 fold rows per method.
+(n_rows == len(X), n_estimators.isna()): 5 fold rows per method. Datasets with NO
+sweep rows (norauto) fall back to FRESH power on the same 5 folds: cat/lgbm/xgb fit
+locally at sweep defaults; TabPFN runs last via the hosted API with a retry loop
+(3 attempts, backoff 10s/60s/300s) so a hosted stall never blocks the fast results.
 
 Usage:
     source /tmp/tabarena/.venv-ta/bin/activate
-    python scripts/eval/insurance_benchmark_v1/run_frontier_benchmark.py
+    python scripts/eval/insurance_benchmark_v1/run_frontier_benchmark.py          # all datasets
+    python scripts/eval/insurance_benchmark_v1/run_frontier_benchmark.py coil2000 # subset, case-insensitive
 
 Outputs (same dir as this script), per dataset:
     frontier_results_<dataset>.csv   method | mean log loss | SE | n_params | on-frontier
     frontier_plot_<dataset>.png      x = log10(n_params), y = mean log loss, +/- SE bars,
                                      frontier red / dominated grey
 
-Self-check: per-dataset assert-based sanity checks (5 fold rows per reused method,
-no NaNs, unique methods, >=1 frontier point, no train/test overlap).
+Self-check: per-dataset assert-based sanity checks (5 fold rows per reused method —
+skipped when the sweep has no rows for that dataset — no NaNs, unique methods, >=1
+frontier point, no train/test overlap).
 """
 from __future__ import annotations
 
+import os
 import sys
 import time
 from pathlib import Path
@@ -54,12 +61,14 @@ HERE = Path(__file__).resolve().parent
 REPO = HERE.parent.parent.parent
 DATA_RAW = REPO / "data" / "raw"
 
-# D5 Option A: the three home-turf sweep datasets. Load configs identical to
-# scripts/run_home_turf_size_sweep.py (target + drops).
+# D5 Option A: the home-turf sweep datasets plus norauto. Load configs identical to
+# scripts/run_home_turf_size_sweep.py (target + drops); norauto.csv was leak-fixed
+# in d170afc (ClaimAmount dropped — do not re-derive) and has no sweep rows.
 DATASETS = [
     dict(name="bemtl97", file="bemtl97.csv", target="claim", drop=["nclaims", "amount"]),
     dict(name="coil2000", file="coil2000.csv", target="CARAVAN", drop=[]),
     dict(name="uslapseagent", file="uslapseagent.csv", target="surrender", drop=[]),
+    dict(name="norauto", file="norauto.csv", target="NbClaim", drop=[]),
 ]
 N_FOLDS = 5
 SWEEP_CSV = HERE / "home_turf_sweep_results.csv"
@@ -86,6 +95,25 @@ def load_Xy(ds: dict) -> tuple[np.ndarray, np.ndarray]:
         X[col] = X[col].astype("category").cat.codes.replace(-1, np.nan)
     X = X.fillna(0.0).astype(np.float32)
     return X.to_numpy(dtype=np.float32), y
+
+
+def _load_api_key() -> None:
+    """Mirror scripts/run_home_turf_size_sweep.py — env TABPFN_API_KEY, else the
+    first TABPFN_API_KEY= line from the candidate .env files."""
+    if os.environ.get("TABPFN_API_KEY"):
+        return
+    candidates = [
+        Path(os.environ.get("TABPFN_MAIN_CHECKOUT", "")) / ".env",
+        Path("/Users/Scott/Documents/Data Science/ADSWP/TabPFN-work-scott/.env"),
+        Path("~/.config/tabpfn/.env").expanduser(),
+    ]
+    for p in candidates:
+        if p and p.exists():
+            for line in p.read_text().splitlines():
+                if line.startswith("TABPFN_API_KEY="):
+                    os.environ["TABPFN_API_KEY"] = line.split("=", 1)[1].strip()
+                    return
+    raise RuntimeError("TABPFN_API_KEY not found (looked in %s)" % candidates)
 
 
 # ---------------------------------------------------------------------------
@@ -213,15 +241,34 @@ def run_dataset(ds: dict, out_csv: Path, out_png: Path) -> pd.DataFrame:
     skf = StratifiedKFold(n_splits=N_FOLDS, shuffle=True, random_state=42)
     folds = list(skf.split(X, y))
 
-    # ---- 1. Reused power: sweep CSV rows for <dataset>@full, default config only ----
+    # ---- 1. Power: reuse sweep CSV rows for <dataset>@full, default config only ----
+    # Datasets with NO sweep rows (norauto) fall back to FRESH CPU fits on the same
+    # 5 folds, same pattern as the D1 fast-method loop below. TabPFN is deferred to
+    # step 4a so a hosted-API stall never blocks the fast CPU results.
     sweep = pd.read_csv(SWEEP_CSV)
     sweep_full = sweep[(sweep.dataset == ds["name"]) & (sweep.n_rows == len(X)) & (sweep.n_estimators.isna())]
+    fresh = sweep_full.empty
     rows: list[dict] = []
-    for m in REUSED_METHODS:
+
+    def reuse_or_fresh(m: str) -> dict:
         r = sweep_full[sweep_full.method == m].sort_values("fold")
-        assert len(r) == N_FOLDS, f"sweep missing fold rows for {m}"
-        ll = r["log_loss"].to_numpy(dtype=float)
-        rows.append({"method": m, "mean": ll.mean(), "se": ll.std(ddof=1) / np.sqrt(len(ll))})
+        if len(r) == N_FOLDS:
+            ll = r["log_loss"].to_numpy(dtype=float)
+            return {"method": m, "mean": ll.mean(), "se": ll.std(ddof=1) / np.sqrt(len(ll))}
+        assert fresh, f"sweep missing fold rows for {m}"
+        maker = {"cat": make_cat, "lgbm": make_lgbm, "xgb": make_xgb}[m]
+        fold_ll = []
+        t1 = time.time()
+        for fold, (tr, te) in enumerate(folds):
+            model = maker()
+            model.fit(X[tr], y[tr])
+            fold_ll.append(log_loss(y[te], model.predict_proba(X[te])))
+            say(f"  {m} f{fold} ll={fold_ll[-1]:.4f} ({time.time() - t1:.0f}s)")
+        ll = np.array(fold_ll)
+        return {"method": m, "mean": ll.mean(), "se": ll.std(ddof=1) / np.sqrt(len(ll))}
+
+    for m in ("cat", "lgbm", "xgb"):
+        rows.append(reuse_or_fresh(m))
 
     # ---- 2. D1: fit GLMs/LR/RF on the same 5 folds (new compute) ----
     d1_makers = {
@@ -267,7 +314,43 @@ def run_dataset(ds: dict, out_csv: Path, out_png: Path) -> pd.DataFrame:
     d2_counts["rf"] = count_rf_leaves(rf)
     say(f"  count rf: {d2_counts['rf']} params ({time.time() - t1:.0f}s)")
 
-    # ---- 4. n_params for every method ----
+    # ---- 4a. TabPFN power: reuse the sweep row when present; otherwise FRESH hosted
+    # run — LAST, after every CPU method above has flushed, so a hosted stall never
+    # blocks the fast results from the run log ----
+    r = sweep_full[sweep_full.method == "tabpfn"].sort_values("fold")
+    if len(r) == N_FOLDS:
+        ll = r["log_loss"].to_numpy(dtype=float)
+        rows.append({"method": "tabpfn", "mean": ll.mean(), "se": ll.std(ddof=1) / np.sqrt(len(ll))})
+    else:
+        assert fresh, "sweep missing fold rows for tabpfn"
+        from tabpfn_client import TabPFNClassifier
+
+        _load_api_key()  # env or .env candidates, same as the sweep
+        fold_ll = []
+        t1 = time.time()
+        for fold, (tr, te) in enumerate(folds):
+            model = TabPFNClassifier(random_state=0)  # default n_estimators=None
+            # Hosted API is flaky (RemoteProtocolError/ConnectionError/httpx timeouts
+            # seen in the sweep log): up to 3 attempts, backoff 10s/60s/300s.
+            for attempt in range(1, 4):
+                try:
+                    model.fit(X[tr], y[tr])
+                    break
+                except Exception as e:
+                    wait = [10, 60, 300][attempt - 1]
+                    say(f"  tabpfn f{fold} fit attempt {attempt}/3 failed: {e!r}; retrying in {wait}s")
+                    time.sleep(wait)
+                    if attempt == 3:
+                        raise
+            pp = model.predict_proba(X[te])
+            if pp.ndim == 1 or pp.shape[1] == 1:  # single-class fallback (sweep pattern)
+                pp = np.column_stack([1 - pp, pp]) if pp.ndim == 1 else np.column_stack([1 - pp[:, 0], pp[:, 0]])
+            fold_ll.append(log_loss(y[te], pp))
+            say(f"  tabpfn f{fold} ll={fold_ll[-1]:.4f} ({time.time() - t1:.0f}s)")
+        ll = np.array(fold_ll)
+        rows.append({"method": "tabpfn", "mean": ll.mean(), "se": ll.std(ddof=1) / np.sqrt(len(ll))})
+
+    # ---- 5. n_params for every method ----
     glm_n = n_cols + 1  # post-encoding column count + 1 intercept (harness uses cat.codes)
     for r in rows:
         m = r["method"]
@@ -316,11 +399,14 @@ def run_dataset(ds: dict, out_csv: Path, out_png: Path) -> pd.DataFrame:
 
 def sanity_check(sweep_full: pd.DataFrame, folds: list[tuple[np.ndarray, np.ndarray]], table: pd.DataFrame, on_frontier: set) -> None:
     """Assert-based sanity checks, per repo convention (run at end of main)."""
-    # (a) sweep has exactly 5 non-NaN fold rows per reused method; split is a valid
-    # 5-fold partition of the full index set with no train/test overlap within a fold.
-    n = sweep_full[sweep_full.method == "lgbm"]["fold"].nunique()
-    assert n == N_FOLDS, f"expected {N_FOLDS} sweep folds, got {n}"
-    assert sweep_full["log_loss"].notna().all(), "sweep reused log-loss has NaNs"
+    # (a) when the sweep HAS rows for this dataset: exactly 5 non-NaN fold rows per
+    # reused method (skipped for fresh datasets like norauto, which have none).
+    if not sweep_full.empty:
+        n = sweep_full[sweep_full.method == "lgbm"]["fold"].nunique()
+        assert n == N_FOLDS, f"expected {N_FOLDS} sweep folds, got {n}"
+        assert sweep_full["log_loss"].notna().all(), "sweep reused log-loss has NaNs"
+    # split is a valid 5-fold partition of the full index set with no train/test
+    # overlap within a fold (checked for fresh and reused runs alike)
     n_total = sum(len(te) for _, te in folds)
     assert len(np.unique(np.concatenate([te for _, te in folds]))) == n_total, "test folds overlap"
     for tr, te in folds:
@@ -338,8 +424,12 @@ def sanity_check(sweep_full: pd.DataFrame, folds: list[tuple[np.ndarray, np.ndar
 # ---------------------------------------------------------------------------
 def main() -> None:
     t0 = time.time()
+    # CLI filter: dataset names from sys.argv[1:] (case-insensitive); empty = all.
+    wanted = {a.lower() for a in sys.argv[1:]} if len(sys.argv) > 1 else None
     for ds in DATASETS:
         name = ds["name"]
+        if wanted is not None and name.lower() not in wanted:
+            continue
         out_csv = HERE / f"frontier_results_{name}.csv"
         out_png = HERE / f"frontier_plot_{name}.png"
         print(f"\n{'=' * 70}\nDATASET {name}\n{'=' * 70}", flush=True)
