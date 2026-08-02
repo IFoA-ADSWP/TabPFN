@@ -1,7 +1,7 @@
 # TabPFN vs GBDT Baselines on Insurance Datasets, and Domain Fine-Tuning Effectiveness
 
 Technical research report — engineering/data-science audience.
-Branch: `feat/tabarena-benchmark`. Date: 2026-08-01. Updated: 2026-08-02 (§11, §12).
+Branch: `feat/tabarena-benchmark`. Date: 2026-08-01. Updated: 2026-08-02 (§11, §12, §13, §14).
 
 ## 1. Objective
 
@@ -400,10 +400,188 @@ at 163K rows, the largest cell in the sweep.
   HPO inside the harness (§8(a)) remains the only untested accuracy lever, and the
   ensemble-size dimension is closed.
 
+## 14. Addendum — Insurance Frontier Benchmark (2026-08-02)
+
+Pareto-efficiency analysis for issue #27 (repo IFoA-ADSWP/TabPFN): predictive power
+(log loss) vs parsimony (# params as a proxy for interpretability), per the agreed design
+spec `docs/analyses/insurance_frontier_benchmark_spec.md` (commit 037d215, settled
+decisions D1–D5). Each of the three home-turf datasets is an **independent frontier**
+(separate table + plot; no cross-dataset Pareto comparison). Implementation committed in
+`ed3e119` (script) with the spec's acceptance criteria 1–4 met; this addendum is
+deliverable 6.
+
+### 14.1 Setup
+
+- **Spec:** `docs/analyses/insurance_frontier_benchmark_spec.md` — authoritative reading
+  of issue #27; D1–D5 are settled, not re-derived (§14.3/14.4 check the spec's expected
+  results (a) and (b) against the run).
+- **D1/D2 combined pass, one script:** `scripts/eval/insurance_benchmark_v1/run_frontier_benchmark.py`
+  runs all three datasets, one pass each. D1 (Option B) re-runs LogisticGLM/LR,
+  TweedieGLM, PoissonGLM and RandomForest (the fast families whose v1 folds did not match
+  the sweep's splits); D2 (Option A) re-fits LightGBM/XGBoost/CatBoost at their recorded
+  defaults purely to count parameters. GBDT/RF param count = `n_estimators × mean leaves
+  per tree`; GLM/LR = post-encoding column count + 1 intercept (harness uses `cat.codes`
+  → raw column count); count inputs recorded in
+  `scripts/eval/insurance_benchmark_v1/method_info.csv`.
+- **Reused sweep power (no re-run):** TabPFN / CAT / LGBM / XGB log loss is taken as-is
+  from `scripts/eval/insurance_benchmark_v1/home_turf_sweep_results.csv` (§13), filtered
+  to full size (`n_rows == len(X)`, `n_estimators.isna()`) — the new run uses the same
+  splits, `StratifiedKFold(5, shuffle=True, random_state=42)`, so the D1 re-runs land on
+  the identical folds.
+- **New compute only:** GLMs/LR/RF power (5 folds) + leaf-count refits for all tree
+  families. The GLM/LR/RF pass is cheap even at 163K rows (LR/GLMs ~1–7 s/fold on
+  bemtl97; RF ~16–87 s/fold, per `frontier_benchmark_run.log`).
+- **D3 Pareto rule (Option B, beyond SE):** model A is dominated iff some model B with
+  strictly fewer params has `mean_B + SE_B < mean_A − SE_A`. Models within SE of each
+  other both stay on the frontier; ties on both axes keep both models on. Rationale per
+  spec §5: a point-estimate rule would let fold noise decide membership (bemtl97 LGBM
+  0.3418 vs TabPFN 0.3428 is within fold noise).
+- **TabPFN parameter count — settled non-decision (spec §5):** constant **10,000,000** per
+  dataset regardless of training size — the top-right anchor (max power, min parsimony).
+  It never changes frontier membership; the exact hosted-model figure is TBD from
+  PriorLabs/TabPFN docs and is flagged as constant regardless.
+- **Datasets:** bemtl97 (leak-fixed per §6: `claim` target, `nclaims`/`amount` dropped;
+  163,212 rows, pos-rate 11.2%), coil2000 (`CARAVAN`; 9,822 rows, pos-rate ≈6%),
+  uslapseagent (`surrender`; 29,317 rows). Note: the 184K-row dataset is `norauto` — the
+  designated first extension per D5, **not** part of this v1 run.
+
+### 14.2 Results — log loss mean ± SE over 5 folds, lower is better
+
+**bemtl97** (163,212 rows, `claim`, leak-fixed):
+
+| method | mean log loss | ± SE | n_params | on frontier |
+| --- | ---: | ---: | ---: | --- |
+| lgbm | **0.34177** | 0.00053 | 3,100 | yes |
+| lr | 0.34270 | 0.00040 | 11 | yes |
+| logisticglm | 0.34270 | 0.00040 | 11 | yes |
+| poissonglm | 0.34277 | 0.00040 | 11 | yes |
+| tabpfn | 0.34279 | 0.00057 | 10,000,000 | yes |
+| tweedieglm | 0.34280 | 0.00042 | 11 | yes |
+| cat | 0.34363 | 0.00053 | 63,546 | no |
+| xgb | 0.34503 | 0.00054 | 3,981 | no |
+| rf | 0.59530 | 0.01219 | 2,245,565 | no |
+
+**coil2000** (9,822 rows, `CARAVAN`):
+
+| method | mean log loss | ± SE | n_params | on frontier |
+| --- | ---: | ---: | ---: | --- |
+| tabpfn | **0.20059** | 0.00221 | 10,000,000 | yes |
+| lr | 0.20554 | 0.00187 | 86 | yes |
+| logisticglm | 0.20626 | 0.00188 | 86 | yes |
+| cat | 0.20823 | 0.00244 | 63,764 | yes |
+| poissonglm | 0.21093 | 0.00233 | 86 | yes |
+| tweedieglm | 0.21779 | 0.00260 | 86 | yes |
+| lgbm | 0.22193 | 0.00261 | 3,100 | no |
+| xgb | 0.24937 | 0.00354 | 2,719 | no |
+| rf | 0.47859 | 0.02993 | 71,763 | no |
+
+**uslapseagent** (29,317 rows, `surrender`):
+
+| method | mean log loss | ± SE | n_params | on frontier |
+| --- | ---: | ---: | ---: | --- |
+| tabpfn | **0.24909** | 0.00518 | 10,000,000 | yes |
+| cat | 0.25286 | 0.00459 | 63,394 | yes |
+| lgbm | 0.25367 | 0.00446 | 3,100 | yes |
+| xgb | 0.26419 | 0.00460 | 3,781 | no |
+| rf | 0.27141 | 0.00325 | 270,218 | no |
+| logisticglm | 0.27624 | 0.00506 | 11 | yes |
+| lr | 0.27660 | 0.00505 | 11 | yes |
+| poissonglm | 0.28584 | 0.00488 | 11 | yes |
+| tweedieglm | 0.28781 | 0.00593 | 11 | yes |
+
+Bold = best mean log loss per dataset (power winner). Frontier membership per the D3
+beyond-SE rule, reproduced from `frontier_results_<dataset>.csv` (the run's self-check
+asserts ≥1 frontier point per dataset).
+
+### 14.3 Narrative per dataset
+
+**bemtl97 — the spec's mid-complexity squeeze, confirmed.** The entire top of the table
+is a 0.001-wide cluster: LGBM 0.34177, all four GLM variants and LR 0.34270–0.34280,
+TabPFN 0.34279. LGBM's tiny edge puts it on the frontier; TabPFN and all six GLMs are on
+because no 11-param model beats anyone else beyond SE and LGBM does not beat TabPFN beyond
+SE (`0.34177+0.00053 = 0.34230` vs `0.34279−0.00057 = 0.34222` — within SE). This is
+exactly the fold-noise trap the D3 rule exists to avoid. **CatBoost (63,546 params) and
+XGBoost (3,981) are dominated** — beaten on power by LGBM/TabPFN *and* on parsimony by the
+GLMs: a clean case of the spec's expected result (a), a real "don't deploy this" signal.
+RandomForest is catastrophic (0.59530 ± 0.01219) — worst by a wide margin, dominated on
+both axes, consistent with §13's sweep pattern. On expected result (b): TabPFN's §13
+0.0010 lead over LGBM does **not** survive the parsimony constraint here — LGBM holds the
+power edge and the GLMs hold parsimony; TabPFN survives the frontier only on the
+beyond-SE tie.
+
+**coil2000 — TabPFN leads, GLMs hold the low-complexity end, CatBoost beats LightGBM.**
+TabPFN is the power winner (0.20059) and the top-right anchor. LR (0.20554) and
+LogisticGLM (0.20626) at just 86 params are within ~0.006 of TabPFN — the most
+interesting actuary trade-off on this dataset. CatBoost makes the frontier (0.20823, 63,764
+params) because it beats LGBM (0.22193) and XGBoost (0.24937) on power; LGBM and XGBoost
+are dominated (no power advantage, worse parsimony than the GLMs) — the usual GBDT pecking
+order is inverted here. RandomForest again fails (0.47859 ± 0.02993). On expected result
+(b): TabPFN's lead **survives** the frontier constraint — it is the best power on the
+dataset, and parsimony pressure only closes the gap, it does not remove it.
+
+**uslapseagent — the full family stack is on the frontier.** TabPFN (0.24909), CatBoost
+(0.25286) and LightGBM (0.25367) are all within ~0.005 and all on the frontier, each the
+most parsimonious model at its power tier (CatBoost and LightGBM dominate XGBoost: both
+beat it on power with far fewer params). The GLM family anchors the parsimony end — all
+four 11-param variants are on the frontier (logisticglm/lr at 0.27624/0.27660, then
+poisson/tweedie within SE of them); nothing at 11 params beats them beyond SE. XGBoost and
+RandomForest are dominated; RF (0.27141) beats the GLMs on power but is crushed on
+parsimony (270,218 vs 11 params) — a textbook mid-complexity squeeze (expected result
+(a)). On expected result (b): TabPFN's lead survives — it wins power outright, with
+parsimony again closing but not removing the gap.
+
+### 14.4 Interpretation — what an actuary should take away
+
+- **The GLM family (11–86 params) is never dominated on any dataset.** On every frontier
+  at least one GLM variant is on the curve — they anchor the low-complexity end with log
+  loss within ~0.001 (bemtl97) to ~0.006 (coil2000) of the power winner. For
+  governance-defensible deployment under a complexity budget, a GLM is always on the
+  table. This is the single most robust result of the frontier.
+- **TabPFN is on the frontier everywhere but never parsimonious.** It wins power on 2 of 3
+  datasets (coil2000, uslapseagent) and is within fold-noise of the winner on the third,
+  but at a constant 10,000,000 params it is always the top-right anchor — never a
+  parsimony answer. The spec's expected result (b) resolves as: TabPFN's accuracy lead
+  survives the frontier only where it is the outright power winner; where it merely ties
+  (bemtl97), parsimony pressure removes the advantage.
+- **RandomForest at default config is a frontier failure** — dominated on all three
+  datasets, catastrophic on bemtl97 (0.59530), consistent with §13 and the v1 baseline.
+  No further RF exploration is warranted at default settings.
+- **The mid-complexity squeeze (expected result (a)) is real**: CatBoost/XGBoost are
+  dominated on bemtl97, LGBM/XGBoost on coil2000, XGBoost/RF on uslapseagent — beaten on
+  power by TabPFN and on parsimony by the GLMs. Mid-complexity models must earn their
+  place by beating the GLMs by more than SE, and mostly they do not.
+- **Where to look next: `norauto` (184K rows)** — the designated first extension per D5
+  and the strongest test of whether TabPFN drops off the frontier at scale (the §12.1
+  size-ceiling hypothesis applied to the frontier axis). Priority beyond `norauto` is
+  open (spec §8). Regression/severity frontiers are deferred to Phase 2 (D4) with an
+  RMSE/Poisson-deviance axis.
+
+### 14.5 Files & reproducibility
+
+- **Script:** `scripts/eval/insurance_benchmark_v1/run_frontier_benchmark.py` (committed
+  `ed3e119`, branch `feat/tabarena-benchmark`; spec commit `037d215`).
+- **Run command:** `source /tmp/tabarena/.venv-ta/bin/activate && python
+  scripts/eval/insurance_benchmark_v1/run_frontier_benchmark.py`
+- **Outputs** (same dir as the script): `frontier_results_bemtl97.csv`,
+  `frontier_results_coil2000.csv`, `frontier_results_uslapseagent.csv` (method | mean | se
+  | n_params | on-frontier), `frontier_plot_{dataset}.png` (x = log10(n_params), y = mean
+  log loss, ± SE bars, frontier red / dominated grey), `frontier_benchmark_run.log`
+  (per-fold timings and log loss).
+- **Inputs:** `data/raw/{bemtl97,coil2000,uslapseagent}.csv`;
+  `home_turf_sweep_results.csv` (reused TabPFN/CAT/LGBM/XGB power, identical folds);
+  `method_info.csv` (recorded defaults for the D2 leaf-count refits).
+- **Self-check:** assert-based sanity checks at end of run — 5 sweep fold rows per reused
+  method, no NaNs, unique methods, ≥1 frontier point, no train/test overlap within folds.
+- Regression/severity frontier deliberately **not** in this pass (D4, classification-only
+  v1); Phase 2 adds the RMSE/Poisson-deviance axis.
+
 ## 9. Source Workbooks
 
 - `scripts/run_home_turf_size_sweep.py` — home-turf size sweep runner (3 datasets × 3
   sizes × 5 folds, TabPFN + GBDT arms; §13).
+- `scripts/eval/insurance_benchmark_v1/run_frontier_benchmark.py` — insurance frontier
+  benchmark (D1/D2 combined pass, 3 datasets × 9 methods, D3 beyond-SE Pareto rule;
+  §14, commit `ed3e119`).
 - `scripts/finish_home_turf_sweep.py` — sweep result assembly, fold/cell bookkeeping
   (§13).
 - `scripts/finish_home_turf_sweep_v2.py` — revised assembly: flaky-config dedup, error
@@ -441,3 +619,10 @@ at 163K rows, the largest cell in the sweep.
 - `scripts/eval/insurance_benchmark_v1/home_turf_sweep_results.csv` — size sweep, per-fold
   log loss / Brier / ROC-AUC, 220 rows (9 cells × 5 folds, zero errors; primary evidence
   for §13).
+- `scripts/eval/insurance_benchmark_v1/frontier_results_{bemtl97,coil2000,uslapseagent}.csv`
+  — frontier benchmark, per-method mean log loss ± SE, n_params, on-frontier flag
+  (primary evidence for §14.2).
+- `scripts/eval/insurance_benchmark_v1/frontier_plot_{bemtl97,coil2000,uslapseagent}.png`
+  — frontier plots, x = log10(n_params), y = mean log loss ± SE (§14.2).
+- `scripts/eval/insurance_benchmark_v1/frontier_benchmark_run.log` — frontier run log,
+  per-fold timings and log loss (§14.1).
