@@ -2,6 +2,8 @@
 
 Reads .rda files (default /tmp/opencode/datasets/) and writes cleaned CSVs to
 data/raw/. Categorical columns are written as strings; binary targets are int.
+The Spanish motor portfolio source is a raw CSV (comma-separated, "NA" convention,
+DD/MM/YYYY dates) — handled by a CSV-source branch in main().
 
 Usage:
     python scripts/prepare_insurance_datasets.py [SRC_DIR]
@@ -20,6 +22,29 @@ HERE = Path(__file__).resolve().parent
 REPO = HERE.parent
 OUT_DIR = REPO / "data" / "raw"
 SRC_DIR = Path(sys.argv[1]) if len(sys.argv) > 1 else Path("/tmp/opencode/datasets")
+
+# Spanish motor portfolio: source is a raw CSV, not an .rda (see module docstring).
+SPANISH_MOTOR_CSV = (
+    REPO / "data" / "raw" / "Spanish motor portfolio" / "Motor vehicle insurance data.csv"
+)
+CSV_SOURCES = {"spanish_motor": SPANISH_MOTOR_CSV}
+
+_SPANISH_NUM = [
+    "Lapse", "N_claims_year", "Cost_claims_year", "N_claims_history", "R_Claims_history",
+    "Seniority", "Policies_in_force", "Max_policies", "Max_products", "Payment", "Premium",
+    "Power", "Cylinder_capacity", "Value_vehicle", "N_doors", "Length", "Weight",
+    "Year_matriculation", "Second_driver", "Distribution_channel", "Type_risk", "Area",
+]
+
+# Shared feature set for both spanish_motor variants (step-1 validation: raw date
+# columns, ID and Date_lapse are dropped; Date_lapse presence achieves AUC ~0.85 vs
+# lapse — termination-date variable, must-exclude per the bemtl97 leak rule).
+_SPANISH_FEATURES = [
+    "Distribution_channel", "Seniority", "Policies_in_force", "Max_policies", "Max_products",
+    "Payment", "Premium", "Type_risk", "Area", "Second_driver", "driver_age", "licence_age",
+    "vehicle_age", "Power", "Cylinder_capacity", "Value_vehicle", "N_doors", "Type_fuel",
+    "Length", "Weight",
+]
 
 
 def _to_str(df: pd.DataFrame, cols: list[str]) -> None:
@@ -87,12 +112,63 @@ def make_norauto(df: pd.DataFrame) -> tuple[pd.DataFrame, list[str]]:
     return df, ["NbClaim"]
 
 
+def _spanish_motor_base(df: pd.DataFrame) -> pd.DataFrame:
+    """Shared transform for both spanish_motor makers: coerce numerics, collapse the
+    policy-year panel to the LAST row per ID (bemtl16 precedent — avoids same-policy
+    rows leaking across random folds), derive ages from the DD/MM/YYYY dates, and
+    impute the motorbike NA trap. Length NA is ~100% Type_risk==1 (motorbikes) —
+    the frontier harness fillna(0) would set bike length to 0.0 m, so impute median
+    by Type_risk here; Type_fuel NA -> 'unknown' category (N_doors==0 is genuine
+    motorbike data, NOT missing — untouched)."""
+    for c in _SPANISH_NUM:
+        df[c] = pd.to_numeric(df[c], errors="coerce")
+    last = pd.to_datetime(df["Date_last_renewal"], format="%d/%m/%Y")
+    df = (df.assign(_last=last)
+            .sort_values(["ID", "_last"])
+            .groupby("ID", as_index=False)
+            .tail(1)
+            .drop(columns=["_last"]))
+    last = pd.to_datetime(df["Date_last_renewal"], format="%d/%m/%Y")
+    df["driver_age"] = (last - pd.to_datetime(df["Date_birth"], format="%d/%m/%Y")).dt.days / 365.25
+    df["licence_age"] = (last - pd.to_datetime(df["Date_driving_licence"], format="%d/%m/%Y")).dt.days / 365.25
+    df["vehicle_age"] = last.dt.year - df["Year_matriculation"]
+    df["Length"] = df.groupby("Type_risk")["Length"].transform(lambda s: s.fillna(s.median()))
+    df["Type_fuel"] = df["Type_fuel"].fillna("unknown").astype(str)
+    return df
+
+
+def make_spanish_motor_freq(df: pd.DataFrame) -> tuple[pd.DataFrame, list[str]]:
+    """Claims-frequency variant (frontier regression mode, poisson_deviance). Target:
+    N_claims_year (int count, 0-25). Leak exclusions verified in step 1:
+    N_claims_history / R_Claims_history include CURRENT-year claims (AUC 0.76/0.92 vs
+    claims>0; hist==0 => current==0 with zero exceptions) and Cost_claims_year is a
+    sibling target (cost==0 iff N==0 exactly) — none are kept as features."""
+    keep = _SPANISH_FEATURES + ["N_claims_year"]
+    out = _spanish_motor_base(df)[keep].copy()
+    out["N_claims_year"] = out["N_claims_year"].astype(int)
+    return out, ["N_claims_year"]
+
+
+def make_spanish_motor_lapse(df: pd.DataFrame) -> tuple[pd.DataFrame, list[str]]:
+    """Lapse variant (frontier classification mode). Target: LapseB = (Lapse > 0),
+    binarised from the stored count 0-7 (dictionary: book-level cancellations per
+    maturity year). Current-year claims ARE kept as features (AUC ~0.54 vs lapse —
+    verified non-leak). Date_lapse is excluded (presence AUC 0.85 vs lapse)."""
+    base = _spanish_motor_base(df)
+    keep = _SPANISH_FEATURES + ["N_claims_year", "Cost_claims_year"]
+    out = base[keep].copy()
+    out["LapseB"] = (base["Lapse"] > 0).astype(int)
+    return out, ["LapseB"]
+
+
 DATASETS = [
     ("uslapseagent", "uslapseagent.csv", make_uslapseagent),
     ("beMTPL97", "bemtl97.csv", make_bemtl97),
     ("beMTPL16", "bemtl16.csv", make_bemtl16),
     ("ausautoBI8999", "ausautoBI8999.csv", make_ausauto),
     ("norauto", "norauto.csv", make_norauto),
+    ("spanish_motor", "spanish_motor_freq.csv", make_spanish_motor_freq),
+    ("spanish_motor", "spanish_motor_lapse.csv", make_spanish_motor_lapse),
 ]
 
 
@@ -109,14 +185,29 @@ def _print_stats(df: pd.DataFrame, targets: list[str]) -> None:
 
 def main() -> None:
     OUT_DIR.mkdir(parents=True, exist_ok=True)
+    args = [a for a in sys.argv[1:] if not a.startswith("--")]
+    only = None
+    if "--only" in sys.argv:
+        only = sys.argv[sys.argv.index("--only") + 1]
     for stem, out_name, maker in DATASETS:
-        src = SRC_DIR / f"{stem}.rda"
-        df_raw = list(pyreadr.read_r(src).values())[0]
+        if only is not None and stem != only:
+            continue
+        if stem in CSV_SOURCES:
+            # CSV-source branch: Spanish motor portfolio (comma-sep, "NA" convention,
+            # DD/MM/YYYY dates parsed in the maker). Existing datasets keep the .rda path.
+            df_raw = pd.read_csv(CSV_SOURCES[stem], sep=",", na_values=["NA", "na"])
+        else:
+            src = SRC_DIR / f"{stem}.rda"
+            df_raw = list(pyreadr.read_r(src).values())[0]
         df, targets = maker(df_raw)
         out = OUT_DIR / out_name
         df.to_csv(out, index=False)
         print(f"{out.name}: {df.shape[0]} rows x {df.shape[1]} cols")
         _print_stats(df, targets)
+        if stem == "spanish_motor":
+            t = df[targets[0]]
+            rate = (t == 1).mean() if t.nunique() == 2 else (t > 0).mean()
+            print(f"      spanish_motor {out_name}: {rate:.1%} positive/claims>0 rate")
 
 
 if __name__ == "__main__":
