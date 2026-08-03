@@ -13,6 +13,10 @@ pip install -r requirements.txt
 jupyter notebook notebooks/adswp_project/01_TabPFN_classifier_eudirectlapse.ipynb
 ```
 
+### API key setup
+
+Scripts using the hosted TabPFN client need an API key. Set the `TABPFN_API_KEY` environment variable, or place a `.env` file containing `TABPFN_API_KEY=...` in the repo root, or point `TABPFN_ENV_FILE` at a `.env` file elsewhere. Scripts fail with a clear error if none is found.
+
 See [`CONTRIBUTING.md`](CONTRIBUTING.md) for detailed setup and contribution guide.
 
 ## Directory Structure
