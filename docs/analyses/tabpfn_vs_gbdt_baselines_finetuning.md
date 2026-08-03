@@ -1,7 +1,7 @@
 # TabPFN vs GBDT Baselines on Insurance Datasets, and Domain Fine-Tuning Effectiveness
 
 Technical research report — engineering/data-science audience.
-Branch: `feat/tabarena-benchmark`. Date: 2026-08-01. Updated: 2026-08-02 (§11, §12, §13, §14); 2026-08-03 (§14.6 norauto first extension).
+Branch: `feat/tabarena-benchmark`. Date: 2026-08-01. Updated: 2026-08-02 (§11, §12, §13, §14); 2026-08-03 (§14.6 norauto first extension, §14.7 v1-suite extension).
 
 ## 1. Objective
 
@@ -553,10 +553,11 @@ parsimony again closing but not removing the gap.
 - **`norauto` (184K rows) is done (§14.6)** — the designated first extension per D5.
   LGBM takes the power edge at scale (0.17518 vs TabPFN 0.17619) and TabPFN survives the
   frontier only on the beyond-SE tie — the §12.1 size-ceiling hypothesis holds on the
-  frontier axis. **Where to look next: the post-`norauto` dataset priority (spec §8)** —
-  `ausprivauto0405`/`bemtl16` are the natural candidates, not scheduled.
-  Regression/severity frontiers are deferred to Phase 2 (D4) with an
-  RMSE/Poisson-deviance axis.
+  frontier axis. **The v1 classification suite is now complete (§14.6, §14.7)** —
+  `ausprivauto0405` and `bemtl16` closed out the remaining post-`norauto` priority
+  (spec §8). **Where to look next: the spec §8 regression Phase 2 (D4)** — an
+  RMSE/Poisson-deviance axis on the remaining v1 regression datasets
+  (`ausprivauto0405_vehvalue`, `freMTPL2freq`).
 
 ### 14.5 Files & reproducibility
 
@@ -608,6 +609,64 @@ transfers to the frontier axis:** LGBM takes the power edge at scale (0.17518 vs
 membership as bemtl97 at 163K rows (§14.3). Files:
 `scripts/eval/insurance_benchmark_v1/frontier_results_norauto.csv`,
 `frontier_plot_norauto.png`.
+
+### 14.7 v1-suite extension — ausprivauto0405 + bemtl16
+
+The remaining two v1 classification datasets, completing the post-`norauto` priority
+(spec §8). Both fit **fresh** — neither was covered by the home-turf sweep, so there is
+no reusable power; `run_frontier_benchmark.py` uses the same fallback path as norauto
+(§14.6). Results committed in `b2d03a5`.
+
+**ausprivauto0405** (67,856 rows, 6.8% positive, target `ClaimOcc`):
+
+| method | mean log loss | ± SE | n_params | on frontier |
+| --- | ---: | ---: | ---: | --- |
+| logisticglm | **0.23947** | 0.00038 | 7 | yes |
+| lr | 0.23947 | 0.00038 | 7 | yes |
+| poissonglm | 0.23956 | 0.00036 | 7 | yes |
+| tweedieglm | 0.23983 | 0.00033 | 7 | yes |
+| tabpfn | 0.24026 | 0.00037 | 10,000,000 | no |
+| lgbm | 0.24164 | 0.00018 | 3,100 | no |
+| cat | 0.24327 | 0.00047 | 62,604 | no |
+| xgb | 0.24907 | 0.00051 | 4,368 | no |
+| rf | 0.52831 | 0.00988 | 602,223 | no |
+
+**bemtl16** (58,723 rows, 36.0% positive, target `number_of_liability_claims`):
+
+| method | mean log loss | ± SE | n_params | on frontier |
+| --- | ---: | ---: | ---: | --- |
+| tabpfn | **0.23803** | 0.00129 | 10,000,000 | yes |
+| lgbm | 0.23985 | 0.00112 | 3,100 | yes |
+| cat | 0.24341 | 0.00101 | 63,778 | no |
+| xgb | 0.25144 | 0.00114 | 4,253 | no |
+| rf | 0.26121 | 0.00203 | 434,404 | no |
+| logisticglm | 0.26315 | 0.00171 | 14 | yes |
+| lr | 0.26319 | 0.00172 | 14 | yes |
+| poissonglm | 0.30162 | 0.00383 | 14 | yes |
+| tweedieglm | 0.65338 | 0.00001 | 14 | yes |
+
+**ausprivauto0405 — the first outright TabPFN domination.** The frontier is exactly the
+four 7-param GLMs (logisticglm/lr tied at 0.23947, then poissonglm 0.23956, tweedieglm
+0.23983); every other method — tabpfn, lgbm, cat, xgb, rf — is dominated. This
+confirms the spec's expected result (a) at its most decisive: the GLM family wins **both
+axes**. TabPFN's 10,000,000-param power edge is gone — logisticglm at 7 params beats it
+beyond SE (`mean_B + SE_B = 0.23984` vs `mean_A − SE_A = 0.23989`). It extends
+the §12.1 "at scale" narrative one step further than norauto: at 67,856 rows / 6.8%
+positive the problem is easy enough that a 7-param GLM beats 10M-param TabPFN outright.
+
+**bemtl16 — TabPFN survives, and this time the edge is real.** TabPFN keeps the power
+edge (0.23803) over lgbm (0.23985) and it is **beyond SE**, not a fold-noise tie:
+`lgbm mean+SE = 0.24097` vs `tabpfn mean−SE = 0.23674`. The frontier-tie story of
+§14.3/§14.6 (TabPFN surviving only on the beyond-SE tie) does **not** repeat here — at
+36% positive, TabPFN's lead over the GBDTs holds on the power axis at 10M params.
+Parsimony still narrows the practical gap: lgbm at 3,100 params is within 0.002 of
+TabPFN's log loss, and the GLM family anchors the low-complexity end at 14 params
+(logisticglm/lr 0.26315/0.26319, poisson/tweedie well behind — tweedieglm catastrophic
+at 0.65338). But unlike §14.6, parsimony alone does not remove TabPFN from the frontier;
+cat/xgb/rf are dominated. Files:
+`scripts/eval/insurance_benchmark_v1/frontier_results_ausprivauto0405.csv`,
+`frontier_results_bemtl16.csv`, `frontier_plot_ausprivauto0405.png`,
+`frontier_plot_bemtl16.png`, `frontier_v1suite_run.log`.
 
 ## 9. Source Workbooks
 
