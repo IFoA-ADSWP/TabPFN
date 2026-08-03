@@ -8,6 +8,8 @@ home-turf sweep datasets per docs/analyses/insurance_frontier_benchmark_spec.md
   coil2000      target=CARAVAN,  drop=[]
   uslapseagent  target=surrender, drop=[]
   norauto       target=NbClaim,  drop=[]                    (no sweep rows — fresh power)
+  ausprivauto0405 target=ClaimOcc, drop=[]                  (no sweep rows — fresh power)
+  bemtl16       target=number_of_liability_claims, drop=[]  (no sweep rows — fresh power)
 
 Each dataset is an INDEPENDENT frontier (separate table + plot, no cross-dataset
 Pareto comparison).
@@ -69,6 +71,8 @@ DATASETS = [
     dict(name="coil2000", file="coil2000.csv", target="CARAVAN", drop=[]),
     dict(name="uslapseagent", file="uslapseagent.csv", target="surrender", drop=[]),
     dict(name="norauto", file="norauto.csv", target="NbClaim", drop=[]),
+    dict(name="ausprivauto0405", file="ausprivauto0405.csv", target="ClaimOcc", drop=[]),
+    dict(name="bemtl16", file="bemtl16.csv", target="number_of_liability_claims", drop=[]),
 ]
 N_FOLDS = 5
 SWEEP_CSV = HERE / "home_turf_sweep_results.csv"
