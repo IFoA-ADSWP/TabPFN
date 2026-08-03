@@ -7,7 +7,7 @@ Tracked from GitHub issues. Updated manually.
 | 🔲 | #34 | Upload Spanish Dataset to repository | — |
 | 🔲 | #29 | Funding Request #2 | Cillian-Williamson |
 | 🔲 | #28 | Funding Request #1 | Cillian-Williamson |
-| 🔲 | #27 | Review TabArena | — |
+| 🔲 | #27 | Review TabArena (frontier benchmark D1–D5 + v1-suite extension done, unpushed; regression Phase 2 open) | scotthawes |
 | 🔲 | #26 | List Available Foundational Models | — |
 | 🔲 | #25 | Draft Insurance/Actuarial Use Cases | — |
 | 🔲 | #24 | Dataset Selection CASDatasets | Cillian-Williamson |
