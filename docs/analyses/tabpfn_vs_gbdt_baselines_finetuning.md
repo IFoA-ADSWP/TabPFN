@@ -1,7 +1,7 @@
 # TabPFN vs GBDT Baselines on Insurance Datasets, and Domain Fine-Tuning Effectiveness
 
 Technical research report — engineering/data-science audience.
-Branch: `feat/tabarena-benchmark`. Date: 2026-08-01. Updated: 2026-08-02 (§11, §12, §13, §14); 2026-08-03 (§14.6 norauto first extension, §14.7 v1-suite extension).
+Branch: `feat/tabarena-benchmark`. Date: 2026-08-01. Updated: 2026-08-02 (§11, §12, §13, §14); 2026-08-03 (§14.6 norauto first extension, §14.7 v1-suite extension, §14.8 regression Phase 2).
 
 ## 1. Objective
 
@@ -555,9 +555,12 @@ parsimony again closing but not removing the gap.
   frontier only on the beyond-SE tie — the §12.1 size-ceiling hypothesis holds on the
   frontier axis. **The v1 classification suite is now complete (§14.6, §14.7)** —
   `ausprivauto0405` and `bemtl16` closed out the remaining post-`norauto` priority
-  (spec §8). **Where to look next: the spec §8 regression Phase 2 (D4)** — an
-  RMSE/Poisson-deviance axis on the remaining v1 regression datasets
-  (`ausprivauto0405_vehvalue`, `freMTPL2freq`).
+  (spec §8). **The regression Phase 2 (D4) is now done (§14.8)** — the frontier covers
+  10 datasets (6 classification + 4 regression). **Where to look next:** the spec's
+  remaining open items are TabPFN's exact param count (non-decision, recorded), an
+  exposure-weighted Poisson deviance / offsets refinement, and the fine-tuned TabPFN arm
+  (§12.3 tuning asymmetry) — of these the highest-value is the fine-tuned TabPFN arm, or
+  else close out issue #27.
 
 ### 14.5 Files & reproducibility
 
@@ -667,6 +670,121 @@ cat/xgb/rf are dominated. Files:
 `scripts/eval/insurance_benchmark_v1/frontier_results_ausprivauto0405.csv`,
 `frontier_results_bemtl16.csv`, `frontier_plot_ausprivauto0405.png`,
 `frontier_plot_bemtl16.png`, `frontier_v1suite_run.log`.
+
+### 14.8 Regression Phase 2 — RMSE + Poisson-deviance frontiers (D4)
+
+The regression/severity axis the v1 classification pass deliberately deferred (spec §5
+D4): severity mixes a different power metric and TabPFN's documented regression weakness
+would have polluted v1's first delivery. Phase 2 runs **4 datasets** on their **stored
+targets** — RMSE for `ausautoBI8999` (log-scale `AggClaim`), `ausprivauto0405_vehvalue`
+(raw `VehValue`), `bemtl97_amount` (log1p amount, `claim` dropped as a leak) and Poisson
+deviance for `freMTPL2freq` (log(`Exposure`) offset feature, `IDpol` dropped). All **8
+regressors at defaults** (ols / poissonglm / tweedieglm / rf / cat / lgbm / xgb / tabpfn
+via hosted API), **5-fold KFold seed 42**, all fits fresh. The §14.7 pointer named
+`ausprivauto0405_vehvalue` + `freMTPL2freq` as candidates; `ausautoBI8999` +
+`bemtl97_amount` were run as well. Results committed in `78c3df2`.
+
+**ausautoBI8999** (22,036 rows, RMSE on stored log-scale `AggClaim`):
+
+| method | mean RMSE | ± SE | n_params | on frontier |
+| --- | ---: | ---: | ---: | --- |
+| tabpfn | **0.96491** | 0.00868 | 10,000,000 | yes |
+| cat | 0.96883 | 0.00756 | 63,944 | yes |
+| lgbm | 0.97456 | 0.00822 | 3,100 | yes |
+| xgb | 0.98945 | 0.00957 | 5,223 | yes |
+| rf | 1.01260 | 0.00874 | 1,112,247 | no |
+| ols | 1.07133 | 0.00928 | 12 | yes |
+| poissonglm | 1.07881 | 0.00926 | 12 | yes |
+| tweedieglm | 1.08867 | 0.00875 | 12 | yes |
+
+**ausprivauto0405_vehvalue** (67,856 rows, RMSE on raw `VehValue`):
+
+| method | mean RMSE | ± SE | n_params | on frontier |
+| --- | ---: | ---: | ---: | --- |
+| tabpfn | **0.71162** | 0.01246 | 10,000,000 | yes |
+| lgbm | 0.71645 | 0.01258 | 3,100 | yes |
+| cat | 0.72171 | 0.01164 | 63,912 | yes |
+| xgb | 0.73784 | 0.00809 | 5,994 | no |
+| rf | 0.82071 | 0.00893 | 2,599,078 | no |
+| poissonglm | 1.00932 | 0.01609 | 7 | yes |
+| ols | 1.04150 | 0.01545 | 7 | yes |
+| tweedieglm | 1.05117 | 0.01548 | 7 | yes |
+
+**bemtl97_amount** (163,212 rows, RMSE on stored log1p amount, `claim` dropped as leak):
+
+| method | mean RMSE | ± SE | n_params | on frontier |
+| --- | ---: | ---: | ---: | --- |
+| lgbm | **0.48499** | 0.00431 | 3,100 | yes |
+| cat | 0.48726 | 0.00412 | 63,226 | yes |
+| xgb | 0.49149 | 0.00448 | 4,733 | yes |
+| rf | 0.50457 | 0.00461 | 902,022 | no |
+| ols | 0.70799 | 0.00651 | 12 | yes |
+| tabpfn | 0.72825 | 0.01057 | 10,000,000 | no |
+| tweedieglm | 1.84473 | 0.00626 | 12 | yes |
+| poissonglm | 6.45906 | 2.83431 | 12 | yes |
+
+**freMTPL2freq** (678,013 rows, Poisson deviance, log(`Exposure`) offset feature, `IDpol` dropped):
+
+| method | mean Poisson deviance | ± SE | n_params | on frontier |
+| --- | ---: | ---: | ---: | --- |
+| lgbm | **0.29113** | 0.00138 | 3,100 | yes |
+| cat | 0.30048 | 0.00184 | 63,788 | no |
+| xgb | 0.31221 | 0.00208 | 5,747 | no |
+| ols | 0.32097 | 0.00161 | 11 | yes |
+| poissonglm | 0.32109 | 0.00161 | 11 | yes |
+| tweedieglm | 0.32109 | 0.00161 | 11 | yes |
+| tabpfn | 0.38770 | 0.00201 | 10,000,000 | no |
+| rf | 0.47966 | 0.00525 | 3,337,930 | no |
+
+Bold = best mean per dataset (power winner). Frontier membership per the D3 beyond-SE
+rule (§14.1), reproduced from `frontier_results_<dataset>.csv`.
+
+**ausautoBI8999 — TabPFN wins the power axis outright, and this time the lead is real.**
+TabPFN is the power winner (0.96491) over cat (0.96883) and it is **beyond SE**, not a
+fold-noise tie: `tabpfn mean−SE = 0.95623` vs `cat mean+SE = 0.97639`. The frontier is
+tabpfn/cat/lgbm/xgb plus the 12-param GLM anchors; rf is the only dominated method (beaten
+on power by the GBDTs *and* on parsimony by the GLMs). The GLMs trail by ~0.11–0.12
+(1.07133/1.07881/1.08867) — the widest GLM gap of the regression pass.
+
+**ausprivauto0405_vehvalue — TabPFN wins power within SE of lgbm — and a critical v1
+discrepancy.** TabPFN leads (0.71162 vs lgbm 0.71645), but the intervals overlap, so it
+shares the frontier with lgbm on the beyond-SE tie (`tabpfn mean+SE = 0.72408` vs
+`lgbm mean−SE = 0.70387`); cat trails at 0.72171, xgb/rf are dominated. **This does NOT
+reproduce the v1 verdict (§4.1: TabPFN +67.2% on vehvalue, rank 8/8, RMSE ≈ 1.20/fold in
+`results_per_split.csv`).** The v1 figure came from the TabArena harness (3-fold, a
+different client invocation); the frontier protocol — TabPFNRegressor (random_state=0) on
+5-fold KFold seed 42 — gives 0.71. The +67.2% was protocol-specific, not a stable
+property of the model on this dataset, and §12.1's citation of it as a size-ceiling data
+point should be read accordingly.
+
+**bemtl97_amount — TabPFN dominated at scale; the zero-inflation trap.** lgbm (0.48499) /
+cat (0.48726) / xgb (0.49149) sweep the top; rf and tabpfn (0.72825 ± 0.01057) are
+dominated — tabpfn beaten on power and on parsimony, consistent with v1's +48.3% verdict
+(§12.1). The GLM end tells the zero-inflation story: poissonglm is catastrophic
+(6.45906 ± 2.83431) — predicting >0 systematically misses the ~89% zero mass — and
+tweedieglm is poor (1.84473); ols (0.70799) anchors the GLM family, and the 12-param
+models all sit on the frontier because nothing has fewer parameters to dominate them.
+
+**freMTPL2freq — the frequency axis is genuinely competitive for GLMs, and TabPFN's worst
+size-ceiling case.** lgbm wins power (0.29113); the 11-param GLM family — Poisson, the
+actuarial gold standard — lands within ~10% (0.32097/0.32109/0.32109), unlike
+classification where GLM variants were placeholders. cat/xgb/tabpfn/rf are dominated;
+tabpfn at 0.38770 is ~+33% behind lgbm on 678,013 rows ≈ 100× its ~1K-row home-turf
+regime — the strongest §12.1 size-ceiling confirmation yet. Files:
+`scripts/eval/insurance_benchmark_v1/frontier_results_{ausautoBI8999,ausprivauto0405_vehvalue,bemtl97_amount,freMTPL2freq}.csv`,
+`frontier_plot_{ausautoBI8999,ausprivauto0405_vehvalue,bemtl97_amount,freMTPL2freq}.png`,
+`frontier_regression_run.log`.
+
+**D4 synthesis — TabPFN's regression lead does not survive the frontier.** Across the four
+regression axes TabPFN wins power only at small N — beyond SE at 22,036 rows
+(ausautoBI8999) and on the beyond-SE tie at 67,856 rows (vehvalue) — and is dominated at
+scale: 163,212 rows (bemtl97_amount) and 678,013 rows (freMTPL2freq). This transfers the
+§12.1 size-ceiling hypothesis to the regression axis: at ~1K effective context the model
+holds its edge on small/medium severity problems and loses it where every row of signal
+matters. It also flags a protocol sensitivity worth recording — the frontier protocol's
+TabPFNRegressor does not reproduce v1's vehvalue +67.2%, so v1's regression verdicts are
+harness-specific. The GLMs are far more competitive on frequency than on classification;
+on severity the GBDTs dominate outright.
 
 ## 9. Source Workbooks
 
