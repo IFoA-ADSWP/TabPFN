@@ -2,6 +2,8 @@
 
 Date: 2026-03-29
 
+Canonical current summary: docs/reports/TABPFN_BENCHMARK_SUMMARY.md (2026-08 frontier-era verdict refines this report's "dataset-dependent" conclusion).
+
 ## Objective
 Evaluate whether TabPFN (client backend) outperforms a logistic regression baseline (GLM) across multiple insurance datasets, not only on EU Direct Lapse.
 
@@ -82,7 +84,7 @@ Expected files:
 If missing, regenerate via:
 
 ```bash
-python scripts/download_datasets.py
+python scripts/infra/download_datasets.py
 ```
 
 ### 3. Run analysis

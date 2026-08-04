@@ -118,7 +118,7 @@ After saving a `.tabpfn_fit` artifact, run a reload check to confirm the model c
 
 Recommended script:
 
-- `scripts/check_saved_finetune_classifier_model.py`
+- `scripts/legacy_finetuning/check_saved_finetune_classifier_model.py`
 
 Default behavior:
 

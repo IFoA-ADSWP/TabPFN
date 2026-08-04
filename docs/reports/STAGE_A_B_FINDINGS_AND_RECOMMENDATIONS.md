@@ -128,10 +128,10 @@ Immediate regressor next steps:
 - Workspace: TabPFN-work-scott, with local upstream TabPFN source available at TabPFN-upstream.
 - Key execution environment detail: use local upstream import path when running fine-tuning utilities.
    - `PYTHONPATH=/Users/Scott/Documents/Data Science/ADSWP/TabPFN-upstream/src`
-- Runner implementation check: `scripts/run_domain_finetune_stage_a.py` imports and uses `TabPFNClassifier` for both raw and fine-tuned TabPFN arms.
+- Runner implementation check: `scripts/legacy_finetuning/run_domain_finetune_stage_a.py` imports and uses `TabPFNClassifier` for both raw and fine-tuned TabPFN arms.
 - `TabPFNRegressor` was not used in Stage A/B runs documented here.
 - Core runner used for Stage A and Stage B style comparisons:
-   - `python scripts/run_domain_finetune_stage_a.py --target-dataset <dataset> --target-rows 2500 --pool-rows-per-dataset 1000 --tabpfn-device cpu --tabpfn-context-samples <64|128> --tabpfn-max-finetune-steps <1|3|5> --seed 42 --observations "..." --comments "..."`
+   - `python scripts/legacy_finetuning/run_domain_finetune_stage_a.py --target-dataset <dataset> --target-rows 2500 --pool-rows-per-dataset 1000 --tabpfn-device cpu --tabpfn-context-samples <64|128> --tabpfn-max-finetune-steps <1|3|5> --seed 42 --observations "..." --comments "..."`
 - Datasets used:
    - `eudirectlapse`, `coil2000`, `ausprivauto0405`, `freMTPL2freq_binary`
 - Fixed controls in reported runs:

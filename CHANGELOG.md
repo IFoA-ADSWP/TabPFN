@@ -13,8 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `tests/` directory with a smoke test — addresses wiki issue #5
 - Wiki at https://github.com/IFoA-ADSWP/TabPFN/wiki (Issues disabled, backlog lives in the wiki)
 - `docs/MAINTENANCE_BACKLOG.md` (canonical source for the wiki)
-- `scripts/import_backlog_to_github.py` (bulk import when Issues are re-enabled)
-- `scripts/push_wiki.sh` (sync `docs/MAINTENANCE_BACKLOG.md` to the wiki)
+- `scripts/infra/import_backlog_to_github.py` (bulk import when Issues are re-enabled)
+- `scripts/infra/push_wiki.sh` (sync `docs/MAINTENANCE_BACKLOG.md` to the wiki)
 
 ### Changed
 - `.gitignore` now excludes `.venv*/`, `outputs/archive/`, `*.pkl`, `*.tabpfn_fit`, `**/.DS_Store`, `**/catboost_info/`

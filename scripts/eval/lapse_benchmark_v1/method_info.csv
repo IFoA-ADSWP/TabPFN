@@ -1,0 +1,4 @@
+method,method_type,method_subtype,config_type,ta_name,ta_suite,ag_key,model_key,config_default,can_hpo,compute,is_bag,has_raw,has_processed,has_results,name,name_suffix,cache_type,cache_kwargs,date,date_introduced,reference_url,display_name,verified
+[Lapse] GBM (default),config,default,[Lapse] GBM,[Lapse] LightGBM,[Lapse] LightGBM,GBM,[Lapse] GBM,LightGBM_c1_default_HOLDOUT,False,cpu,False,True,True,True,,,local,{},,,,[Lapse] GBM,True
+[Lapse] LR (default),config,default,[Lapse] LR,[Lapse] LinearModel,[Lapse] LinearModel,LR,[Lapse] LR,LinearModel_c1_default_HOLDOUT,False,cpu,False,True,True,True,,,local,{},,,,[Lapse] LR,True
+[Lapse] TabPFNClient (default),config,default,[Lapse] TabPFNClient,[Lapse] TabPFNClient,[Lapse] TabPFNClient,TabPFNClient,[Lapse] TabPFNClient,TabPFNClient_c1_default_HOLDOUT,False,cpu,False,True,True,True,,,local,{},,,,[Lapse] TabPFNClient,True

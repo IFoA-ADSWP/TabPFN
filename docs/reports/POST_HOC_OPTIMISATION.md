@@ -2,6 +2,8 @@
 
 Scope note: this summary covers a classification use case (insurance lapse prediction) and references classifier workflows, not `TabPFNRegressor`.
 
+Canonical current summary: docs/reports/TABPFN_BENCHMARK_SUMMARY.md (2026-08 frontier-era verdict refines this report's "dataset-dependent" conclusion).
+
 ## Overview
 
 This document summarizes the results of post-hoc optimization experiments performed on the TabPFN model for insurance lapse prediction, WITHOUT true fine-tuning (which requires GPU infrastructure unavailable in this environment).

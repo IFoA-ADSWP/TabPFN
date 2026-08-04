@@ -1,0 +1,255 @@
+
+======================================================================
+DATASET bemtl97
+======================================================================
+[23:03:31] dataset=bemtl97 shape=(163212, 10) pos_rate=0.1120
+[23:03:33]   lr f0 ll=0.3441 (2s)
+[23:03:34]   lr f1 ll=0.3425 (3s)
+[23:03:35]   lr f2 ll=0.3427 (5s)
+[23:03:36]   lr f3 ll=0.3416 (5s)
+[23:03:38]   lr f4 ll=0.3427 (7s)
+[23:03:39]   logisticglm f0 ll=0.3441 (1s)
+[23:03:40]   logisticglm f1 ll=0.3425 (3s)
+[23:03:41]   logisticglm f2 ll=0.3427 (4s)
+[23:03:42]   logisticglm f3 ll=0.3416 (5s)
+[23:03:44]   logisticglm f4 ll=0.3428 (6s)
+[23:03:46]   tweedieglm f0 ll=0.3442 (2s)
+[23:03:47]   tweedieglm f1 ll=0.3426 (3s)
+[23:03:48]   tweedieglm f2 ll=0.3428 (4s)
+[23:03:49]   tweedieglm f3 ll=0.3416 (6s)
+[23:03:51]   tweedieglm f4 ll=0.3428 (7s)
+[23:03:52]   poissonglm f0 ll=0.3441 (1s)
+[23:03:54]   poissonglm f1 ll=0.3425 (2s)
+[23:03:55]   poissonglm f2 ll=0.3428 (4s)
+[23:03:56]   poissonglm f3 ll=0.3416 (5s)
+[23:03:57]   poissonglm f4 ll=0.3428 (6s)
+[23:04:14]   rf f0 ll=0.6362 (16s)
+[23:04:29]   rf f1 ll=0.5596 (32s)
+[23:04:48]   rf f2 ll=0.5905 (50s)
+[23:05:06]   rf f3 ll=0.5939 (68s)
+[23:05:24]   rf f4 ll=0.5963 (87s)
+[23:05:47]   count cat: 63546 params (22s)
+[23:05:47]   count xgb: 3981 params (1s)
+[23:05:49]   count lgbm: 3100 params (2s)
+[23:06:07]   count rf: 2245565 params (18s)
+     method   mean     se  n_params on_frontier
+       lgbm 0.3418 0.0005      3100         yes
+         lr 0.3427 0.0004        11         yes
+logisticglm 0.3427 0.0004        11         yes
+ poissonglm 0.3428 0.0004        11         yes
+     tabpfn 0.3428 0.0006  10000000         yes
+ tweedieglm 0.3428 0.0004        11         yes
+        cat 0.3436 0.0005     63546          no
+        xgb 0.3450 0.0005      3981          no
+         rf 0.5953 0.0122   2245565          no
+SELF-CHECK OK: folds=5, methods=9, on-frontier=6
+[23:06:08] bemtl97 done -> /Users/Scott/Documents/Data Science/ADSWP/TabPFN-work-scott-worktrees/cumans/scripts/eval/insurance_benchmark_v1/frontier_results_bemtl97.csv, /Users/Scott/Documents/Data Science/ADSWP/TabPFN-work-scott-worktrees/cumans/scripts/eval/insurance_benchmark_v1/frontier_plot_bemtl97.png
+
+======================================================================
+DATASET coil2000
+======================================================================
+[23:06:08] dataset=coil2000 shape=(9822, 85) pos_rate=0.0597
+[23:06:08]   lr f0 ll=0.2043 (0s)
+[23:06:09]   lr f1 ll=0.2014 (1s)
+[23:06:09]   lr f2 ll=0.2121 (1s)
+[23:06:10]   lr f3 ll=0.2031 (2s)
+[23:06:10]   lr f4 ll=0.2068 (2s)
+/private/tmp/tabarena/.venv-ta/lib/python3.12/site-packages/sklearn/linear_model/_logistic.py:473: ConvergenceWarning: lbfgs failed to converge after 500 iteration(s) (status=1):
+STOP: TOTAL NO. OF ITERATIONS REACHED LIMIT
+
+Increase the number of iterations to improve the convergence (max_iter=500).
+You might also want to scale the data as shown in:
+    https://scikit-learn.org/stable/modules/preprocessing.html
+Please also refer to the documentation for alternative solver options:
+    https://scikit-learn.org/stable/modules/linear_model.html#logistic-regression
+  n_iter_i = _check_optimize_result(
+[23:06:11]   logisticglm f0 ll=0.2063 (1s)
+/private/tmp/tabarena/.venv-ta/lib/python3.12/site-packages/sklearn/linear_model/_logistic.py:473: ConvergenceWarning: lbfgs failed to converge after 500 iteration(s) (status=1):
+STOP: TOTAL NO. OF ITERATIONS REACHED LIMIT
+
+Increase the number of iterations to improve the convergence (max_iter=500).
+You might also want to scale the data as shown in:
+    https://scikit-learn.org/stable/modules/preprocessing.html
+Please also refer to the documentation for alternative solver options:
+    https://scikit-learn.org/stable/modules/linear_model.html#logistic-regression
+  n_iter_i = _check_optimize_result(
+[23:06:11]   logisticglm f1 ll=0.2015 (1s)
+/private/tmp/tabarena/.venv-ta/lib/python3.12/site-packages/sklearn/linear_model/_logistic.py:473: ConvergenceWarning: lbfgs failed to converge after 500 iteration(s) (status=1):
+STOP: TOTAL NO. OF ITERATIONS REACHED LIMIT
+
+Increase the number of iterations to improve the convergence (max_iter=500).
+You might also want to scale the data as shown in:
+    https://scikit-learn.org/stable/modules/preprocessing.html
+Please also refer to the documentation for alternative solver options:
+    https://scikit-learn.org/stable/modules/linear_model.html#logistic-regression
+  n_iter_i = _check_optimize_result(
+[23:06:12]   logisticglm f2 ll=0.2125 (1s)
+/private/tmp/tabarena/.venv-ta/lib/python3.12/site-packages/sklearn/linear_model/_logistic.py:473: ConvergenceWarning: lbfgs failed to converge after 500 iteration(s) (status=1):
+STOP: TOTAL NO. OF ITERATIONS REACHED LIMIT
+
+Increase the number of iterations to improve the convergence (max_iter=500).
+You might also want to scale the data as shown in:
+    https://scikit-learn.org/stable/modules/preprocessing.html
+Please also refer to the documentation for alternative solver options:
+    https://scikit-learn.org/stable/modules/linear_model.html#logistic-regression
+  n_iter_i = _check_optimize_result(
+[23:06:12]   logisticglm f3 ll=0.2034 (2s)
+/private/tmp/tabarena/.venv-ta/lib/python3.12/site-packages/sklearn/linear_model/_logistic.py:473: ConvergenceWarning: lbfgs failed to converge after 500 iteration(s) (status=1):
+STOP: TOTAL NO. OF ITERATIONS REACHED LIMIT
+
+Increase the number of iterations to improve the convergence (max_iter=500).
+You might also want to scale the data as shown in:
+    https://scikit-learn.org/stable/modules/preprocessing.html
+Please also refer to the documentation for alternative solver options:
+    https://scikit-learn.org/stable/modules/linear_model.html#logistic-regression
+  n_iter_i = _check_optimize_result(
+[23:06:12]   logisticglm f4 ll=0.2075 (2s)
+/private/tmp/tabarena/.venv-ta/lib/python3.12/site-packages/sklearn/linear_model/_glm/glm.py:286: ConvergenceWarning: lbfgs failed to converge after 500 iteration(s) (status=1):
+STOP: TOTAL NO. OF ITERATIONS REACHED LIMIT
+
+Increase the number of iterations to improve the convergence (max_iter=500).
+You might also want to scale the data as shown in:
+    https://scikit-learn.org/stable/modules/preprocessing.html
+  self.n_iter_ = _check_optimize_result(
+[23:06:14]   tweedieglm f0 ll=0.2242 (2s)
+/private/tmp/tabarena/.venv-ta/lib/python3.12/site-packages/sklearn/linear_model/_glm/glm.py:286: ConvergenceWarning: lbfgs failed to converge after 500 iteration(s) (status=1):
+STOP: TOTAL NO. OF ITERATIONS REACHED LIMIT
+
+Increase the number of iterations to improve the convergence (max_iter=500).
+You might also want to scale the data as shown in:
+    https://scikit-learn.org/stable/modules/preprocessing.html
+  self.n_iter_ = _check_optimize_result(
+[23:06:15]   tweedieglm f1 ll=0.2112 (3s)
+/private/tmp/tabarena/.venv-ta/lib/python3.12/site-packages/sklearn/linear_model/_glm/glm.py:286: ConvergenceWarning: lbfgs failed to converge after 500 iteration(s) (status=1):
+STOP: TOTAL NO. OF ITERATIONS REACHED LIMIT
+
+Increase the number of iterations to improve the convergence (max_iter=500).
+You might also want to scale the data as shown in:
+    https://scikit-learn.org/stable/modules/preprocessing.html
+  self.n_iter_ = _check_optimize_result(
+[23:06:17]   tweedieglm f2 ll=0.2211 (5s)
+/private/tmp/tabarena/.venv-ta/lib/python3.12/site-packages/sklearn/linear_model/_glm/glm.py:286: ConvergenceWarning: lbfgs failed to converge after 500 iteration(s) (status=1):
+STOP: TOTAL NO. OF ITERATIONS REACHED LIMIT
+
+Increase the number of iterations to improve the convergence (max_iter=500).
+You might also want to scale the data as shown in:
+    https://scikit-learn.org/stable/modules/preprocessing.html
+  self.n_iter_ = _check_optimize_result(
+[23:06:19]   tweedieglm f3 ll=0.2204 (7s)
+/private/tmp/tabarena/.venv-ta/lib/python3.12/site-packages/sklearn/linear_model/_glm/glm.py:286: ConvergenceWarning: lbfgs failed to converge after 500 iteration(s) (status=1):
+STOP: TOTAL NO. OF ITERATIONS REACHED LIMIT
+
+Increase the number of iterations to improve the convergence (max_iter=500).
+You might also want to scale the data as shown in:
+    https://scikit-learn.org/stable/modules/preprocessing.html
+  self.n_iter_ = _check_optimize_result(
+[23:06:21]   tweedieglm f4 ll=0.2121 (8s)
+/private/tmp/tabarena/.venv-ta/lib/python3.12/site-packages/sklearn/linear_model/_glm/glm.py:286: ConvergenceWarning: lbfgs failed to converge after 500 iteration(s) (status=1):
+STOP: TOTAL NO. OF ITERATIONS REACHED LIMIT
+
+Increase the number of iterations to improve the convergence (max_iter=500).
+You might also want to scale the data as shown in:
+    https://scikit-learn.org/stable/modules/preprocessing.html
+  self.n_iter_ = _check_optimize_result(
+[23:06:22]   poissonglm f0 ll=0.2118 (2s)
+/private/tmp/tabarena/.venv-ta/lib/python3.12/site-packages/sklearn/linear_model/_glm/glm.py:286: ConvergenceWarning: lbfgs failed to converge after 500 iteration(s) (status=1):
+STOP: TOTAL NO. OF ITERATIONS REACHED LIMIT
+
+Increase the number of iterations to improve the convergence (max_iter=500).
+You might also want to scale the data as shown in:
+    https://scikit-learn.org/stable/modules/preprocessing.html
+  self.n_iter_ = _check_optimize_result(
+[23:06:24]   poissonglm f1 ll=0.2027 (3s)
+/private/tmp/tabarena/.venv-ta/lib/python3.12/site-packages/sklearn/linear_model/_glm/glm.py:286: ConvergenceWarning: lbfgs failed to converge after 500 iteration(s) (status=1):
+STOP: TOTAL NO. OF ITERATIONS REACHED LIMIT
+
+Increase the number of iterations to improve the convergence (max_iter=500).
+You might also want to scale the data as shown in:
+    https://scikit-learn.org/stable/modules/preprocessing.html
+  self.n_iter_ = _check_optimize_result(
+[23:06:25]   poissonglm f2 ll=0.2132 (5s)
+/private/tmp/tabarena/.venv-ta/lib/python3.12/site-packages/sklearn/linear_model/_glm/glm.py:286: ConvergenceWarning: lbfgs failed to converge after 500 iteration(s) (status=1):
+STOP: TOTAL NO. OF ITERATIONS REACHED LIMIT
+
+Increase the number of iterations to improve the convergence (max_iter=500).
+You might also want to scale the data as shown in:
+    https://scikit-learn.org/stable/modules/preprocessing.html
+  self.n_iter_ = _check_optimize_result(
+[23:06:27]   poissonglm f3 ll=0.2167 (6s)
+/private/tmp/tabarena/.venv-ta/lib/python3.12/site-packages/sklearn/linear_model/_glm/glm.py:286: ConvergenceWarning: lbfgs failed to converge after 500 iteration(s) (status=1):
+STOP: TOTAL NO. OF ITERATIONS REACHED LIMIT
+
+Increase the number of iterations to improve the convergence (max_iter=500).
+You might also want to scale the data as shown in:
+    https://scikit-learn.org/stable/modules/preprocessing.html
+  self.n_iter_ = _check_optimize_result(
+[23:06:28]   poissonglm f4 ll=0.2101 (8s)
+[23:06:30]   rf f0 ll=0.4393 (1s)
+[23:06:31]   rf f1 ll=0.4231 (3s)
+[23:06:32]   rf f2 ll=0.5931 (4s)
+[23:06:34]   rf f3 ll=0.4697 (5s)
+[23:06:35]   rf f4 ll=0.4677 (7s)
+[23:06:40]   count cat: 63764 params (5s)
+[23:06:41]   count xgb: 2719 params (1s)
+[23:06:42]   count lgbm: 3100 params (1s)
+[23:06:43]   count rf: 71763 params (1s)
+     method   mean     se  n_params on_frontier
+     tabpfn 0.2006 0.0022  10000000         yes
+         lr 0.2055 0.0019        86         yes
+logisticglm 0.2063 0.0019        86         yes
+        cat 0.2082 0.0024     63764         yes
+ poissonglm 0.2109 0.0023        86         yes
+ tweedieglm 0.2178 0.0026        86         yes
+       lgbm 0.2219 0.0026      3100          no
+        xgb 0.2494 0.0035      2719          no
+         rf 0.4786 0.0299     71763          no
+SELF-CHECK OK: folds=5, methods=9, on-frontier=6
+[23:06:43] coil2000 done -> /Users/Scott/Documents/Data Science/ADSWP/TabPFN-work-scott-worktrees/cumans/scripts/eval/insurance_benchmark_v1/frontier_results_coil2000.csv, /Users/Scott/Documents/Data Science/ADSWP/TabPFN-work-scott-worktrees/cumans/scripts/eval/insurance_benchmark_v1/frontier_plot_coil2000.png
+
+======================================================================
+DATASET uslapseagent
+======================================================================
+[23:06:43] dataset=uslapseagent shape=(29317, 10) pos_rate=0.3786
+[23:06:44]   lr f0 ll=0.2619 (0s)
+[23:06:44]   lr f1 ll=0.2812 (1s)
+[23:06:44]   lr f2 ll=0.2828 (1s)
+[23:06:44]   lr f3 ll=0.2892 (1s)
+[23:06:44]   lr f4 ll=0.2678 (1s)
+[23:06:45]   logisticglm f0 ll=0.2616 (0s)
+[23:06:45]   logisticglm f1 ll=0.2808 (0s)
+[23:06:45]   logisticglm f2 ll=0.2825 (1s)
+[23:06:45]   logisticglm f3 ll=0.2888 (1s)
+[23:06:45]   logisticglm f4 ll=0.2675 (1s)
+[23:06:46]   tweedieglm f0 ll=0.2744 (0s)
+[23:06:46]   tweedieglm f1 ll=0.2990 (0s)
+[23:06:46]   tweedieglm f2 ll=0.2849 (1s)
+[23:06:46]   tweedieglm f3 ll=0.3041 (1s)
+[23:06:47]   tweedieglm f4 ll=0.2766 (1s)
+[23:06:47]   poissonglm f0 ll=0.2744 (0s)
+[23:06:47]   poissonglm f1 ll=0.2942 (0s)
+[23:06:47]   poissonglm f2 ll=0.2847 (1s)
+[23:06:47]   poissonglm f3 ll=0.2994 (1s)
+[23:06:48]   poissonglm f4 ll=0.2765 (1s)
+[23:06:50]   rf f0 ll=0.2685 (2s)
+[23:06:52]   rf f1 ll=0.2704 (4s)
+[23:06:54]   rf f2 ll=0.2782 (7s)
+[23:06:57]   rf f3 ll=0.2787 (9s)
+[23:06:59]   rf f4 ll=0.2613 (11s)
+[23:07:07]   count cat: 63394 params (8s)
+[23:07:07]   count xgb: 3781 params (0s)
+[23:07:08]   count lgbm: 3100 params (1s)
+[23:07:11]   count rf: 270218 params (2s)
+     method   mean     se  n_params on_frontier
+     tabpfn 0.2491 0.0052  10000000         yes
+        cat 0.2529 0.0046     63394         yes
+       lgbm 0.2537 0.0045      3100         yes
+        xgb 0.2642 0.0046      3781          no
+         rf 0.2714 0.0032    270218          no
+logisticglm 0.2762 0.0051        11         yes
+         lr 0.2766 0.0050        11         yes
+ poissonglm 0.2858 0.0049        11         yes
+ tweedieglm 0.2878 0.0059        11         yes
+SELF-CHECK OK: folds=5, methods=9, on-frontier=7
+[23:07:11] uslapseagent done -> /Users/Scott/Documents/Data Science/ADSWP/TabPFN-work-scott-worktrees/cumans/scripts/eval/insurance_benchmark_v1/frontier_results_uslapseagent.csv, /Users/Scott/Documents/Data Science/ADSWP/TabPFN-work-scott-worktrees/cumans/scripts/eval/insurance_benchmark_v1/frontier_plot_uslapseagent.png
+
+ALL DATASETS DONE in 222s

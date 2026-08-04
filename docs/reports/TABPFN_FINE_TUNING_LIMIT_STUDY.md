@@ -135,13 +135,13 @@ The study also delivers a reproducible persistence pipeline with automatic loggi
 ## Appendix A: Reproducibility Artifacts
 
 - Trial runner scripts:
-  - `scripts/run_finetune_first_batch.sh`
-  - `scripts/run_finetune_stress_batch_2000.sh`
-  - `scripts/run_finetune_crossover_batch_3000.sh`
+  - `scripts/legacy_finetuning/run_finetune_first_batch.sh`
+  - `scripts/legacy_finetuning/run_finetune_stress_batch_2000.sh`
+  - `scripts/legacy_finetuning/run_finetune_crossover_batch_3000.sh`
 - Trial harness:
-  - `scripts/run_small_finetune_classifier_trial.py`
+  - `scripts/legacy_finetuning/run_small_finetune_classifier_trial.py`
 - Reload validator:
-  - `scripts/check_saved_finetune_classifier_model.py`
+  - `scripts/legacy_finetuning/check_saved_finetune_classifier_model.py`
 - Logs:
   - `outputs/current/tables/tabpfn_finetune_trial_results.csv`
   - `outputs/current/tables/tabpfn_finetune_reload_checks.csv`
