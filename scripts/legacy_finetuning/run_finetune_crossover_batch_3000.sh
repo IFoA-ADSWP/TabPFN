@@ -4,7 +4,7 @@ set -euo pipefail
 # 3000-row crossover confirmation batch: CPU vs MPS with matched configs.
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 
 run_trial() {
   local label="$1"
@@ -17,13 +17,13 @@ run_trial() {
   echo "===== ${label} ====="
   echo "device=${device} rows=${rows} context=${context} steps=${steps}"
 
-  (cd "$REPO_ROOT" && python scripts/run_small_finetune_classifier_trial.py \
+  (cd "$REPO_ROOT" && python scripts/legacy_finetuning/run_small_finetune_classifier_trial.py \
     --device "$device" \
     --rows "$rows" \
     --context-samples "$context" \
     --max-finetune-steps "$steps")
 
-  (cd "$REPO_ROOT" && python scripts/check_saved_finetune_classifier_model.py --device cpu)
+  (cd "$REPO_ROOT" && python scripts/legacy_finetuning/check_saved_finetune_classifier_model.py --device cpu)
 }
 
 echo "Running TabPFN crossover batch at 3000 rows..."

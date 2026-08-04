@@ -19,8 +19,8 @@ For this plan, a run is considered reasonable if it:
 - Current evidence: `cpu` performed better than `mps` on the small local smoke workload
 - Dataset for limit finding: `data/raw/coil2000.csv`
 - Target: `CARAVAN`
-- Baseline harness: `scripts/run_small_finetune_classifier_trial.py`
-- Save/load validator: `scripts/check_saved_finetune_classifier_model.py`
+- Baseline harness: `scripts/legacy_finetuning/run_small_finetune_classifier_trial.py`
+- Save/load validator: `scripts/legacy_finetuning/check_saved_finetune_classifier_model.py`
 
 ## What We Are Testing
 
@@ -54,7 +54,7 @@ Treat a configuration as approaching the limit if any of the following happen:
 1. Run tests in order.
 2. Do not change multiple variables at once unless the phase explicitly says so.
 3. Record every run in `outputs/current/tables/tabpfn_finetune_trial_results.csv`.
-4. For every saved model, run `scripts/check_saved_finetune_classifier_model.py`.
+4. For every saved model, run `scripts/legacy_finetuning/check_saved_finetune_classifier_model.py`.
 5. If a run fails, stop that branch and do not scale it further.
 
 ## Stage A: CPU Row Scaling Baseline
@@ -158,8 +158,8 @@ Use this pattern for each test:
 
 ```bash
 cd /Users/Scott/Documents/Data\ Science/ADSWP/TabPFN-work-scott
-python scripts/run_small_finetune_classifier_trial.py --device cpu --rows 1000 --context-samples 128 --max-finetune-steps 1
-python scripts/check_saved_finetune_classifier_model.py --device cpu
+python scripts/legacy_finetuning/run_small_finetune_classifier_trial.py --device cpu --rows 1000 --context-samples 128 --max-finetune-steps 1
+python scripts/legacy_finetuning/check_saved_finetune_classifier_model.py --device cpu
 ```
 
 Swap `cpu` for `mps` only on the explicit MPS spot checks.

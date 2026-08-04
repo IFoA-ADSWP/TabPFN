@@ -55,7 +55,7 @@ Keep identical across runs:
 
 The Stage A runner now supports policy-based pool selection:
 
-- Script: `scripts/run_domain_finetune_stage_a.py`
+- Script: `scripts/legacy_finetuning/run_domain_finetune_stage_a.py`
 - New args:
   - `--pool-policy {all,homogeneous,heterogeneous,similarity_topk,mixed_baseline}`
   - `--pool-k <int>`
@@ -80,7 +80,7 @@ Use at least 3 seeds in scale-up (`42`, `43`, `44`) after smoke validation.
 ## Command Template
 
 ```bash
-python scripts/run_domain_finetune_stage_a.py \
+python scripts/legacy_finetuning/run_domain_finetune_stage_a.py \
   --target-dataset eudirectlapse \
   --seed 42 \
   --target-rows 800 \
@@ -112,7 +112,7 @@ Repeat with `--pool-policy mixed_baseline`.
 Using existing Stage A output (`outputs/current/tables/domain_finetune_study_runs.csv`), a post-hoc proxy evaluation can be run with:
 
 ```bash
-python scripts/evaluate_classifier_homogeneity_proposal.py
+python scripts/legacy_finetuning/evaluate_classifier_homogeneity_proposal.py
 ```
 
 Interpretation constraints:
@@ -240,7 +240,7 @@ Rationale:
 
 ```bash
 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 \
-python scripts/run_domain_finetune_stage_a.py \
+python scripts/legacy_finetuning/run_domain_finetune_stage_a.py \
   --target-dataset eudirectlapse \
   --seed 42 \
   --target-rows 800 \
@@ -271,7 +271,7 @@ export MKL_NUM_THREADS=1
 for dataset in eudirectlapse coil2000 ausprivauto0405 freMTPL2freq_binary; do
   for seed in 42 43 44; do
     for policy in similarity_topk mixed_baseline; do
-      python scripts/run_domain_finetune_stage_a.py \
+      python scripts/legacy_finetuning/run_domain_finetune_stage_a.py \
         --target-dataset "$dataset" \
         --seed "$seed" \
         --target-rows 800 \

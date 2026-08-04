@@ -207,7 +207,7 @@ Stage R2 (regressor hardening/ablation):
   - Maintain identical split seed and evaluation discipline.
    - Readiness gate before calling a configuration “ready” for Stage R3 reruns: evaluate a small seed panel using the latest logged rows for the exact config and require `finetune_steps_executed >= 1` for every seed, finite `last_step_loss` values for every seed, `abs(last_step_loss) <= 1e6` for every seed, and cross-seed `last_step_loss` range `<= 100`.
    - Default claim-target seed panel: `42`, `1337`, `2025`.
-   - Command shape: `python scripts/evaluate_regressor_stability_gate.py --target-col ClaimNb --target-transform none --rows 5000 --context-samples 64 --device cpu --seeds 42 1337 2025 --strict-exit`
+   - Command shape: `python scripts/legacy_finetuning/evaluate_regressor_stability_gate.py --target-col ClaimNb --target-transform none --rows 5000 --context-samples 64 --device cpu --seeds 42 1337 2025 --strict-exit`
    - Decision gate: if the stability gate fails, do not call the config ready for Stage R3 reruns. If all claim-frequency variants remain blocked (`steps_executed=0`) or fail the stability gate, regressor fine-tuning is not yet viable for insurance count targets and further engineering is required.
 
 ## 11. Decision Rules

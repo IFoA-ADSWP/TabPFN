@@ -4,7 +4,7 @@ This script runs a minimal finetuning loop matching the example in
 `examples/finetune_classifier.py` to measure training time per sample.
 
 Usage:
-  python scripts/finetune_pilot.py --n_pilot 2000 --device cpu
+  python scripts/legacy_finetuning/finetune_pilot.py --n_pilot 2000 --device cpu
 
 Notes:
 - Set `HF_TOKEN` or pass `--hf_token` if you need access to gated models.

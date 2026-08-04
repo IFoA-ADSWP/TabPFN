@@ -1,8 +1,8 @@
 """Pilot timing script for TabPFN fine-tuning.
 
 Usage examples:
-  python scripts/pilot_timing.py --n_pilot 1000
-  python scripts/pilot_timing.py --csv data/processed/my_features.csv --target target_col --n_pilot 500
+  python scripts/legacy_finetuning/pilot_timing.py --n_pilot 1000
+  python scripts/legacy_finetuning/pilot_timing.py --csv data/processed/my_features.csv --target target_col --n_pilot 500
 
 Notes:
 - Installs: pip install tabpfn torch pandas scikit-learn

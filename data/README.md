@@ -22,7 +22,7 @@ All input CSVs are in `data/raw/`. The first four (eudirectlapse, coil2000, ausp
 | `ausprivauto0405.csv` | Aus. Vehicle (AU) | [CASdatasets](https://github.com/dutangc/CASdatasets) (GitHub mirror) | `ClaimOcc` | 67,856 | 7 | 6.8% | `scripts/download_datasets.py` |
 | `freMTPL2freq_binary.csv` | freMTPL2 Binary (FR) | Derived from freMTPL2freq.csv (below) — sampled 50K rows, binarised `ClaimNb > 0` | `ClaimIndicator` | 50,000 | 10 | 5.0% | `scripts/download_datasets.py` |
 
-Used together in: `notebooks/baseline_experiments/07_multi_dataset_benchmark.ipynb`, `scripts/run_domain_finetune_stage_a.py`, `scripts/evaluate_classifier_homogeneity_proposal.py`.
+Used together in: `notebooks/baseline_experiments/07_multi_dataset_benchmark.ipynb`, `scripts/legacy_finetuning/run_domain_finetune_stage_a.py`, `scripts/legacy_finetuning/evaluate_classifier_homogeneity_proposal.py`.
 
 ### Classification — Supplementary
 
