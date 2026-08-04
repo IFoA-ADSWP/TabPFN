@@ -116,7 +116,7 @@ Open action items: **none** — #2 and #3 were resolved in `f72c57f`; all others
 
 ## 5. Merge mechanics
 
-**EXECUTED 2026-08-04**: `git merge origin/main` clean (`ed6de3a`) → pushed → PR #51 marked ready (was draft) → merged (`31d40a5`). Post-merge checks: registry paths all resolve on `origin/main`; branch kept until follow-ups #52–#55 land.
+**EXECUTED 2026-08-04**: `git merge origin/main` clean (`ed6de3a`) → pushed → PR #51 marked ready (was draft) → merged (`31d40a5`). Post-merge checks: registry paths all resolve on `origin/main`; branch kept; follow-ups #52/#53/#55 landed (PRs #61/#62), #54 assessed (PR #63).
 
 ```bash
 git fetch origin
@@ -126,6 +126,6 @@ git merge origin/main     # resolved cleanly
 
 - Merge `origin/main` into the branch first, resolve any conflicts (currently none), then PR to `main`.
 - Pushes from git 2.39.3 need the HTTP/2 workaround (empty 400 on larger packs): repo config `http.version=HTTP/1.1` + `http.postBuffer=524288000`. Documented, applied; branch push of 2026-08-04 used it.
-- `TASKS.md` #27 row updated to "pushed; wrap-up open" (matches reality as of `58dde49`; both #27 and #27a rows still show open checkboxes pending wrap-up).
+- `TASKS.md` #27/#27a rows were closed in TASKS.md during post-merge wrap-up (PR #60).
 - `origin/main` carries 2 cosmetic junk commits from a diagnostic (`f0bf230` test + `5264ec1` revert, content-neutral) — cleanup decision pending.
 - Low risk: additive-only diff, no existing source files modified.

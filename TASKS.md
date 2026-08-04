@@ -6,10 +6,10 @@ Tracked from GitHub issues. Updated manually.
 |--------|---|-------|----------|
 | 🔲 | #57 | Clean up main junk commits (f0bf230, 5264ec1) — blocked (needs main force-push decision) | — |
 | ✅ | #56 | Merge PR #51 + post-merge verification — merged 2026-08-04 (31d40a5); registry check clean | scotthawes |
-| 🔲 | #55 | Version-drift re-test policy for the benchmark verdict | — |
-| 🔲 | #54 | TabPFN levers in the parsimony framework — fine-tuning, HPO, ensembling | — |
-| 🔲 | #53 | Regime characterization — why does TabPFN win lapse at 53.5K but lose frequency/severity? | — |
-| 🔲 | #52 | Conclusion & adoption guidance for the TabPFN benchmark | — |
+| ✅ | #55 | Version-drift re-test policy for the benchmark verdict — PR #62 | — |
+| 🔲 | #54 | TabPFN levers in the parsimony framework — fine-tuning, HPO, ensembling — assessment shipped (PR #63), run decision pending | — |
+| ✅ | #53 | Regime characterization — why does TabPFN win lapse at 53.5K but lose frequency/severity? — PR #61 | — |
+| ✅ | #52 | Conclusion & adoption guidance for the TabPFN benchmark — PR #61 | — |
 | 🔲 | #35 | Pipeline for Insurance/Actuarial Predictions — 4/5 criteria done (#47–#50); #46 open (generic CLI) | — |
 | 🔲 | #46 | Pipeline: CLI entrypoint (dataset path + target column) — partial: registry-based filter, not arbitrary path+target | — |
 | 🔲 | #29 | Funding Request #1 | Cillian-Williamson |

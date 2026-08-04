@@ -66,7 +66,7 @@ else:
 
 **Status:** ✅ Updated in notebook.ipynb
 
-### ⚠️ **CRITICAL: ACTION REQUIRED BY USER**
+### ⚠️ Action required
 
 You must **regenerate your HuggingFace token immediately**. The old token `hf_REDACTED_COMPROMISED_TOKEN` is now compromised:
 
@@ -208,9 +208,11 @@ Before committing code:
 | Mid-session | Attempted HF auth, pasted raw token | ❌ |
 | Error encountered | Cell 3 failed with missing `ipywidgets` | ⚠️ |
 | Token exposed | Cell 4 contained raw token in visible form | 🚨 |
-| **NOW** | **Deleted compromised cells, updated auth** | ✅ |
-| **NEXT** | **User regenerates HF token** | ⏳ User Action |
-| **Then** | **Run notebook with new secure config** | ⏳ Next Step |
+| Session end | Deleted compromised cells, updated auth | ✅ |
+
+**Next steps:**
+1. Regenerate the Hugging Face token (user action).
+2. Re-run the notebook with the new secure config.
 
 ---
 
@@ -252,6 +254,6 @@ For security concerns or questions:
 ---
 
 **Incident Resolution Date:** 2024  
-**Resolved by:** Automated Security Remediation  
+**Resolved by:** token revocation and rotation  
 **Notebook File:** `/Users/Scott/Documents/Data Science/ADSWP/TabPFN/BaselineExperiments/finetuning_notebook.ipynb`  
 **Status:** ✅ READY FOR SECURE EXECUTION
