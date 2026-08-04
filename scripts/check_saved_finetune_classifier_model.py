@@ -3,7 +3,8 @@
 By default this script reads the latest saved-model row from the fine-tune trial
 results CSV, reconstructs the same sampled dataset and holdout split, reloads the
 `.tabpfn_fit` artifact, and evaluates it on the original holdout partition.
-"""
+
+Legacy — fine-tuning-era script, kept for provenance; registered reports cite its outputs (outputs/current/tables/)."""
 
 from __future__ import annotations
 

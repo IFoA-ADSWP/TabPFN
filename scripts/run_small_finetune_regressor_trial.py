@@ -3,7 +3,8 @@
 This script mirrors the classifier smoke harness for quick local readiness checks.
 It prefers the local upstream TabPFN source tree so fine-tuning APIs are available
 when installed package versions differ.
-"""
+
+Legacy — fine-tuning-era script, kept for provenance; registered reports cite its outputs (outputs/current/tables/)."""
 
 from __future__ import annotations
 

@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
-"""Analyze Round 3 (context=128, steps=5) classifier fine-tuning results."""
+"""Analyze Round 3 (context=128, steps=5) classifier fine-tuning results.
+
+Legacy — fine-tuning-era script, kept for provenance; registered reports cite
+its outputs (outputs/current/tables/)."""
 
 import pandas as pd
 import numpy as np

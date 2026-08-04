@@ -1,3 +1,5 @@
+"""Legacy — fine-tuning-era script, kept for provenance; registered reports cite its outputs (outputs/current/tables/)."""
+
 from sklearn.datasets import make_classification
 from sklearn.model_selection import train_test_split
 from tabpfn import TabPFNClassifier

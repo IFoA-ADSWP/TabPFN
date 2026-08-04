@@ -9,7 +9,8 @@ This executes a controlled first-pass experiment from
 
 Outputs are appended to:
 - outputs/current/tables/domain_finetune_study_runs.csv
-"""
+
+Legacy — fine-tuning-era script, kept for provenance; registered reports cite its outputs (outputs/current/tables/)."""
 
 from __future__ import annotations
 

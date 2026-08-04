@@ -9,7 +9,8 @@ Usage:
 Notes:
 - Set `HF_TOKEN` or pass `--hf_token` if you need access to gated models.
 - Installs: `pip install tabpfn torch pandas scikit-learn tqdm`
-"""
+
+Legacy — fine-tuning-era script, kept for provenance; registered reports cite its outputs (outputs/current/tables/)."""
 
 import argparse
 import os

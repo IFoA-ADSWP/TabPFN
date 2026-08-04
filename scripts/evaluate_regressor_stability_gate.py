@@ -4,7 +4,8 @@ The gate is evaluated across a small seed panel using previously logged rows fro
 the regressor trial ledger. A configuration is considered ready only when the
 latest run for each required seed executes at least the requested number of
 fine-tune steps and the observed last-step losses remain finite and non-extreme.
-"""
+
+Legacy — fine-tuning-era script, kept for provenance; registered reports cite its outputs (outputs/current/tables/)."""
 
 from __future__ import annotations
 

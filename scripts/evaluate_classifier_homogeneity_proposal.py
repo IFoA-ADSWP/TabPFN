@@ -10,7 +10,8 @@ This script does NOT run models. It reuses current results in:
 It computes per-target fine-tune deltas (domain_finetuned - raw) and compares those
 against a simple homogeneity proxy based on class prevalence distance between target
 and domain pool candidates.
-"""
+
+Legacy — fine-tuning-era script, kept for provenance; registered reports cite its outputs (outputs/current/tables/)."""
 
 from __future__ import annotations
 

@@ -1,3 +1,5 @@
+"""Legacy — fine-tuning-era script, kept for provenance; registered reports cite its outputs (outputs/current/tables/)."""
+
 from __future__ import annotations
 
 import argparse

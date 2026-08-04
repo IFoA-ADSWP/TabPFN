@@ -385,7 +385,7 @@ added by commit 63d43ee.
 - **Config-lite probe:** per cell, TabPFN also ran an `n_estimators=8` arm (API cap) to
   test whether the v1 default sits below a better ensemble setting.
 - Harness: `scripts/run_home_turf_size_sweep.py`; row assembly and error handling:
-  `scripts/finish_home_turf_sweep.py`, `scripts/finish_home_turf_sweep_v2.py`.
+  `scripts/finish_home_turf_sweep_v2.py`.
 
 ### 13.2 Results — mean log loss over 5 folds, lower is better
 
@@ -927,10 +927,8 @@ signal, TabPFN's 10M-param prior adds nothing. Files:
 - `scripts/eval/insurance_benchmark_v1/run_frontier_benchmark.py` — insurance frontier
   benchmark (D1/D2 combined pass, 3 datasets × 9 methods, D3 beyond-SE Pareto rule;
   §14, commit `ed3e119`).
-- `scripts/finish_home_turf_sweep.py` — sweep result assembly, fold/cell bookkeeping
-  (§13).
-- `scripts/finish_home_turf_sweep_v2.py` — revised assembly: flaky-config dedup, error
-  handling (§13).
+- `scripts/finish_home_turf_sweep_v2.py` — sweep result assembly, fold/cell bookkeeping,
+  flaky-config dedup, error handling (§13; supersedes `finish_home_turf_sweep.py`).
 - `scripts/run_tabarena_insurance_benchmark.py` — benchmark runner (task registry, target
   definitions, feature handling at line 184).
 - `scripts/run_tabarena_insurance_imbalance_pilot.py` — imbalance pilot (coil2000 +

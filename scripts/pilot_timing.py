@@ -7,7 +7,8 @@ Usage examples:
 Notes:
 - Installs: pip install tabpfn torch pandas scikit-learn
 - If no CSV provided, a synthetic dataset will be used.
-"""
+
+Legacy — fine-tuning-era script, kept for provenance; registered reports cite its outputs (outputs/current/tables/)."""
 
 import argparse
 import time

@@ -3,7 +3,8 @@
 This script is designed for local readiness checks before larger fine-tuning runs.
 It prefers the local upstream TabPFN source tree so repo-specific fine-tuning APIs
 are available even if the installed package differs.
-"""
+
+Legacy — fine-tuning-era script, kept for provenance; registered reports cite its outputs (outputs/current/tables/)."""
 
 from __future__ import annotations
 
