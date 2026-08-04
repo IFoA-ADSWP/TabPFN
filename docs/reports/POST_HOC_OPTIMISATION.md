@@ -79,7 +79,7 @@ This document summarizes the results of post-hoc optimization experiments perfor
 ### Action Items
 
 **Immediate (This Week):**
-1. ✅ Deploy: `TabPFN (Engineered Features) → Isotonic Calibration`
+1. Deploy (pending): `TabPFN (Engineered Features) → Isotonic Calibration`
 2. Set up monitoring: Track Brier score, ROC AUC weekly
 3. A/B test vs current baseline for 2 weeks
 4. No infrastructure changes needed (same API, same latency)
@@ -165,7 +165,7 @@ Should you decide to pursue GPU fine-tuning in the future, documentation is avai
 - GPU fine-tuning can be revisited in 3-6 months if needed
 - Full documentation available for future GPU-based optimization
 
-**Next Step:** Contact deployment team to schedule rollout of optimized model.
+**Recommended next step:** contact the deployment team to schedule rollout of the optimized model.
 
 ---
 

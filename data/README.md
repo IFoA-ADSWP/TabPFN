@@ -37,8 +37,8 @@ Used together in: `notebooks/baseline_experiments/07_multi_dataset_benchmark.ipy
 | `freMTPL2freq.csv` | `ClaimNb` (claim frequency count) | 678,013 | Core regression benchmark: `notebooks/baseline_experiments/08_multi_dataset_regression_benchmark.ipynb` |
 | `eudirectlapse.csv` | `prem_pure` (pure premium — continuous) | 23,060 | Regression benchmark notebook 08, premium target |
 | `ausprivauto0405.csv` | `VehValue` (vehicle value — continuous) | 67,856 | Regression benchmark notebook 08, vehicle value target |
-| `coil2000.csv` | `MINKGEM` (income — continuous) | 9,822 | Planned in notebook 08 but **not run** (API limit) |
-| `freMTPL2freq_binary.csv` | `Density` (demographic — continuous) | 50,000 | Planned in notebook 08 but **not run** (API limit) |
+| `coil2000.csv` | `MINKGEM` (income — continuous) | 9,822 | Not run in notebook 08 (API limit); delivered via frontier benchmark (PR #51) |
+| `freMTPL2freq_binary.csv` | `Density` (demographic — continuous) | 50,000 | Not run in notebook 08 (API limit); delivered via frontier benchmark (PR #51) |
 | `freMTPL2sev.csv` (remote) | Claim severity | — | `notebooks/adswp_project/02_TabPFN_freMTPL.ipynb` — loaded from CASdatasets via pyreadr |
 | `usautoBI.rda` (remote) | US Auto Bodily Injury | — | `notebooks/adswp_project/03_usautoBI_fit.ipynb` — loaded from CASdatasets via pyreadr |
 

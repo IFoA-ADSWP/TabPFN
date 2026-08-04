@@ -1,6 +1,6 @@
 # Insurance Frontier Benchmark — Design Spec
 
-Status: agreed spec for issue #27 (repo IFoA-ADSWP/TabPFN). This document is intended to be pasted into the issue body and later executed as a self-contained implementation task. It encodes approved design decisions D1–D5 (see §5); those are settled choices, not open options.
+Status: agreed spec for issue #27 (repo IFoA-ADSWP/TabPFN). This document was written as the self-contained implementation spec for the frontier benchmark; it was pasted into the issue body and executed (PR #51). It encodes approved design decisions D1–D5 (see §5); those are settled choices, not open options.
 
 ---
 

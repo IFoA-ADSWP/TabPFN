@@ -117,4 +117,4 @@ A TASKS.md                               (GitHub issue tracker)
 2. Expand lapse model panel (XGBoost, CatBoost, RandomForest, Logistic GLM) — commented out in `run_lapse_benchmark.py` for the first pass
 3. Run TabFM locally (requires GPU or heavy CPU time)
 4. Fine-tuning experiments on lapse data
-5. Set up `.opencode/project/CONTEXT.md` for agent orientation
+5. Set up `.opencode/project/CONTEXT.md` for agent orientation (not done)

@@ -7,14 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- docs: human-voice cleanup pass — removed AI-assistant framing and phantom file references (papers/status/analyses/notebooks/data)
+
 ### Added
 - `LICENSE` file (MIT) — addresses wiki issue #1
 - `CHANGELOG.md` (this file) — addresses wiki issue #10
 - `tests/` directory with a smoke test — addresses wiki issue #5
 - Wiki at https://github.com/IFoA-ADSWP/TabPFN/wiki (Issues disabled, backlog lives in the wiki)
-- `docs/MAINTENANCE_BACKLOG.md` (canonical source for the wiki)
+- Backlog tracking: `TASKS.md` (the planned `docs/MAINTENANCE_BACKLOG.md` was never created)
 - `scripts/infra/import_backlog_to_github.py` (bulk import when Issues are re-enabled)
-- `scripts/infra/push_wiki.sh` (sync `docs/MAINTENANCE_BACKLOG.md` to the wiki)
+- `scripts/infra/push_wiki.sh` (sync the backlog to the wiki)
 
 ### Changed
 - `.gitignore` now excludes `.venv*/`, `outputs/archive/`, `*.pkl`, `*.tabpfn_fit`, `**/.DS_Store`, `**/catboost_info/`

@@ -30,5 +30,3 @@ What this means for actuaries
 
 Short practical note on calibration
 We use a simple post‑training adjustment (isotonic calibration) on held‑out data to make predicted probabilities better match observed frequencies; this keeps the ordering the same but makes the percentage numbers more trustworthy.
-
-If you like this tone, I can: (a) replace the original short journal draft with this plain version, (b) produce a combined file with both technical and plain sections, or (c) shorten further for a one‑paragraph press summary.

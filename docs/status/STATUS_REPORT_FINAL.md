@@ -65,33 +65,7 @@ Rollback trigger:
 
 ## Repository Restructuring Required
 
-Current issue:
-- The repository mixes final research notes, generated outputs, notebooks, and draft/support docs in one flat documentation area, making review and version control noisy.
-
-Recommended structure (documentation only):
-
-1. Keep a single canonical narrative
-- Canonical paper: `UNIFIED_PAPER_FINAL.md`
-- Canonical status: `STATUS_REPORT_FINAL.md`
-- Canonical index: `INDEX_DOCUMENTATION.md`
-
-2. Move supporting writeups into an archive folder
-- Move these to `docs/archive/` (or `BaselineExperiments/docs/archive/`):
-   - `QUICK_REFERENCE.md`
-   - `QUICK_REFERENCE_STREAMLINED.md`
-   - `BEFORE_AFTER_COMPARISON.md`
-   - `STREAMLINING_SUMMARY.md`
-   - `UNIFIED_PAPER_STRUCTURE.md`
-
-3. Separate generated artifacts from versioned research notes
-- Keep generated outputs under `outputs/` but do not bundle them with narrative-note commits.
-- Commit output artifacts only when they are explicitly required for reproducibility snapshots.
-
-4. Commit strategy
-- Use small thematic commits:
-   - `docs: refine research status report`
-   - `docs: restructure index and canonical doc map`
-   - `data-artifacts: add reproducibility snapshot` (only when needed)
+A proposed restructuring of then-orphaned quick-reference docs was not carried out; the referenced files were never committed to this repository.
 
 ---
 
@@ -99,24 +73,19 @@ Recommended structure (documentation only):
 
 - Re-centered this report on research findings rather than editorial process details.
 - Added explicit deployment recommendation and rollback rule.
-- Added concrete repository restructuring guidance to reduce future documentation drift.
 
 ---
 
 ## Linked Core Files
 
-- Main paper: `UNIFIED_PAPER_FINAL.md`
-- Supporting article draft: `ARTICLE_REVISED_COMPLETE.md`
-- Optimization details: `FINETUNING_SUMMARY.md`
-- Documentation map: `INDEX_DOCUMENTATION.md`
+The long-form paper and supporting documents referenced by this status report live outside this repository and were never committed here.
 
 ---
 
 ## Next Actions
 
 1. Keep this file as the short executive research status.
-2. Keep `UNIFIED_PAPER_FINAL.md` as the long-form publication narrative.
-3. Archive non-canonical supporting docs to reduce maintenance overhead.
-4. Continue production monitoring for calibration drift after deployment.
+2. Archive non-canonical supporting docs to reduce maintenance overhead.
+3. Continue production monitoring for calibration drift after deployment.
 
-Report date (intentionally future-dated to match target production cutover milestone): 2026-03-29
+Report date: 2026-03-29
