@@ -6,7 +6,7 @@ The Spanish motor portfolio source is a raw CSV (comma-separated, "NA" conventio
 DD/MM/YYYY dates) — handled by a CSV-source branch in main().
 
 Usage:
-    python scripts/prepare_insurance_datasets.py [SRC_DIR]
+    python scripts/infra/prepare_insurance_datasets.py [SRC_DIR]
 """
 
 from __future__ import annotations

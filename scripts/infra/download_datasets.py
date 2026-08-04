@@ -12,7 +12,7 @@ Datasets sourced:
 The 4th dataset (eudirectlapse.csv) is already present in data/raw/.
 
 Run from the repo root:
-    python scripts/download_datasets.py
+    python scripts/infra/download_datasets.py
 """
 
 import sys

@@ -84,7 +84,7 @@ Expected files:
 If missing, regenerate via:
 
 ```bash
-python scripts/download_datasets.py
+python scripts/infra/download_datasets.py
 ```
 
 ### 3. Run analysis

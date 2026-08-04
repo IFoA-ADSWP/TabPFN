@@ -98,7 +98,7 @@ REPO = HERE.parent.parent.parent
 DATA_RAW = REPO / "data" / "raw"
 
 # D5 Option A: the home-turf sweep datasets plus norauto. Load configs identical to
-# scripts/run_home_turf_size_sweep.py (target + drops); norauto.csv was leak-fixed
+# scripts/benchmarks/run_home_turf_size_sweep.py (target + drops); norauto.csv was leak-fixed
 # in d170afc (ClaimAmount dropped — do not re-derive) and has no sweep rows.
 DATASETS = [
     dict(name="bemtl97", file="bemtl97.csv", target="claim", drop=["nclaims", "amount"]),
@@ -118,7 +118,7 @@ DATASETS = [
 # spanish_motor_freq: last policy-year per ID (53,502 rows), target N_claims_year;
 # NO log_exposure transform — per-row exposure is uniform ~1 year (verified in step
 # 1), and leak columns (N_claims_history/R_Claims_history/Cost_claims_year) were
-# dropped at prep time (scripts/prepare_insurance_datasets.py).
+# dropped at prep time (scripts/infra/prepare_insurance_datasets.py).
 REG_DATASETS = [
     dict(name="ausautoBI8999", file="ausautoBI8999.csv", target="AggClaim", drop=[], metric="rmse"),
     dict(name="ausprivauto0405_vehvalue", file="ausprivauto0405.csv", target="VehValue", drop=[], metric="rmse"),
@@ -149,7 +149,7 @@ TABPFN_N_PARAMS = 10_000_000
 
 
 def load_Xy(ds: dict, regression: bool = False) -> tuple[np.ndarray, np.ndarray]:
-    """Identical to scripts/run_home_turf_size_sweep.py load_Xy — same split input.
+    """Identical to scripts/benchmarks/run_home_turf_size_sweep.py load_Xy — same split input.
     regression=True keeps y as float64 (continuous/count targets) instead of int64
     class labels. Regression datasets may set ds["transform"]="log_exposure"
     (freMTPL2freq): the Exposure column is replaced by log(Exposure) — Exposure is the

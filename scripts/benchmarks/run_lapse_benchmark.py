@@ -2,7 +2,7 @@
 
 Usage:
     source /tmp/tabarena/.venv-ta/bin/activate
-    python scripts/run_lapse_benchmark.py
+    python scripts/benchmarks/run_lapse_benchmark.py
 """
 
 from __future__ import annotations

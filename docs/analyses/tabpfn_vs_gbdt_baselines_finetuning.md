@@ -233,7 +233,7 @@ Prior working hypothesis: TabPFN's losses to GBDTs are partly an **imbalance-han
 deficit** — GBDTs get class-weight handling "for free" while TabPFN defaults to the raw
 prior. Pilot: `TabPFNClassifier(balance_probabilities=True, n_estimators=8)` vs v1 default
 on the two most informative binary tasks, same folds as v1 (`coil2000`, 6% positive;
-`uslapseagent`, 38% positive). Harness: `scripts/run_tabarena_insurance_imbalance_pilot.py`;
+`uslapseagent`, 38% positive). Harness: `scripts/benchmarks/run_tabarena_insurance_imbalance_pilot.py`;
 results: `scripts/eval/insurance_benchmark_v1/focused_imbalance_results.csv`.
 
 ### 11.2 Null on 1−AUC, and why
@@ -292,7 +292,7 @@ claim traces to evidence cited above.
 ### 12.1 Dataset-size mismatch — primary cause of the headline losses
 
 TabPFN is pre-trained on **1,024-sample context windows**. The benchmark's hosted-API
-client (`scripts/run_tabarena_insurance_benchmark.py:23,245`) accepts full-size training
+client (`scripts/benchmarks/run_tabarena_insurance_benchmark.py:23,245`) accepts full-size training
 sets on our 10K–184K-row datasets (norauto 184K rows, §4.2; bemtl97 163,212 rows, §6), but
 each prediction can effectively attend to only ~1K training rows — the local-API
 equivalent of this behavior is `ignore_pretraining_limits=True`. GBDTs, by contrast, see
@@ -384,8 +384,8 @@ added by commit 63d43ee.
   matching the §2.1 harness convention.
 - **Config-lite probe:** per cell, TabPFN also ran an `n_estimators=8` arm (API cap) to
   test whether the v1 default sits below a better ensemble setting.
-- Harness: `scripts/run_home_turf_size_sweep.py`; row assembly and error handling:
-  `scripts/finish_home_turf_sweep_v2.py`.
+- Harness: `scripts/benchmarks/run_home_turf_size_sweep.py`; row assembly and error handling:
+  `scripts/benchmarks/finish_home_turf_sweep_v2.py`.
 
 ### 13.2 Results — mean log loss over 5 folds, lower is better
 
@@ -833,7 +833,7 @@ on severity the GBDTs dominate outright.
 
 Real-portfolio extension: Segura-Gisbert et al. (2024), "Dataset of an actual motor
 vehicle insurance portfolio" (Spanish motor, prepared by `make_spanish_motor_freq` in
-`scripts/prepare_insurance_datasets.py`). 53,502 policies, target `N_claims_year`
+`scripts/infra/prepare_insurance_datasets.py`). 53,502 policies, target `N_claims_year`
 (int 0–18, 11.1% claims > 0), Poisson deviance, 5-fold KFold seed 42, all 8 regressors
 fit **fresh**. The raw policy-year panel is collapsed to the last policy-year per ID
 (bemtl16 precedent); `Length` NA (motorbikes) is imputed by `Type_risk` median;
@@ -882,7 +882,7 @@ LR (0.684); TabPFN also leads the combined lapse leaderboard (elo 1128). The
 
 ## 14.10 Gap-closing addendum (2026-08-04)
 
-**5-fold lapse re-run** (`scripts/run_lapse_benchmark.py`, both classification
+**5-fold lapse re-run** (`scripts/benchmarks/run_lapse_benchmark.py`, both classification
 entries now `n_splits: 5`; experiment cache cleared first — 0 cache_exists, so
 both datasets including eudirectlapse were freshly refit; premium regression task
 stays 2-fold). Mean AUC over 5 stratified folds, ±SE:
@@ -922,20 +922,20 @@ signal, TabPFN's 10M-param prior adds nothing. Files:
 
 ## 9. Source Workbooks
 
-- `scripts/run_home_turf_size_sweep.py` — home-turf size sweep runner (3 datasets × 3
+- `scripts/benchmarks/run_home_turf_size_sweep.py` — home-turf size sweep runner (3 datasets × 3
   sizes × 5 folds, TabPFN + GBDT arms; §13).
 - `scripts/eval/insurance_benchmark_v1/run_frontier_benchmark.py` — insurance frontier
   benchmark (D1/D2 combined pass, 3 datasets × 9 methods, D3 beyond-SE Pareto rule;
   §14, commit `ed3e119`).
-- `scripts/finish_home_turf_sweep_v2.py` — sweep result assembly, fold/cell bookkeeping,
+- `scripts/benchmarks/finish_home_turf_sweep_v2.py` — sweep result assembly, fold/cell bookkeeping,
   flaky-config dedup, error handling (§13; supersedes `finish_home_turf_sweep.py`).
-- `scripts/run_tabarena_insurance_benchmark.py` — benchmark runner (task registry, target
+- `scripts/benchmarks/run_tabarena_insurance_benchmark.py` — benchmark runner (task registry, target
   definitions, feature handling at line 184).
-- `scripts/run_tabarena_insurance_imbalance_pilot.py` — imbalance pilot (coil2000 +
+- `scripts/benchmarks/run_tabarena_insurance_imbalance_pilot.py` — imbalance pilot (coil2000 +
   uslapseagent, `balance_probabilities` vs default; §11).
 - `scripts/eval/insurance_benchmark_v1/rescore_focused_imbalance_logloss.py` — log-loss /
   Brier re-score of pilot folds (§11.3).
-- `scripts/prepare_insurance_datasets.py` — dataset prep (`make_bemtl97` at line 43).
+- `scripts/infra/prepare_insurance_datasets.py` — dataset prep (`make_bemtl97` at line 43).
 - `outputs/current/logs/domain_finetune_logbook.md` — domain fine-tune runs and
   interpretation blocks (protocol runs 2026-04-02).
 - Prior write-ups: `docs/reports/COMBINED_TABPFN_CLASSIFIER_REGRESSOR_ANALYSIS.md`,

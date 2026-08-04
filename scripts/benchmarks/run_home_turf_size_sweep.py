@@ -12,7 +12,7 @@ dropped, noted in the CSV via 'trimmed' column).
 
 Usage:
     source /tmp/tabarena/.venv-ta/bin/activate
-    python scripts/run_home_turf_size_sweep.py
+    python scripts/benchmarks/run_home_turf_size_sweep.py
 
 Output: scripts/eval/insurance_benchmark_v1/home_turf_sweep_results.csv
 """

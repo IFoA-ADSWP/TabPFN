@@ -5,7 +5,7 @@ Run this before the full 7-dataset benchmark.
 
 Usage:
     source .venv-ta/bin/activate
-    python scripts/run_smoke_tabarena.py
+    python scripts/benchmarks/run_smoke_tabarena.py
 """
 
 from __future__ import annotations

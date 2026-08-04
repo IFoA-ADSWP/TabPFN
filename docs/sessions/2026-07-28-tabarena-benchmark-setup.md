@@ -8,9 +8,9 @@ Set up the TabArena benchmark framework to evaluate TabPFN against tree-based an
 
 | Script | Purpose | Status |
 |--------|---------|--------|
-| `scripts/run_smoke_tabarena.py` | Quick 3-model smoke test on coil2000 | ✅ Passed |
-| `scripts/run_lapse_benchmark.py` | Lapse-only benchmark (classification + regression), 7 models | ⚠️ Runs, but too slow for full results on this machine |
-| `scripts/run_tabarena_insurance_benchmark.py` | 7-dataset full benchmark | ⚠️ Untested, has same fixes applied |
+| `scripts/benchmarks/run_smoke_tabarena.py` | Quick 3-model smoke test on coil2000 | ✅ Passed |
+| `scripts/benchmarks/run_lapse_benchmark.py` | Lapse-only benchmark (classification + regression), 7 models | ⚠️ Runs, but too slow for full results on this machine |
+| `scripts/benchmarks/run_tabarena_insurance_benchmark.py` | 7-dataset full benchmark | ⚠️ Untested, has same fixes applied |
 
 ## Environment
 
@@ -88,7 +88,7 @@ On Apple Silicon, LightGBM auto-detects Metal GPU and trains in GPU-emulation mo
 **Fix:** force every `libomp.dylib` lookup to one copy:
 
 ```bash
-DYLD_LIBRARY_PATH=/opt/homebrew/opt/libomp/lib python scripts/run_lapse_benchmark.py
+DYLD_LIBRARY_PATH=/opt/homebrew/opt/libomp/lib python scripts/benchmarks/run_lapse_benchmark.py
 ```
 
 Verified: repro fits exit 0, deterministic AUC across runs.
@@ -103,9 +103,9 @@ eudirectlapse.csv has 9 object-type categorical columns that must be converted t
 ## Files Changed
 
 ```
-M scripts/run_smoke_tabarena.py          (fixes 1-4, 6)
-M scripts/run_tabarena_insurance_benchmark.py  (fixes 1-3, 5, 6)
-A scripts/run_lapse_benchmark.py         (new, focused lapse benchmark)
+M scripts/benchmarks/run_smoke_tabarena.py          (fixes 1-4, 6)
+M scripts/benchmarks/run_tabarena_insurance_benchmark.py  (fixes 1-3, 5, 6)
+A scripts/benchmarks/run_lapse_benchmark.py         (new, focused lapse benchmark)
 M scripts/README.md                      (updated with benchmark section)
 A scripts/eval/smoke_test/               (smoke test results)
 A TASKS.md                               (GitHub issue tracker)

@@ -21,7 +21,7 @@ All research work for issue #27 (TabArena insurance frontier benchmark).
 
   Plus the raw source dir `data/raw/Spanish motor portfolio/` (Segura-Gisbert et al. 2024, "Dataset of an actual motor vehicle insurance portfolio": `Motor vehicle insurance data.csv`, `Descriptive of the variables.xlsx`, `sample type claim.csv`).
 
-  `scripts/prepare_insurance_datasets.py` regenerates the CASdatasets-derived CSVs from `.rda` files, and now also carries two additional makers (`make_spanish_motor_freq`, `make_spanish_motor_lapse`) with a CSV-source branch — the worktree has no `.rda` sources for the Spanish data — plus an `--only` CLI filter.
+  `scripts/infra/prepare_insurance_datasets.py` regenerates the CASdatasets-derived CSVs from `.rda` files, and now also carries two additional makers (`make_spanish_motor_freq`, `make_spanish_motor_lapse`) with a CSV-source branch — the worktree has no `.rda` sources for the Spanish data — plus an `--only` CLI filter.
 
 - **Benchmark scripts** (`scripts/`):
 
@@ -53,7 +53,7 @@ Status legend: all five stages are DONE — the work exists committed on the bra
 
 ### 2.1 Stage 1 — Data + prep
 
-- 7 CSVs in `data/raw/`, `scripts/prepare_insurance_datasets.py`, and a `data/README.md` update.
+- 7 CSVs in `data/raw/`, `scripts/infra/prepare_insurance_datasets.py`, and a `data/README.md` update.
 - Status: DONE — data CSVs + prep script in commit `4b6be6f`; `data/README.md` update in `58dde49`.
 - The prep commit also brings the Spanish motor makers (CSV-source branch, `--only` filter) and the `Spanish motor portfolio/` raw source dir.
 - The `data/README.md` gap originally flagged here (5 datasets undocumented, beMTPL16-vs-`bemtl16` naming collision) is addressed; see fix #4 in §3.

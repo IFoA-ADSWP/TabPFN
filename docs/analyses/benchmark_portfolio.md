@@ -12,11 +12,11 @@ This portfolio is the project's "custom benchmarking to assess insurance perform
 
 | # | Preferred name | Files | What it measures | Status |
 |---|---|---|---|---|
-| 1 | Smoke test | `scripts/run_smoke_tabarena.py` | Pipeline works end-to-end (1 dataset `coil2000`, 3 models, 2 folds, ~2 min) | done |
-| 2 | Default-config baseline | `scripts/run_tabarena_insurance_benchmark.py` | Default-config head-to-head: 9 tasks / 7 datasets, 8 models (TabPFN vs GBDTs vs GLMs vs RF), insurance metrics (1−AUC, RMSE) | done |
-| 3 | Lapse benchmark | `scripts/run_lapse_benchmark.py` | Lapse classification + premium regression, ELO leaderboard; `eudirectlapse` + `spanish_motor_lapse` | done |
-| 4 | Imbalance study | `scripts/run_tabarena_insurance_imbalance_pilot.py` | Does `balance_probabilities` help on imbalanced insurance data? (`coil2000` + `uslapseagent`, 5 folds) | done |
-| 5 | Size sweep — small-data regime | `scripts/run_home_turf_size_sweep.py` + `scripts/finish_home_turf_sweep_v2.py` | Size sensitivity: 3 datasets × 1K/5K/full × 5 folds, log loss / Brier / 1−AUC | done |
+| 1 | Smoke test | `scripts/benchmarks/run_smoke_tabarena.py` | Pipeline works end-to-end (1 dataset `coil2000`, 3 models, 2 folds, ~2 min) | done |
+| 2 | Default-config baseline | `scripts/benchmarks/run_tabarena_insurance_benchmark.py` | Default-config head-to-head: 9 tasks / 7 datasets, 8 models (TabPFN vs GBDTs vs GLMs vs RF), insurance metrics (1−AUC, RMSE) | done |
+| 3 | Lapse benchmark | `scripts/benchmarks/run_lapse_benchmark.py` | Lapse classification + premium regression, ELO leaderboard; `eudirectlapse` + `spanish_motor_lapse` | done |
+| 4 | Imbalance study | `scripts/benchmarks/run_tabarena_insurance_imbalance_pilot.py` | Does `balance_probabilities` help on imbalanced insurance data? (`coil2000` + `uslapseagent`, 5 folds) | done |
+| 5 | Size sweep — small-data regime | `scripts/benchmarks/run_home_turf_size_sweep.py` + `scripts/benchmarks/finish_home_turf_sweep_v2.py` | Size sensitivity: 3 datasets × 1K/5K/full × 5 folds, log loss / Brier / 1−AUC | done |
 | 6 | Parsimony frontier | `scripts/eval/insurance_benchmark_v1/run_frontier_benchmark.py` | **THE core deliverable (issue #27):** accuracy-vs-complexity Pareto frontiers, 12 datasets (6 class + 6 reg), D1–D5 methodology, `--regression` mode | done |
 
 ## 3. Findings by benchmark
@@ -34,11 +34,11 @@ Script filenames, eval dirs, and report section numbers are **stable IDs by desi
 
 | Canonical | Aliases | Stable ID (file / dir) |
 |---|---|---|
-| Smoke test | — | `scripts/run_smoke_tabarena.py` / `scripts/eval/smoke_test` |
-| Default-config baseline | v1 baseline | `scripts/run_tabarena_insurance_benchmark.py` / `scripts/eval/insurance_benchmark_v1` |
-| Lapse benchmark | — | `scripts/run_lapse_benchmark.py` / `scripts/eval/lapse_benchmark_v1` |
-| Imbalance study | imbalance pilot | `scripts/run_tabarena_insurance_imbalance_pilot.py` / `scripts/eval/insurance_imbalance_pilot` |
-| Size sweep — small-data regime | home-turf size sweep | `scripts/run_home_turf_size_sweep.py` + `scripts/finish_home_turf_sweep_v2.py` / `scripts/eval/insurance_benchmark_v1` |
+| Smoke test | — | `scripts/benchmarks/run_smoke_tabarena.py` / `scripts/eval/smoke_test` |
+| Default-config baseline | v1 baseline | `scripts/benchmarks/run_tabarena_insurance_benchmark.py` / `scripts/eval/insurance_benchmark_v1` |
+| Lapse benchmark | — | `scripts/benchmarks/run_lapse_benchmark.py` / `scripts/eval/lapse_benchmark_v1` |
+| Imbalance study | imbalance pilot | `scripts/benchmarks/run_tabarena_insurance_imbalance_pilot.py` / `scripts/eval/insurance_imbalance_pilot` |
+| Size sweep — small-data regime | home-turf size sweep | `scripts/benchmarks/run_home_turf_size_sweep.py` + `scripts/benchmarks/finish_home_turf_sweep_v2.py` / `scripts/eval/insurance_benchmark_v1` |
 | Parsimony frontier | frontier benchmark | `scripts/eval/insurance_benchmark_v1/run_frontier_benchmark.py` / `scripts/eval/insurance_benchmark_v1` |
 
 One naming rule: the "imbalance pilot" is a study, not a pilot — the hypothesis was tested to completion (null result), so the word "pilot" in prose should be avoided going forward.
@@ -60,11 +60,11 @@ Each step was gated by the previous one: the smoke test validated the harness, t
 
 ### Source Workbooks
 
-- `scripts/run_smoke_tabarena.py`
-- `scripts/run_tabarena_insurance_benchmark.py`
-- `scripts/run_lapse_benchmark.py`
-- `scripts/run_tabarena_insurance_imbalance_pilot.py`
-- `scripts/run_home_turf_size_sweep.py` (+ `scripts/finish_home_turf_sweep_v2.py`)
+- `scripts/benchmarks/run_smoke_tabarena.py`
+- `scripts/benchmarks/run_tabarena_insurance_benchmark.py`
+- `scripts/benchmarks/run_lapse_benchmark.py`
+- `scripts/benchmarks/run_tabarena_insurance_imbalance_pilot.py`
+- `scripts/benchmarks/run_home_turf_size_sweep.py` (+ `scripts/benchmarks/finish_home_turf_sweep_v2.py`)
 - `scripts/eval/insurance_benchmark_v1/run_frontier_benchmark.py`
 
 ### Evidence Files

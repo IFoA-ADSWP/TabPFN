@@ -8,7 +8,7 @@ Usage:
     uv pip install --prerelease=allow -e "/tmp/tabarena/packages/tabarena[benchmark,tabfm]"
 
     # 2. Run
-    python scripts/run_tabarena_insurance_benchmark.py
+    python scripts/benchmarks/run_tabarena_insurance_benchmark.py
 
 What it does:
     Wraps 6 classification + 3 regression insurance datasets from data/raw/
@@ -55,10 +55,10 @@ HERE = Path(__file__).resolve().parent
 REPO = HERE.parent
 DATA_RAW = REPO / "data" / "raw"
 
-RUN_NAME = "insurance_imbalance_pilot"
+RUN_NAME = "insurance_benchmark_v1"
 RESULTS_DIR = str(HERE / "experiments" / RUN_NAME)
 EVAL_DIR = HERE / "eval" / RUN_NAME
-TASK_CACHE_DIR = HERE / "task_cache" / "insurance_benchmark_v1"  # reuse v1 splits
+TASK_CACHE_DIR = HERE / "task_cache" / RUN_NAME
 
 # ---------------------------------------------------------------------------
 # Dataset definitions — full
@@ -76,9 +76,52 @@ CLASSIFICATION_DATASETS = {
         "n_splits": 5,
         "desc": "CoIL 2000 caravan insurance, 9.8K rows, 6.0% positive",
     },
+    "ausprivauto0405": {
+        "file": "ausprivauto0405.csv",
+        "target": "ClaimOcc",
+        "n_splits": 5,
+        "desc": "Australian vehicle insurance claim occurrence, 68K rows, 6.8% positive",
+    },
+    "bemtl97": {
+        "file": "bemtl97.csv",
+        "target": "claim",
+        "n_splits": 5,
+        "desc": "Belgian motor TPL 1997, 163K rows, 11.2% positive",
+    },
+    "bemtl16": {
+        "file": "bemtl16.csv",
+        "target": "number_of_liability_claims",
+        "n_splits": 5,
+        "desc": "Belgian motor TPL 2016 panel (deduped), 59K rows, 36.0% positive",
+    },
+    "norauto": {
+        "file": "norauto.csv",
+        "target": "NbClaim",
+        "n_splits": 5,
+        "desc": "Norwegian auto claims (binarised), 184K rows, 4.6% positive",
+    },
 }
 
-REGRESSION_DATASETS = {}
+REGRESSION_DATASETS = {
+    "ausautoBI8999": {
+        "file": "ausautoBI8999.csv",
+        "target": "AggClaim",
+        "n_splits": 3,
+        "desc": "Australian auto BI severity, 22K rows, log target",
+    },
+    "ausprivauto0405_vehvalue": {
+        "file": "ausprivauto0405.csv",
+        "target": "VehValue",
+        "n_splits": 3,
+        "desc": "Vehicle value regression, 68K rows, continuous target",
+    },
+    "bemtl97_amount": {
+        "file": "bemtl97.csv",
+        "target": "amount",
+        "n_splits": 3,
+        "desc": "Belgian motor TPL 1997 severity, 163K rows, log1p zero-inflated target",
+    },
+}
 
 # ---------------------------------------------------------------------------
 # Small subsets for GPU-bound models like TabFM (1K rows, CPU-feasible)
@@ -244,27 +287,9 @@ class TabPFNClientModel(AbstractModel):
         return ConfigGenerator(search_space={}, model_cls=cls, manual_configs=[{}])
 
 
-class TabPFNBalancedModel(TabPFNClientModel):
-    """TabPFN via hosted API with balance_probabilities=True and a larger ensemble.
-
-    Hypothesis: v1 lost to GBDTs on imbalanced insurance targets because the default
-    ``balance_probabilities=False`` (no class-balance calibration) with only 8
-    estimators. This variant uses 16 estimators and probability balancing.
-    """
-
-    ag_key = "TabPFNClient-balanced"
-    ag_name = "TabPFNClient-balanced"
-
-    def _fit(self, X: pd.DataFrame, y: pd.Series, **kwargs) -> None:
-        Xp = self.preprocess(X, y=y, is_train=True)
-        from tabpfn_client import TabPFNClassifier
-        # ponytail: hosted API caps n_estimators at 8 (422 on 16). Ensemble size is
-        # therefore identical to v1 default; the tested change is balance_probabilities
-        # alone. Spec asked for 16 — revisit on local TabPFN or a lifted API cap.
-        self.model = TabPFNClassifier(
-            model_path="v3_default", random_state=0, balance_probabilities=True, n_estimators=8
-        )
-        self.model.fit(Xp, y)
+# ---------------------------------------------------------------------------
+# Custom GLM models
+# ---------------------------------------------------------------------------
 
 class PoissonGlmModel(AbstractModel):
     """GLM with Poisson family — for claim count regression."""
@@ -388,13 +413,29 @@ if __name__ == "__main__":
         task.with_task_metadata(meta).load().validate_metadata()
 
     # ---- 3. Define models ----
-    # Focused pilot: run ONLY the balanced TabPFN variant. v1 GBDT rows (CAT/XGB/GBM)
-    # are reused from results_per_split.csv — same deterministic splits, same harness.
+    # Split by problem type: the bundle force-fits every model on every task, but the
+    # GLMs are family-specific (Logistic = binary, Poisson/Tweedie = regression) and
+    # autogluon refuses to fit them on mismatched tasks (aborts the whole run).
     common_models = [
-        (TabPFNBalancedModel.config_generator(), 0),
+        # --- Foundation (hosted API, no GPU) ---
+        (TabPFNClientModel.config_generator(), 0),
+        # ponytail: TabFM dropped — 6.1GB checkpoint on an 8GB Mac is
+        # OOM-killed every time. Re-add on a GPU box (needs the 1K subsets).
+        # --- Tree-based (registry, all CPU) ---
+        ("LightGBM", 0, {"device_type": "cpu"}),
+        ("XGBoost", 0),
+        ("CatBoost", 0),
+        ("RandomForest", 0),
     ]
-    classification_models = common_models
-    regression_models = []
+    classification_models = common_models + [
+        (LogisticGlmModel.config_generator(), 0),
+        ("Linear", 0),
+    ]
+    regression_models = common_models + [
+        (PoissonGlmModel.config_generator(), 0),
+        (TweedieGlmModel.config_generator(), 0),
+        ("Linear", 0),
+    ]
     bundle_kwargs = dict(
         # ponytail: holdout = no bagging (1 fit per model per split). The default
         # 8-bag folds would be hundreds of fits across 7 datasets on an 8-core M1;
@@ -413,8 +454,6 @@ if __name__ == "__main__":
         (classification_models, ["binary", "multiclass"], cls_tasks),
         (regression_models, ["regression"], reg_tasks),
     ]:
-        if not panel or not panel_tasks:
-            continue
         experiments = TabArenaV0pt1ExperimentBundle(models=panel, **bundle_kwargs).build_experiments(num_gpus=0)
         print(f"\nRunning {len(experiments)} experiments on {problem_types} tasks...")
         results = context.build_and_run_jobs(

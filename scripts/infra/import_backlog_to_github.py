@@ -5,7 +5,7 @@ Each `### Issue N — Title` section in `docs/MAINTENANCE_BACKLOG.md` becomes a
 GitHub issue. Run this once Issues are enabled on the repo.
 
 Usage:
-    python scripts/import_backlog_to_github.py
+    python scripts/infra/import_backlog_to_github.py
 
 Requires:
     - gh CLI installed and authenticated

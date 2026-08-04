@@ -38,7 +38,7 @@ Expected raw datasets in `data/raw/`:
 If one or more are missing, regenerate via:
 
 ```bash
-python scripts/download_datasets.py
+python scripts/infra/download_datasets.py
 ```
 
 ---

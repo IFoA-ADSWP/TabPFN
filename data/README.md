@@ -18,9 +18,9 @@ All input CSVs are in `data/raw/`. The first four (eudirectlapse, coil2000, ausp
 | Dataset | Label | Source | Target | Rows | Features | Pos Rate | Downloaded By |
 |---------|-------|--------|--------|------|----------|----------|-------------|
 | `eudirectlapse.csv` | EU Direct Lapse | [CASdatasets](https://CRAN.R-project.org/package=CASdatasets) R package (CRAN) | `lapse` | 23,060 | 18 | 12.8% | Already present |
-| `coil2000.csv` | COIL 2000 (NL) | [OpenML ID 298](https://openml.org/d/298) | `CARAVAN` | 9,822 | 85 | 6.0% | `scripts/download_datasets.py` |
-| `ausprivauto0405.csv` | Aus. Vehicle (AU) | [CASdatasets](https://github.com/dutangc/CASdatasets) (GitHub mirror) | `ClaimOcc` | 67,856 | 7 | 6.8% | `scripts/download_datasets.py` |
-| `freMTPL2freq_binary.csv` | freMTPL2 Binary (FR) | Derived from freMTPL2freq.csv (below) — sampled 50K rows, binarised `ClaimNb > 0` | `ClaimIndicator` | 50,000 | 10 | 5.0% | `scripts/download_datasets.py` |
+| `coil2000.csv` | COIL 2000 (NL) | [OpenML ID 298](https://openml.org/d/298) | `CARAVAN` | 9,822 | 85 | 6.0% | `scripts/infra/download_datasets.py` |
+| `ausprivauto0405.csv` | Aus. Vehicle (AU) | [CASdatasets](https://github.com/dutangc/CASdatasets) (GitHub mirror) | `ClaimOcc` | 67,856 | 7 | 6.8% | `scripts/infra/download_datasets.py` |
+| `freMTPL2freq_binary.csv` | freMTPL2 Binary (FR) | Derived from freMTPL2freq.csv (below) — sampled 50K rows, binarised `ClaimNb > 0` | `ClaimIndicator` | 50,000 | 10 | 5.0% | `scripts/infra/download_datasets.py` |
 
 Used together in: `notebooks/baseline_experiments/07_multi_dataset_benchmark.ipynb`, `scripts/legacy_finetuning/run_domain_finetune_stage_a.py`, `scripts/legacy_finetuning/evaluate_classifier_homogeneity_proposal.py`.
 
@@ -47,7 +47,7 @@ Used together in: `notebooks/baseline_experiments/07_multi_dataset_benchmark.ipy
 Two benchmark variants prepared from the raw source directory
 `data/raw/Spanish motor portfolio/` (raw CSV + `Descriptive of the variables.xlsx`
 data dictionary + `sample type claim.csv`) by
-`scripts/prepare_insurance_datasets.py --only spanish_motor`. The raw policy-year
+`scripts/infra/prepare_insurance_datasets.py --only spanish_motor`. The raw policy-year
 panel is collapsed to the last policy-year per ID (bemtl16 precedent — avoids
 same-policy rows leaking across random folds); `Length` NA (motorbikes) is imputed
 by `Type_risk` median; exposure is treated as uniform ~1yr (no offset).
@@ -58,7 +58,7 @@ by `Type_risk` median; exposure is treated as uniform ~1yr (no offset).
 | `spanish_motor_lapse.csv` | Lapse classification (frontier) | `LapseB` = (`Lapse` > 0) | 53,502 | 23 | 35.4% | `Date_lapse` (termination date, presence AUC 0.85 vs lapse) |
 
 Source: Segura-Gisbert, M., et al. (2024). "Dataset of an actual motor vehicle
-insurance portfolio." Rebuild with: `python scripts/prepare_insurance_datasets.py --only spanish_motor`.
+insurance portfolio." Rebuild with: `python scripts/infra/prepare_insurance_datasets.py --only spanish_motor`.
 
 ### Sklearn Demo Datasets
 

@@ -46,7 +46,7 @@ The two open questions are settled: the 5-fold lapse re-run confirms the Spanish
 
 ### Source Workbooks
 
-`scripts/run_smoke_tabarena.py`; `scripts/run_tabarena_insurance_benchmark.py`; `scripts/run_lapse_benchmark.py`; `scripts/run_tabarena_insurance_imbalance_pilot.py`; `scripts/run_home_turf_size_sweep.py`; `scripts/eval/insurance_benchmark_v1/run_frontier_benchmark.py`
+`scripts/benchmarks/run_smoke_tabarena.py`; `scripts/benchmarks/run_tabarena_insurance_benchmark.py`; `scripts/benchmarks/run_lapse_benchmark.py`; `scripts/benchmarks/run_tabarena_insurance_imbalance_pilot.py`; `scripts/benchmarks/run_home_turf_size_sweep.py`; `scripts/eval/insurance_benchmark_v1/run_frontier_benchmark.py`
 
 ### Evidence Files
 
