@@ -786,6 +786,55 @@ TabPFNRegressor does not reproduce v1's vehvalue +67.2%, so v1's regression verd
 harness-specific. The GLMs are far more competitive on frequency than on classification;
 on severity the GBDTs dominate outright.
 
+### 14.9 Spanish motor portfolio — frequency frontier (53,502 rows)
+
+Real-portfolio extension: Segura-Gisbert et al. (2024), "Dataset of an actual motor
+vehicle insurance portfolio" (Spanish motor, prepared by `make_spanish_motor_freq` in
+`scripts/prepare_insurance_datasets.py`). 53,502 policies, target `N_claims_year`
+(int 0–18, 11.1% claims > 0), Poisson deviance, 5-fold KFold seed 42, all 8 regressors
+fit **fresh**. The raw policy-year panel is collapsed to the last policy-year per ID
+(bemtl16 precedent); `Length` NA (motorbikes) is imputed by `Type_risk` median;
+exposure uniform ~1yr (no offset). Leak exclusions verified **pre-run**:
+`N_claims_history` / `R_Claims_history` include CURRENT-year claims (leak AUC
+0.76/0.92 vs claims > 0 — the history-variable leak, ~0.918, was caught before the
+run) and `Cost_claims_year` is a sibling target; none are kept as features.
+
+| method | mean Poisson deviance | ± SE | n_params | on frontier |
+| --- | ---: | ---: | ---: | --- |
+| lgbm | **0.89157** | 0.01238 | 3,100 | yes |
+| tabpfn | 0.98764 | 0.01624 | 10,000,000 | no |
+| ols | 0.98994 | 0.01854 | 21 | yes |
+| cat | 0.99757 | 0.02372 | 63,892 | no |
+| rf | 0.99808 | 0.01651 | 412,124 | no |
+| poissonglm | 1.01250 | 0.01867 | 21 | yes |
+| tweedieglm | 1.01250 | 0.01867 | 21 | yes |
+| xgb | 1.35178 | 0.03642 | 5,350 | no |
+
+**LGBM dominates beyond SE; TabPFN falls off the frontier for the fourth time at
+scale; the GLM anchors sit within noise of TabPFN at 21 params.** lgbm wins power
+(0.89157) and dominates TabPFN outright per the D3 beyond-SE rule (`lgbm mean+SE =
+0.90395` vs `tabpfn mean−SE = 0.97140`), ~10.8% better deviance (0.98764 vs 0.89157).
+ols / poissonglm / tweedieglm (21 params) hold the frontier anchors, all within SE of
+TabPFN's mean (0.98994 / 1.01250 vs 0.98764) — parsimony closes a gap that power
+leaves open, the §12.1 pattern again. Null deviance is 1.0123, so poissonglm /
+tweedieglm at 1.01250 are effectively at the intercept-only floor: the portfolio's
+frequency signal is thin, and only lgbm extracts it. cat (0.99757) / rf (0.99808) sit
+just off the power edge, xgb is dominated (1.35178). This is the **fourth at-scale
+frontier where TabPFN is off-frontier** — after norauto (surviving only on the
+beyond-SE tie, §14.6), bemtl97_amount and freMTPL2freq (dominated, §14.8) — and
+consistent with the D4 synthesis: at 53,502 rows the 10M-param model adds nothing a
+3,100-param LGBM or a 21-param GLM does not already provide. Files:
+`scripts/eval/insurance_benchmark_v1/frontier_results_spanish_motor_freq.csv`,
+`frontier_plot_spanish_motor_freq.png`. Model version note: TabPFN served via the
+hosted client 0.3.3; this run used auto-selection (resolves to v3_default), and the
+benchmark scripts now pin `model_path="v3_default"` explicitly for reproducibility.
+
+**Actuary takeaway:** on this real Spanish motor frequency book, a default LGBM
+beats TabPFN by ~10.8% deviance with 1/3,200 of the parameters, and the standard
+Poisson GLM is statistically indistinguishable from TabPFN — there is no actuarial
+case for TabPFN on frequency at this scale; the lapse variant remains a pending
+extension.
+
 ## 9. Source Workbooks
 
 - `scripts/run_home_turf_size_sweep.py` — home-turf size sweep runner (3 datasets × 3

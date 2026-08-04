@@ -99,7 +99,7 @@ def make_tabpfn(n_estimators: int | None):
     kw: dict = {"random_state": 0}
     if n_estimators is not None:
         kw["n_estimators"] = n_estimators
-    return TabPFNClassifier(**kw)
+    return TabPFNClassifier(model_path="v3_default", **kw)
 
 
 def make_cat():

@@ -42,6 +42,24 @@ Used together in: `notebooks/baseline_experiments/07_multi_dataset_benchmark.ipy
 | `freMTPL2sev.csv` (remote) | Claim severity | — | `notebooks/adswp_project/02_TabPFN_freMTPL.ipynb` — loaded from CASdatasets via pyreadr |
 | `usautoBI.rda` (remote) | US Auto Bodily Injury | — | `notebooks/adswp_project/03_usautoBI_fit.ipynb` — loaded from CASdatasets via pyreadr |
 
+### Spanish Motor Portfolio (Segura-Gisbert et al. 2024)
+
+Two benchmark variants prepared from the raw source directory
+`data/raw/Spanish motor portfolio/` (raw CSV + `Descriptive of the variables.xlsx`
+data dictionary + `sample type claim.csv`) by
+`scripts/prepare_insurance_datasets.py --only spanish_motor`. The raw policy-year
+panel is collapsed to the last policy-year per ID (bemtl16 precedent — avoids
+same-policy rows leaking across random folds); `Length` NA (motorbikes) is imputed
+by `Type_risk` median; exposure is treated as uniform ~1yr (no offset).
+
+| File | Task | Target | Rows | Cols | Pos Rate | Leak Exclusions |
+|------|------|--------|------|------|----------|-----------------|
+| `spanish_motor_freq.csv` | Poisson frequency regression (frontier) | `N_claims_year` (int 0–18) | 53,502 | 21 | 11.1% (claims > 0) | `N_claims_history` / `R_Claims_history` (current-year leak, AUC 0.76/0.92 vs claims > 0); `Cost_claims_year` (sibling target) |
+| `spanish_motor_lapse.csv` | Lapse classification (frontier) | `LapseB` = (`Lapse` > 0) | 53,502 | 23 | 35.4% | `Date_lapse` (termination date, presence AUC 0.85 vs lapse) |
+
+Source: Segura-Gisbert, M., et al. (2024). "Dataset of an actual motor vehicle
+insurance portfolio." Rebuild with: `python scripts/prepare_insurance_datasets.py --only spanish_motor`.
+
 ### Sklearn Demo Datasets
 
 | Dataset | Used In |

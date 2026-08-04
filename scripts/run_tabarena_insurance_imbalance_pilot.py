@@ -216,10 +216,10 @@ class TabPFNClientModel(AbstractModel):
         Xp = self.preprocess(X, y=y, is_train=True)
         if self.problem_type == "regression":
             from tabpfn_client import TabPFNRegressor
-            self.model = TabPFNRegressor(random_state=0)
+            self.model = TabPFNRegressor(model_path="v3_default", random_state=0)
         else:
             from tabpfn_client import TabPFNClassifier
-            self.model = TabPFNClassifier(random_state=0)
+            self.model = TabPFNClassifier(model_path="v3_default", random_state=0)
         self.model.fit(Xp, y)
 
     def _preprocess(self, X, is_train=False, **kwargs):
@@ -262,7 +262,7 @@ class TabPFNBalancedModel(TabPFNClientModel):
         # therefore identical to v1 default; the tested change is balance_probabilities
         # alone. Spec asked for 16 — revisit on local TabPFN or a lifted API cap.
         self.model = TabPFNClassifier(
-            random_state=0, balance_probabilities=True, n_estimators=8
+            model_path="v3_default", random_state=0, balance_probabilities=True, n_estimators=8
         )
         self.model.fit(Xp, y)
 

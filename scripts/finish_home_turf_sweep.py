@@ -75,7 +75,7 @@ def slice_data(X, y, n):
 def fit_predict(mname: str, mkw: dict, Xtr, ytr, Xte):
     if mname == "tabpfn":
         from tabpfn_client import TabPFNClassifier
-        model = TabPFNClassifier(random_state=0, **mkw)
+        model = TabPFNClassifier(model_path="v3_default", random_state=0, **mkw)
     elif mname == "cat":
         from catboost import CatBoostClassifier
         model = CatBoostClassifier(random_state=0, verbose=0)

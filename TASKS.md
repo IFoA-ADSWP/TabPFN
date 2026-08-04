@@ -8,6 +8,7 @@ Tracked from GitHub issues. Updated manually.
 | 🔲 | #29 | Funding Request #2 | Cillian-Williamson |
 | 🔲 | #28 | Funding Request #1 | Cillian-Williamson |
 | 🔲 | #27 | Review TabArena (frontier benchmark D1–D5 + v1-suite + regression Phase 2 done, unpushed; wrap-up open) | scotthawes |
+| 🔲 | #27a | Spanish motor portfolio extension: prep + frequency frontier done (LGBM wins, TabPFN off-frontier at 53K rows); lapse benchmark pending | scotthawes |
 | 🔲 | #26 | List Available Foundational Models | — |
 | 🔲 | #25 | Draft Insurance/Actuarial Use Cases | — |
 | 🔲 | #24 | Dataset Selection CASDatasets | Cillian-Williamson |

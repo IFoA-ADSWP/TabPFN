@@ -115,11 +115,16 @@ DATASETS = [
 # `claim`: verified claim == (amount > 0) at 100% — a deterministic leak of the target.
 # freMTPL2freq drops IDpol (unique ids) and replaces Exposure with log(Exposure)
 # (natural Poisson offset; verified no Exposure=0 rows) via transform="log_exposure".
+# spanish_motor_freq: last policy-year per ID (53,502 rows), target N_claims_year;
+# NO log_exposure transform — per-row exposure is uniform ~1 year (verified in step
+# 1), and leak columns (N_claims_history/R_Claims_history/Cost_claims_year) were
+# dropped at prep time (scripts/prepare_insurance_datasets.py).
 REG_DATASETS = [
     dict(name="ausautoBI8999", file="ausautoBI8999.csv", target="AggClaim", drop=[], metric="rmse"),
     dict(name="ausprivauto0405_vehvalue", file="ausprivauto0405.csv", target="VehValue", drop=[], metric="rmse"),
     dict(name="bemtl97_amount", file="bemtl97.csv", target="amount", drop=["claim"], metric="rmse"),
     dict(name="freMTPL2freq", file="freMTPL2freq.csv", target="ClaimNb", drop=["IDpol"], metric="poisson_deviance", transform="log_exposure"),
+    dict(name="spanish_motor_freq", file="spanish_motor_freq.csv", target="N_claims_year", drop=[], metric="poisson_deviance"),
 ]
 
 METRIC_LABELS = {  # plot y-axis per metric (metric_fn dispatch)
@@ -460,7 +465,7 @@ def run_dataset(ds: dict, out_csv: Path, out_png: Path) -> pd.DataFrame:
         fold_ll = []
         t1 = time.time()
         for fold, (tr, te) in enumerate(folds):
-            model = TabPFNClassifier(random_state=0)  # default n_estimators=None
+            model = TabPFNClassifier(model_path="v3_default", random_state=0)  # default n_estimators=None
             # Hosted API is flaky (RemoteProtocolError/ConnectionError/httpx timeouts
             # seen in the sweep log): up to 3 attempts, backoff 10s/60s/300s.
             for attempt in range(1, 4):
@@ -601,7 +606,7 @@ def run_dataset_regression(ds: dict, out_csv: Path, out_png: Path) -> pd.DataFra
     fold_vals = []
     t1 = time.time()
     for fold, (tr, te) in enumerate(folds):
-        model = TabPFNRegressor(random_state=0)  # default n_estimators=None
+        model = TabPFNRegressor(model_path="v3_default", random_state=0)  # default n_estimators=None
         # Hosted API is flaky (RemoteProtocolError/ConnectionError/httpx timeouts seen
         # in the sweep log): up to 3 attempts, backoff 10s/60s/300s — same as classifier.
         for attempt in range(1, 4):
