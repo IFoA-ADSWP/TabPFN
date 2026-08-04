@@ -6,7 +6,7 @@ All known tabular foundation models (pre-trained, zero-shot/in-context learning)
 
 | Model | Creator | Hosted API? | CPU-feasible? | Install | License |
 |---|---|---|---|---|---|
-| **TabPFN** (v3/v2.6/v2) | Prior Labs | ✅ tabpfn-client | ⚠️ ≤1K rows | `pip install tabpfn` | Non-commercial (v3) / Apache 2.0 (v2) |
+| **TabPFN** (v3/v2.6/v2) | Prior Labs | ✅ tabpfn-client | ⚠️ ≤1K rows (v2.5-era; see note) | `pip install tabpfn` | Non-commercial (v3) / Apache 2.0 (v2) |
 | **TabFM** | Google | ❌ | ✅ JAX CPU fast | `git clone + pip install` | Apache 2.0 code. Non-commercial weights |
 | **TabICL / v2** | Microsoft | ❌ | ⚠️ Slow | Source from GitHub | MIT |
 | **TabDPT / Turbo** | Yandex | ❌ | ✅ Efficient | Source from GitHub | Apache 2.0 |
@@ -27,7 +27,7 @@ All known tabular foundation models (pre-trained, zero-shot/in-context learning)
 **Only one model is pip-installable:** TabPFN (`pip install tabpfn`). All others require `git clone` from GitHub and manual setup.
 
 **CPU-feasible** (could run locally without GPU):
-- TabPFN — slow, practical only ≤1K rows
+- TabPFN — slow, practical only ≤1K rows (Corrected 2026-08: hosted v3 accepts up to 1M training rows — see master report §12.1 model-version correction; the small-window framing was v2.5-era.)
 - TabFM — JAX backend is fast on CPU, weights are non-commercial
 - TabDPT/Turbo — efficient architecture, Apache 2.0
 - TabSwift — designed for CPU from the start, Apache 2.0

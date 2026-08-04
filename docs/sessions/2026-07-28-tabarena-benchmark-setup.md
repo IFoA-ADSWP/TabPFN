@@ -63,6 +63,8 @@ Takeaways: linear wins lapse classification (small dataset, strong linear signal
 
 Results: `scripts/eval/lapse_benchmark_v1/`
 
+**Superseded:** lapse benchmark re-run at 5 folds (master report §14.10, 2026-08-04).
+
 ## Issues Found
 
 ### Performance: 8-fold bagging is too heavy on CPU

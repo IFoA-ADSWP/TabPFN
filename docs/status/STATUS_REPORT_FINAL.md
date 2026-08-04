@@ -1,3 +1,5 @@
+> **SUPERSEDED** — this report's findings are fully covered by docs/reports/POST_HOC_OPTIMISATION.md and docs/reports/COMBINED_TABPFN_CLASSIFIER_REGRESSOR_ANALYSIS.md (identical numbers). Kept for historical reference. Do not cite as current.
+
 # TabPFN Research Status Report (Refined)
 
 ## Purpose

@@ -1,5 +1,7 @@
 # Class Imbalance Analysis: Effects on TabPFN and Baseline Model Performance
 
+**Follow-up null result:** master report §11 (`balance_probabilities` flag) — different experiment, same question.
+
 ## Executive Summary
 
 This document analyzes how class imbalance (3% lapse rate in 90k policy dataset) affects model performance and whether rebalancing data improves calibration. **Key finding:** Rebalancing helps traditional models significantly (+19-26% improvement) but barely affects TabPFN (+0.9%), proving that TabPFN's miscalibration is **NOT caused by class imbalance** but rather by **pre-training prior mismatch**.
