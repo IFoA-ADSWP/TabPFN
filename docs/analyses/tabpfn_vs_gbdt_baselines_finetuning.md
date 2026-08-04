@@ -221,6 +221,12 @@ leakage:
   fine-tuned-TabPFN arm inside the benchmark on the same folds; (c) GPU inference for the
   100K+ row tasks; (d) severity-specific transforms in the TabPFN arm. Without at least (a)
   or (b), the verdict stands.
+- **Adoption rule (issue #52)**: the decision-level guidance — when to adopt, when to
+  expect domination on the trade-off at scale, and the GLM-default middle — lives in the
+  one-pager's "Conclusion & adoption guidance"
+  (`docs/reports/TABPFN_BENCHMARK_SUMMARY.md`) and the regime analysis
+  (`docs/analyses/regime_characterization.md`); this section stays the benchmark-level
+  verdict.
 
 ## 11. Addendum — Imbalance Pilot and Calibration Re-Score (2026-08-02)
 
