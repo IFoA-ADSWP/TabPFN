@@ -926,6 +926,65 @@ signal, TabPFN's 10M-param prior adds nothing. Files:
 `scripts/eval/insurance_benchmark_v1/frontier_results_spanish_motor_severity.csv`,
 `frontier_plot_spanish_motor_severity.png`.
 
+## 15. Addendum — Version-Drift Re-Test Policy (issue #55, 2026-08-04)
+
+The benchmark verdict is pinned to hosted v3 (`model_path="v3_default"`, tabpfn-client
+0.3.3 — §12.1 model-version correction, §14.9 note). This section is the policy for
+re-running the verdict when the model or client evolves. Docs-only deliverable of
+issue #55 — no re-run has been done; this is the procedure to follow when a trigger
+fires.
+
+### 15.1 Trigger
+
+- A new `tabpfn-client` release installed in the benchmark venv (`/tmp/tabarena/.venv-ta`,
+  currently 0.3.3; the committed `requirements.txt:9` range is the loose
+  `tabpfn-client>=0.2,<0.3` and does not capture the installed version).
+- A Prior Labs model-version announcement (a new `model_path` beyond `v3_default`).
+- Any environment bump: venv rebuild, requirements change, or CI image refresh that
+  changes the resolved client version.
+
+### 15.2 Scope
+
+- **12-dataset frontier** (`scripts/eval/insurance_benchmark_v1/run_frontier_benchmark.py`):
+  6 classification datasets (`DATASETS`, lines 103–110) + 6 regression datasets
+  (`REG_DATASETS`, lines 122–129). One command per dataset, case-insensitive filter
+  (lines 701–707), from the benchmark venv (`source /tmp/tabarena/.venv-ta/bin/activate`,
+  docstring lines 69–74):
+
+  ```bash
+  python scripts/eval/insurance_benchmark_v1/run_frontier_benchmark.py <dataset>
+  python scripts/eval/insurance_benchmark_v1/run_frontier_benchmark.py --regression <dataset>
+  ```
+
+- **Lapse benchmark** (`scripts/benchmarks/run_lapse_benchmark.py`): has no pin of its
+  own, but imports the shared `TabPFNClientModel` from
+  `run_tabarena_insurance_benchmark.py` (lines 26–27), which pins
+  `model_path="v3_default"` (lines 262, 265) — covered transitively; re-run it
+  alongside the frontier.
+- **Sweep-reuse caveat** (must be handled or stated): the frontier reuses TabPFN
+  log-loss rows for bemtl97 / coil2000 / uslapseagent from the committed
+  `home_turf_sweep_results.csv` (lines 31–36, 385–388, 457–461) — refresh the sweep
+  (`scripts/benchmarks/run_home_turf_size_sweep.py`) first, or the frontier will not
+  see new model behavior on those three datasets. norauto / ausprivauto0405 / bemtl16
+  and all regression datasets run fresh TabPFN power (lines 462–488, 603–626).
+
+### 15.3 Procedure
+
+1. **Record versions before running**: `python -c "from importlib.metadata import version; print(version('tabpfn-client'))"` plus the `model_path` used — every TabPFN call site pins `model_path="v3_default"` (`run_frontier_benchmark.py:469,610`; `run_home_turf_size_sweep.py:102`; `finish_home_turf_sweep_v2.py:89`; `run_smoke_tabarena.py:82`; `run_tabarena_insurance_benchmark.py:262,265`; `run_tabarena_insurance_imbalance_pilot.py:219,222,265`). The installed version is authoritative — the committed range is loose (§15.1).
+2. **Run the same datasets/commands as the v3 baselines** (§15.2) — same folds (seed 42), same metrics, same D3 beyond-SE rule (§14.1).
+3. **Diff `scripts/eval/insurance_benchmark_v1/frontier_results_*.csv`** (the 12 committed v3 baselines, §14.2–§14.10) — compare `mean` ± `se` per method and the `on_frontier` flag (columns are stable: `method, mean, se, n_params, on_frontier`, lines 506–508).
+4. **Append a §14.x-style addendum** (this section becomes §16/§17 for the re-run, or a dated `§15.x` sub-section) documenting client + model versions, the command log, and the diff outcome.
+5. **Update the one-pager verdict / adoption rule only if the pattern changes** — wins/losses flip or beyond-SE shifts (`docs/reports/TABPFN_BENCHMARK_SUMMARY.md` "Conclusion & adoption guidance"; regime descriptor `docs/analyses/regime_characterization.md` §3). No change → note "pattern unchanged" in the addendum; do not re-derive the adoption rule.
+6. **Close-out**: registry evidence update (`docs/reports/REPORT_REGISTRY.md`) + a TASKS.md row (owned by the orchestrator).
+
+### 15.4 Automation note (optional)
+
+A dev script or CI check comparing the installed `tabpfn-client` version against the
+baseline recorded here (0.3.3, §15.3 step 1) — e.g. a `pip show tabpfn-client` /
+importlib version check in the existing eval scripts, flagging when it moves off the
+pinned version so a human triggers §15.3. Not built; documented for when the harness
+gets CI.
+
 ## 9. Source Workbooks
 
 - `scripts/benchmarks/run_home_turf_size_sweep.py` — home-turf size sweep runner (3 datasets × 3

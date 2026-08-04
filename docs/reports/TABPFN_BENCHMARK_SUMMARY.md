@@ -45,7 +45,7 @@ Earlier generations could effectively attend to only ~1K training rows, a contex
 > **Between the regimes, prefer the GLM**: the 11–86-param GLM family is never dominated on any dataset (§14.4), and it is statistically indistinguishable from TabPFN on frequency at 21 params (§14.9).
 
 - The rule is predictive, not descriptive: it explains the Spanish motor flip at the same 53,502 rows — lapse wins (linear floor far, §14.10), frequency loses (tree-only signal, §14.9) — where a "small data only" rule would not (regime analysis §2).
-- Re-test on model-version change: every number here is pinned to `v3_default` (tabpfn-client 0.3.3); re-run before trusting the rule on a new model version (issue #55).
+- Re-test on model-version change: every number here is pinned to `v3_default` (tabpfn-client 0.3.3); re-run before trusting the rule on a new model version. The procedure — trigger, scope, diff, and addendum steps — is master report §15 ("Version-Drift Re-Test Policy", issue #55).
 
 ## What's next
 
