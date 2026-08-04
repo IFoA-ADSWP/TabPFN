@@ -1,7 +1,9 @@
 # TabArena Benchmark Branch — Staged Merge Plan
 
+> **STATUS: MERGED 2026-08-04** — PR #51 merged to `main` (merge commit `31d40a5`; final branch tip `f7790ce`, 44 commits). All 5 stages and all pre-merge fixes complete; registry path check post-merge clean. Follow-ups tracked as issues #52–#57.
+
 Coordination/ops document — not a research report; no `docs/reports/REPORT_REGISTRY.md` row is added for this file.
-Branch: `feat/tabarena-benchmark` vs `origin/main` — 38 commits, 86 files committed. Diff is fully additive: 82 files added, 4 modified (`README.md`, `data/README.md`, `scripts/README.md`, `docs/reports/REPORT_REGISTRY.md`). ~+466K lines, bulk of which is 7 committed CSVs in `data/raw/` (~510K rows total). No conflict risk — two merge commits have already reconciled the branch with `origin/main`. Branch pushed to `origin/feat/tabarena-benchmark` on 2026-08-04 (tip `58dde49`); working tree clean.
+Branch: `feat/tabarena-benchmark` vs `origin/main` — 44 commits, ~86 files. Diff was additive + script reorg moves (7 committed CSVs in `data/raw/`, ~510K rows total). Two merge commits had already reconciled the branch with `origin/main`; final pre-merge `git merge origin/main` resolved cleanly (`ed6de3a`).
 
 ## 1. What this branch contains
 
@@ -91,11 +93,11 @@ Status legend: all five stages are DONE — the work exists committed on the bra
 
 ## 3. Pre-merge fixes (colleagues would trip on these)
 
-Open action items: **#2 and #3 only**; the rest are resolved or informational.
+Open action items: **none** — #2 and #3 were resolved in `f72c57f`; all others resolved or informational.
 
 1. **RESOLVED** (`58dde49`) — `scripts/README.md` now lists all 8 benchmark scripts.
-2. 5 run logs (`frontier_benchmark_run.log`, `frontier_norauto_run.log`, `frontier_regression_run.log`, `frontier_v1suite_run.log`, `home_turf_sweep_run.log`) are gitignored (`*.log`) but cited as evidence in §14.5–14.8 and the registry → decide: `git add -f` or mark them regenerable in the docs. **OPEN.**
-3. `rescore_focused_imbalance_logloss.py` needs uncommitted `scripts/experiments/` caches → add a "post-run only" docstring note. **OPEN.**
+2. **RESOLVED** (`f72c57f`) — 5 run logs (`frontier_benchmark_run.log`, `frontier_norauto_run.log`, `frontier_regression_run.log`, `frontier_v1suite_run.log`, `home_turf_sweep_run.log`) were gitignored (`*.log`) but cited as evidence → force-added (`git add -f`), tracked in repo.
+3. **RESOLVED** (`f72c57f`) — `rescore_focused_imbalance_logloss.py` needs uncommitted `scripts/experiments/` caches → "post-run only" docstring note added.
 4. **RESOLVED** — `data/README.md` gap (Stage 1): the section now exists (committed in `58dde49`). Caveat remains: the beMTPL16-vs-`bemtl16` naming collision is documented but the names themselves are unchanged.
 5. Vehvalue discrepancy (§4 +67.2% vs §14.8 within SE) — flag as protocol-specific, not a contradiction.
 6. `TABPFN_API_KEY` required on fresh checkout for all TabPFN runs (documented in README; no secrets in repo — the only API-key string in history is a redacted placeholder).
@@ -114,11 +116,11 @@ Open action items: **#2 and #3 only**; the rest are resolved or informational.
 
 ## 5. Merge mechanics
 
-Documented flow (not executed):
+**EXECUTED 2026-08-04**: `git merge origin/main` clean (`ed6de3a`) → pushed → PR #51 marked ready (was draft) → merged (`31d40a5`). Post-merge checks: registry paths all resolve on `origin/main`; branch kept until follow-ups #52–#55 land.
 
 ```bash
 git fetch origin
-git merge origin/main     # currently resolves cleanly
+git merge origin/main     # resolved cleanly
 # PR / merge to main
 ```
 
