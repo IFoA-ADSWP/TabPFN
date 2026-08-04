@@ -1,0 +1,360 @@
+
+======================================================================
+DATASET ausprivauto0405
+======================================================================
+[10:12:54] dataset=ausprivauto0405 shape=(67856, 6) pos_rate=0.0681
+[10:13:02]   cat f0 ll=0.2424 (8s)
+[10:13:10]   cat f1 ll=0.2422 (16s)
+[10:13:18]   cat f2 ll=0.2431 (25s)
+[10:13:31]   cat f3 ll=0.2447 (37s)
+[10:13:39]   cat f4 ll=0.2439 (45s)
+/private/tmp/tabarena/.venv-ta/lib/python3.12/site-packages/sklearn/utils/validation.py:2749: UserWarning: X does not have valid feature names, but LGBMClassifier was fitted with feature names
+  warnings.warn(
+[10:13:40]   lgbm f0 ll=0.2411 (1s)
+/private/tmp/tabarena/.venv-ta/lib/python3.12/site-packages/sklearn/utils/validation.py:2749: UserWarning: X does not have valid feature names, but LGBMClassifier was fitted with feature names
+  warnings.warn(
+[10:13:40]   lgbm f1 ll=0.2421 (2s)
+/private/tmp/tabarena/.venv-ta/lib/python3.12/site-packages/sklearn/utils/validation.py:2749: UserWarning: X does not have valid feature names, but LGBMClassifier was fitted with feature names
+  warnings.warn(
+[10:13:41]   lgbm f2 ll=0.2414 (2s)
+/private/tmp/tabarena/.venv-ta/lib/python3.12/site-packages/sklearn/utils/validation.py:2749: UserWarning: X does not have valid feature names, but LGBMClassifier was fitted with feature names
+  warnings.warn(
+[10:13:42]   lgbm f3 ll=0.2419 (3s)
+/private/tmp/tabarena/.venv-ta/lib/python3.12/site-packages/sklearn/utils/validation.py:2749: UserWarning: X does not have valid feature names, but LGBMClassifier was fitted with feature names
+  warnings.warn(
+[10:13:43]   lgbm f4 ll=0.2417 (4s)
+[10:13:43]   xgb f0 ll=0.2474 (0s)
+[10:13:43]   xgb f1 ll=0.2494 (1s)
+[10:13:43]   xgb f2 ll=0.2490 (1s)
+[10:13:44]   xgb f3 ll=0.2490 (1s)
+[10:13:44]   xgb f4 ll=0.2506 (1s)
+[10:13:44]   lr f0 ll=0.2387 (0s)
+[10:13:44]   lr f1 ll=0.2387 (0s)
+[10:13:44]   lr f2 ll=0.2400 (0s)
+[10:13:44]   lr f3 ll=0.2406 (0s)
+[10:13:45]   lr f4 ll=0.2394 (1s)
+[10:13:45]   logisticglm f0 ll=0.2387 (0s)
+[10:13:45]   logisticglm f1 ll=0.2387 (0s)
+[10:13:45]   logisticglm f2 ll=0.2400 (0s)
+[10:13:45]   logisticglm f3 ll=0.2406 (0s)
+[10:13:45]   logisticglm f4 ll=0.2394 (0s)
+[10:13:45]   tweedieglm f0 ll=0.2396 (0s)
+[10:13:45]   tweedieglm f1 ll=0.2389 (0s)
+[10:13:45]   tweedieglm f2 ll=0.2402 (0s)
+[10:13:45]   tweedieglm f3 ll=0.2408 (0s)
+[10:13:45]   tweedieglm f4 ll=0.2396 (0s)
+[10:13:45]   poissonglm f0 ll=0.2388 (0s)
+[10:13:45]   poissonglm f1 ll=0.2388 (0s)
+[10:13:45]   poissonglm f2 ll=0.2401 (0s)
+[10:13:45]   poissonglm f3 ll=0.2406 (0s)
+[10:13:45]   poissonglm f4 ll=0.2395 (0s)
+[10:13:51]   rf f0 ll=0.5133 (5s)
+[10:13:56]   rf f1 ll=0.5203 (11s)
+[10:14:01]   rf f2 ll=0.5053 (16s)
+[10:14:06]   rf f3 ll=0.5451 (21s)
+[10:14:11]   rf f4 ll=0.5575 (26s)
+[10:14:18]   count cat: 62604 params (7s)
+[10:14:19]   count xgb: 4368 params (0s)
+[10:14:19]   count lgbm: 3100 params (1s)
+[10:14:24]   count rf: 602223 params (5s)
+Found existing access token, reusing it for authentication.
+00:00 Fitting... -00:00 Fitting... \00:00 Fitting... |00:00 Fitting... /00:00 Fitting... -00:01 Fitting... \00:01 Fitting... |00:01 Fitting... /00:01 Fitting... -00:01 Fitting... Done!
+00:00 Predicting... -00:00 Predicting... \00:00 Predicting... |00:00 Predicting... /00:00 Predicting... -00:01 Predicting... \00:01 Predicting... |00:01 Predicting... /00:01 Predicting... -00:01 Predicting... \00:02 Predicting... |00:02 Predicting... /00:02 Predicting... -00:02 Predicting... \00:02 Predicting... |00:03 Predicting... /00:03 Predicting... -00:03 Predicting... \00:03 Predicting... |00:03 Predicting... /00:04 Predicting... -00:04 Predicting... \00:04 Predicting... |00:04 Predicting... /00:04 Predicting... -00:05 Predicting... \00:05 Predicting... |00:05 Predicting... /00:05 Predicting... -00:05 Predicting... \00:06 Predicting... |00:06 Predicting... /00:06 Predicting... -00:06 Predicting... \00:06 Predicting... |00:07 Predicting... /00:07 Predicting... -00:07 Predicting... \00:07 Predicting... |00:07 Predicting... /00:08 Predicting... -00:08 Predicting... \00:08 Predicting... |00:08 Predicting... /00:08 Predicting... -00:09 Predicting... \00:09 Predicting... |00:09 Predicting... /00:09 Predicting... -00:09 Predicting... Done!
+/private/tmp/tabarena/.venv-ta/lib/python3.12/site-packages/sklearn/metrics/_classification.py:259: UserWarning: The y_prob values do not sum to one. Make sure to pass probabilities.
+  warnings.warn(
+[10:14:41]   tabpfn f0 ll=0.2396 (13s)
+00:00 Fitting... -00:00 Fitting... \00:00 Fitting... |00:00 Fitting... /00:00 Fitting... -00:01 Fitting... \00:01 Fitting... |00:01 Fitting... /00:01 Fitting... -00:01 Fitting... \00:02 Fitting... |00:02 Fitting... /00:02 Fitting... -00:02 Fitting... \00:02 Fitting... |00:03 Fitting... /00:03 Fitting... Done!
+00:00 Predicting... -00:00 Predicting... \00:00 Predicting... |00:00 Predicting... /00:00 Predicting... -00:01 Predicting... \00:01 Predicting... |00:01 Predicting... /00:01 Predicting... -00:01 Predicting... \00:02 Predicting... |00:02 Predicting... /00:02 Predicting... -00:02 Predicting... \00:02 Predicting... |00:03 Predicting... /00:03 Predicting... -00:03 Predicting... \00:03 Predicting... |00:03 Predicting... /00:04 Predicting... -00:04 Predicting... \00:04 Predicting... |00:04 Predicting... /00:04 Predicting... -00:05 Predicting... \00:05 Predicting... |00:05 Predicting... /00:05 Predicting... -00:05 Predicting... \00:06 Predicting... |00:06 Predicting... /00:06 Predicting... -00:06 Predicting... \00:06 Predicting... |00:07 Predicting... /00:07 Predicting... -00:07 Predicting... \00:07 Predicting... |00:07 Predicting... /00:08 Predicting... -00:08 Predicting... \00:08 Predicting... |00:08 Predicting... /00:08 Predicting... -00:09 Predicting... \00:09 Predicting... |00:09 Predicting... /00:09 Predicting... -00:09 Predicting... \00:09 Predicting... Done!
+/private/tmp/tabarena/.venv-ta/lib/python3.12/site-packages/sklearn/metrics/_classification.py:259: UserWarning: The y_prob values do not sum to one. Make sure to pass probabilities.
+  warnings.warn(
+[10:14:54]   tabpfn f1 ll=0.2396 (26s)
+00:00 Fitting... -00:00 Fitting... \00:00 Fitting... |00:00 Fitting... /00:00 Fitting... -00:01 Fitting... \00:01 Fitting... |00:01 Fitting... /00:01 Fitting... -00:01 Fitting... \00:02 Fitting... |00:02 Fitting... /00:02 Fitting... -00:02 Fitting... \00:02 Fitting... |00:03 Fitting... /00:03 Fitting... Done!
+00:00 Predicting... -00:00 Predicting... \00:00 Predicting... |00:00 Predicting... /00:00 Predicting... -00:01 Predicting... \00:01 Predicting... |00:01 Predicting... /00:01 Predicting... -00:01 Predicting... \00:02 Predicting... |00:02 Predicting... /00:02 Predicting... -00:02 Predicting... \00:02 Predicting... |00:03 Predicting... /00:03 Predicting... -00:03 Predicting... \00:03 Predicting... |00:03 Predicting... /00:04 Predicting... -00:04 Predicting... \00:04 Predicting... |00:04 Predicting... /00:04 Predicting... -00:05 Predicting... \00:05 Predicting... |00:05 Predicting... /00:05 Predicting... -00:05 Predicting... \00:06 Predicting... |00:06 Predicting... /00:06 Predicting... -00:06 Predicting... \00:06 Predicting... |00:07 Predicting... /00:07 Predicting... -00:07 Predicting... \00:07 Predicting... |00:08 Predicting... /00:08 Predicting... -00:08 Predicting... \00:08 Predicting... |00:08 Predicting... /00:09 Predicting... -00:09 Predicting... \00:09 Predicting... |00:09 Predicting... Done!
+/private/tmp/tabarena/.venv-ta/lib/python3.12/site-packages/sklearn/metrics/_classification.py:259: UserWarning: The y_prob values do not sum to one. Make sure to pass probabilities.
+  warnings.warn(
+[10:15:07]   tabpfn f2 ll=0.2403 (39s)
+00:00 Fitting... -00:00 Fitting... \00:00 Fitting... |00:00 Fitting... /00:00 Fitting... -00:01 Fitting... \00:01 Fitting... |00:01 Fitting... /00:01 Fitting... -00:01 Fitting... \00:02 Fitting... |00:02 Fitting... /00:02 Fitting... -00:02 Fitting... \00:02 Fitting... |00:03 Fitting... /00:03 Fitting... Done!
+00:00 Predicting... -00:00 Predicting... \00:00 Predicting... |00:00 Predicting... /00:00 Predicting... -00:01 Predicting... \00:01 Predicting... |00:01 Predicting... /00:01 Predicting... -00:01 Predicting... \00:02 Predicting... |00:02 Predicting... /00:02 Predicting... -00:02 Predicting... \00:02 Predicting... |00:03 Predicting... /00:03 Predicting... -00:03 Predicting... \00:03 Predicting... |00:03 Predicting... /00:04 Predicting... -00:04 Predicting... \00:04 Predicting... |00:04 Predicting... /00:04 Predicting... -00:05 Predicting... \00:05 Predicting... |00:05 Predicting... /00:05 Predicting... -00:05 Predicting... \00:06 Predicting... |00:06 Predicting... /00:06 Predicting... -00:06 Predicting... \00:06 Predicting... |00:07 Predicting... /00:07 Predicting... -00:07 Predicting... \00:07 Predicting... |00:08 Predicting... /00:08 Predicting... -00:08 Predicting... \00:08 Predicting... |00:08 Predicting... /00:09 Predicting... -00:09 Predicting... \00:09 Predicting... |00:09 Predicting... Done!
+/private/tmp/tabarena/.venv-ta/lib/python3.12/site-packages/sklearn/metrics/_classification.py:259: UserWarning: The y_prob values do not sum to one. Make sure to pass probabilities.
+  warnings.warn(
+[10:15:20]   tabpfn f3 ll=0.2416 (52s)
+00:00 Fitting... -00:00 Fitting... \00:00 Fitting... |00:00 Fitting... /00:00 Fitting... -00:01 Fitting... \00:01 Fitting... |00:01 Fitting... /00:01 Fitting... -00:01 Fitting... \00:02 Fitting... |00:02 Fitting... /00:02 Fitting... -00:02 Fitting... \00:02 Fitting... |00:03 Fitting... /00:03 Fitting... Done!
+00:00 Predicting... -00:00 Predicting... \00:00 Predicting... |00:00 Predicting... /00:00 Predicting... -00:01 Predicting... \00:01 Predicting... |00:01 Predicting... /00:01 Predicting... -00:01 Predicting... \00:02 Predicting... |00:02 Predicting... /00:02 Predicting... -00:02 Predicting... \00:02 Predicting... |00:03 Predicting... /00:03 Predicting... -00:03 Predicting... \00:03 Predicting... |00:03 Predicting... /00:04 Predicting... -00:04 Predicting... \00:04 Predicting... |00:04 Predicting... /00:04 Predicting... -00:05 Predicting... \00:05 Predicting... |00:05 Predicting... /00:05 Predicting... -00:05 Predicting... \00:06 Predicting... |00:06 Predicting... /00:06 Predicting... -00:06 Predicting... \00:07 Predicting... |00:07 Predicting... /00:07 Predicting... -00:07 Predicting... \00:07 Predicting... |00:08 Predicting... /00:08 Predicting... -00:08 Predicting... \00:08 Predicting... |00:08 Predicting... /00:09 Predicting... -00:09 Predicting... \00:09 Predicting... |00:09 Predicting... /00:09 Predicting... Done!
+/private/tmp/tabarena/.venv-ta/lib/python3.12/site-packages/sklearn/metrics/_classification.py:259: UserWarning: The y_prob values do not sum to one. Make sure to pass probabilities.
+  warnings.warn(
+[10:15:33]   tabpfn f4 ll=0.2403 (65s)
+     method   mean     se  n_params on_frontier
+logisticglm 0.2395 0.0004         7         yes
+         lr 0.2395 0.0004         7         yes
+ poissonglm 0.2396 0.0004         7         yes
+ tweedieglm 0.2398 0.0003         7         yes
+     tabpfn 0.2403 0.0004  10000000          no
+       lgbm 0.2416 0.0002      3100          no
+        cat 0.2433 0.0005     62604          no
+        xgb 0.2491 0.0005      4368          no
+         rf 0.5283 0.0099    602223          no
+SELF-CHECK OK: folds=5, methods=9, on-frontier=4
+[10:15:34] ausprivauto0405 done -> /Users/Scott/Documents/Data Science/ADSWP/TabPFN-work-scott-worktrees/cumans/scripts/eval/insurance_benchmark_v1/frontier_results_ausprivauto0405.csv, /Users/Scott/Documents/Data Science/ADSWP/TabPFN-work-scott-worktrees/cumans/scripts/eval/insurance_benchmark_v1/frontier_plot_ausprivauto0405.png
+
+======================================================================
+DATASET bemtl16
+======================================================================
+[10:15:34] dataset=bemtl16 shape=(58723, 13) pos_rate=0.3599
+[10:15:44]   cat f0 ll=0.2456 (10s)
+[10:15:52]   cat f1 ll=0.2416 (18s)
+[10:16:00]   cat f2 ll=0.2414 (26s)
+[10:16:08]   cat f3 ll=0.2424 (34s)
+[10:16:17]   cat f4 ll=0.2460 (43s)
+/private/tmp/tabarena/.venv-ta/lib/python3.12/site-packages/sklearn/utils/validation.py:2749: UserWarning: X does not have valid feature names, but LGBMClassifier was fitted with feature names
+  warnings.warn(
+[10:16:18]   lgbm f0 ll=0.2427 (1s)
+/private/tmp/tabarena/.venv-ta/lib/python3.12/site-packages/sklearn/utils/validation.py:2749: UserWarning: X does not have valid feature names, but LGBMClassifier was fitted with feature names
+  warnings.warn(
+[10:16:18]   lgbm f1 ll=0.2391 (2s)
+/private/tmp/tabarena/.venv-ta/lib/python3.12/site-packages/sklearn/utils/validation.py:2749: UserWarning: X does not have valid feature names, but LGBMClassifier was fitted with feature names
+  warnings.warn(
+[10:16:19]   lgbm f2 ll=0.2373 (3s)
+/private/tmp/tabarena/.venv-ta/lib/python3.12/site-packages/sklearn/utils/validation.py:2749: UserWarning: X does not have valid feature names, but LGBMClassifier was fitted with feature names
+  warnings.warn(
+[10:16:20]   lgbm f3 ll=0.2379 (3s)
+/private/tmp/tabarena/.venv-ta/lib/python3.12/site-packages/sklearn/utils/validation.py:2749: UserWarning: X does not have valid feature names, but LGBMClassifier was fitted with feature names
+  warnings.warn(
+[10:16:21]   lgbm f4 ll=0.2423 (4s)
+[10:16:21]   xgb f0 ll=0.2546 (0s)
+[10:16:22]   xgb f1 ll=0.2503 (1s)
+[10:16:22]   xgb f2 ll=0.2491 (1s)
+[10:16:22]   xgb f3 ll=0.2494 (1s)
+[10:16:23]   xgb f4 ll=0.2537 (2s)
+/private/tmp/tabarena/.venv-ta/lib/python3.12/site-packages/sklearn/linear_model/_logistic.py:473: ConvergenceWarning: lbfgs failed to converge after 500 iteration(s) (status=1):
+STOP: TOTAL NO. OF ITERATIONS REACHED LIMIT
+
+Increase the number of iterations to improve the convergence (max_iter=500).
+You might also want to scale the data as shown in:
+    https://scikit-learn.org/stable/modules/preprocessing.html
+Please also refer to the documentation for alternative solver options:
+    https://scikit-learn.org/stable/modules/linear_model.html#logistic-regression
+  n_iter_i = _check_optimize_result(
+[10:16:25]   lr f0 ll=0.2656 (2s)
+/private/tmp/tabarena/.venv-ta/lib/python3.12/site-packages/sklearn/linear_model/_logistic.py:473: ConvergenceWarning: lbfgs failed to converge after 500 iteration(s) (status=1):
+STOP: TOTAL NO. OF ITERATIONS REACHED LIMIT
+
+Increase the number of iterations to improve the convergence (max_iter=500).
+You might also want to scale the data as shown in:
+    https://scikit-learn.org/stable/modules/preprocessing.html
+Please also refer to the documentation for alternative solver options:
+    https://scikit-learn.org/stable/modules/linear_model.html#logistic-regression
+  n_iter_i = _check_optimize_result(
+[10:16:27]   lr f1 ll=0.2574 (4s)
+/private/tmp/tabarena/.venv-ta/lib/python3.12/site-packages/sklearn/linear_model/_logistic.py:473: ConvergenceWarning: lbfgs failed to converge after 500 iteration(s) (status=1):
+STOP: TOTAL NO. OF ITERATIONS REACHED LIMIT
+
+Increase the number of iterations to improve the convergence (max_iter=500).
+You might also want to scale the data as shown in:
+    https://scikit-learn.org/stable/modules/preprocessing.html
+Please also refer to the documentation for alternative solver options:
+    https://scikit-learn.org/stable/modules/linear_model.html#logistic-regression
+  n_iter_i = _check_optimize_result(
+[10:16:30]   lr f2 ll=0.2648 (7s)
+/private/tmp/tabarena/.venv-ta/lib/python3.12/site-packages/sklearn/linear_model/_logistic.py:473: ConvergenceWarning: lbfgs failed to converge after 500 iteration(s) (status=1):
+STOP: TOTAL NO. OF ITERATIONS REACHED LIMIT
+
+Increase the number of iterations to improve the convergence (max_iter=500).
+You might also want to scale the data as shown in:
+    https://scikit-learn.org/stable/modules/preprocessing.html
+Please also refer to the documentation for alternative solver options:
+    https://scikit-learn.org/stable/modules/linear_model.html#logistic-regression
+  n_iter_i = _check_optimize_result(
+[10:16:32]   lr f3 ll=0.2612 (10s)
+/private/tmp/tabarena/.venv-ta/lib/python3.12/site-packages/sklearn/linear_model/_logistic.py:473: ConvergenceWarning: lbfgs failed to converge after 500 iteration(s) (status=1):
+STOP: TOTAL NO. OF ITERATIONS REACHED LIMIT
+
+Increase the number of iterations to improve the convergence (max_iter=500).
+You might also want to scale the data as shown in:
+    https://scikit-learn.org/stable/modules/preprocessing.html
+Please also refer to the documentation for alternative solver options:
+    https://scikit-learn.org/stable/modules/linear_model.html#logistic-regression
+  n_iter_i = _check_optimize_result(
+[10:16:35]   lr f4 ll=0.2669 (12s)
+/private/tmp/tabarena/.venv-ta/lib/python3.12/site-packages/sklearn/linear_model/_logistic.py:473: ConvergenceWarning: lbfgs failed to converge after 500 iteration(s) (status=1):
+STOP: TOTAL NO. OF ITERATIONS REACHED LIMIT
+
+Increase the number of iterations to improve the convergence (max_iter=500).
+You might also want to scale the data as shown in:
+    https://scikit-learn.org/stable/modules/preprocessing.html
+Please also refer to the documentation for alternative solver options:
+    https://scikit-learn.org/stable/modules/linear_model.html#logistic-regression
+  n_iter_i = _check_optimize_result(
+[10:16:37]   logisticglm f0 ll=0.2656 (3s)
+/private/tmp/tabarena/.venv-ta/lib/python3.12/site-packages/sklearn/linear_model/_logistic.py:473: ConvergenceWarning: lbfgs failed to converge after 500 iteration(s) (status=1):
+STOP: TOTAL NO. OF ITERATIONS REACHED LIMIT
+
+Increase the number of iterations to improve the convergence (max_iter=500).
+You might also want to scale the data as shown in:
+    https://scikit-learn.org/stable/modules/preprocessing.html
+Please also refer to the documentation for alternative solver options:
+    https://scikit-learn.org/stable/modules/linear_model.html#logistic-regression
+  n_iter_i = _check_optimize_result(
+[10:16:40]   logisticglm f1 ll=0.2574 (5s)
+/private/tmp/tabarena/.venv-ta/lib/python3.12/site-packages/sklearn/linear_model/_logistic.py:473: ConvergenceWarning: lbfgs failed to converge after 500 iteration(s) (status=1):
+STOP: TOTAL NO. OF ITERATIONS REACHED LIMIT
+
+Increase the number of iterations to improve the convergence (max_iter=500).
+You might also want to scale the data as shown in:
+    https://scikit-learn.org/stable/modules/preprocessing.html
+Please also refer to the documentation for alternative solver options:
+    https://scikit-learn.org/stable/modules/linear_model.html#logistic-regression
+  n_iter_i = _check_optimize_result(
+[10:16:42]   logisticglm f2 ll=0.2646 (7s)
+/private/tmp/tabarena/.venv-ta/lib/python3.12/site-packages/sklearn/linear_model/_logistic.py:473: ConvergenceWarning: lbfgs failed to converge after 500 iteration(s) (status=1):
+STOP: TOTAL NO. OF ITERATIONS REACHED LIMIT
+
+Increase the number of iterations to improve the convergence (max_iter=500).
+You might also want to scale the data as shown in:
+    https://scikit-learn.org/stable/modules/preprocessing.html
+Please also refer to the documentation for alternative solver options:
+    https://scikit-learn.org/stable/modules/linear_model.html#logistic-regression
+  n_iter_i = _check_optimize_result(
+[10:16:43]   logisticglm f3 ll=0.2612 (8s)
+/private/tmp/tabarena/.venv-ta/lib/python3.12/site-packages/sklearn/linear_model/_logistic.py:473: ConvergenceWarning: lbfgs failed to converge after 500 iteration(s) (status=1):
+STOP: TOTAL NO. OF ITERATIONS REACHED LIMIT
+
+Increase the number of iterations to improve the convergence (max_iter=500).
+You might also want to scale the data as shown in:
+    https://scikit-learn.org/stable/modules/preprocessing.html
+Please also refer to the documentation for alternative solver options:
+    https://scikit-learn.org/stable/modules/linear_model.html#logistic-regression
+  n_iter_i = _check_optimize_result(
+[10:16:45]   logisticglm f4 ll=0.2669 (10s)
+/private/tmp/tabarena/.venv-ta/lib/python3.12/site-packages/sklearn/linear_model/_linear_loss.py:330: RuntimeWarning: invalid value encountered in matmul
+  grad[:n_features] = X.T @ grad_pointwise + l2_reg_strength * weights
+/private/tmp/tabarena/.venv-ta/lib/python3.12/site-packages/sklearn/linear_model/_glm/glm.py:286: ConvergenceWarning: lbfgs failed to converge after 0 iteration(s) (status=2):
+ABNORMAL: 
+
+You might also want to scale the data as shown in:
+    https://scikit-learn.org/stable/modules/preprocessing.html
+  self.n_iter_ = _check_optimize_result(
+[10:16:45]   tweedieglm f0 ll=0.6534 (0s)
+/private/tmp/tabarena/.venv-ta/lib/python3.12/site-packages/sklearn/linear_model/_linear_loss.py:330: RuntimeWarning: invalid value encountered in matmul
+  grad[:n_features] = X.T @ grad_pointwise + l2_reg_strength * weights
+/private/tmp/tabarena/.venv-ta/lib/python3.12/site-packages/sklearn/linear_model/_glm/glm.py:286: ConvergenceWarning: lbfgs failed to converge after 0 iteration(s) (status=2):
+ABNORMAL: 
+
+You might also want to scale the data as shown in:
+    https://scikit-learn.org/stable/modules/preprocessing.html
+  self.n_iter_ = _check_optimize_result(
+[10:16:45]   tweedieglm f1 ll=0.6534 (0s)
+/private/tmp/tabarena/.venv-ta/lib/python3.12/site-packages/sklearn/linear_model/_linear_loss.py:330: RuntimeWarning: invalid value encountered in matmul
+  grad[:n_features] = X.T @ grad_pointwise + l2_reg_strength * weights
+/private/tmp/tabarena/.venv-ta/lib/python3.12/site-packages/sklearn/linear_model/_glm/glm.py:286: ConvergenceWarning: lbfgs failed to converge after 0 iteration(s) (status=2):
+ABNORMAL: 
+
+You might also want to scale the data as shown in:
+    https://scikit-learn.org/stable/modules/preprocessing.html
+  self.n_iter_ = _check_optimize_result(
+[10:16:45]   tweedieglm f2 ll=0.6534 (0s)
+/private/tmp/tabarena/.venv-ta/lib/python3.12/site-packages/sklearn/linear_model/_linear_loss.py:330: RuntimeWarning: invalid value encountered in matmul
+  grad[:n_features] = X.T @ grad_pointwise + l2_reg_strength * weights
+/private/tmp/tabarena/.venv-ta/lib/python3.12/site-packages/sklearn/linear_model/_glm/glm.py:286: ConvergenceWarning: lbfgs failed to converge after 0 iteration(s) (status=2):
+ABNORMAL: 
+
+You might also want to scale the data as shown in:
+    https://scikit-learn.org/stable/modules/preprocessing.html
+  self.n_iter_ = _check_optimize_result(
+[10:16:45]   tweedieglm f3 ll=0.6534 (0s)
+/private/tmp/tabarena/.venv-ta/lib/python3.12/site-packages/sklearn/linear_model/_linear_loss.py:330: RuntimeWarning: invalid value encountered in matmul
+  grad[:n_features] = X.T @ grad_pointwise + l2_reg_strength * weights
+/private/tmp/tabarena/.venv-ta/lib/python3.12/site-packages/sklearn/linear_model/_glm/glm.py:286: ConvergenceWarning: lbfgs failed to converge after 0 iteration(s) (status=2):
+ABNORMAL: 
+
+You might also want to scale the data as shown in:
+    https://scikit-learn.org/stable/modules/preprocessing.html
+  self.n_iter_ = _check_optimize_result(
+[10:16:45]   tweedieglm f4 ll=0.6534 (0s)
+/private/tmp/tabarena/.venv-ta/lib/python3.12/site-packages/sklearn/linear_model/_glm/glm.py:286: ConvergenceWarning: lbfgs failed to converge after 500 iteration(s) (status=1):
+STOP: TOTAL NO. OF ITERATIONS REACHED LIMIT
+
+Increase the number of iterations to improve the convergence (max_iter=500).
+You might also want to scale the data as shown in:
+    https://scikit-learn.org/stable/modules/preprocessing.html
+  self.n_iter_ = _check_optimize_result(
+[10:16:47]   poissonglm f0 ll=0.3109 (1s)
+/private/tmp/tabarena/.venv-ta/lib/python3.12/site-packages/sklearn/linear_model/_glm/glm.py:286: ConvergenceWarning: lbfgs failed to converge after 500 iteration(s) (status=1):
+STOP: TOTAL NO. OF ITERATIONS REACHED LIMIT
+
+Increase the number of iterations to improve the convergence (max_iter=500).
+You might also want to scale the data as shown in:
+    https://scikit-learn.org/stable/modules/preprocessing.html
+  self.n_iter_ = _check_optimize_result(
+[10:16:48]   poissonglm f1 ll=0.2876 (3s)
+/private/tmp/tabarena/.venv-ta/lib/python3.12/site-packages/sklearn/linear_model/_glm/glm.py:286: ConvergenceWarning: lbfgs failed to converge after 500 iteration(s) (status=1):
+STOP: TOTAL NO. OF ITERATIONS REACHED LIMIT
+
+Increase the number of iterations to improve the convergence (max_iter=500).
+You might also want to scale the data as shown in:
+    https://scikit-learn.org/stable/modules/preprocessing.html
+  self.n_iter_ = _check_optimize_result(
+[10:16:50]   poissonglm f2 ll=0.3028 (4s)
+/private/tmp/tabarena/.venv-ta/lib/python3.12/site-packages/sklearn/linear_model/_glm/glm.py:286: ConvergenceWarning: lbfgs failed to converge after 500 iteration(s) (status=1):
+STOP: TOTAL NO. OF ITERATIONS REACHED LIMIT
+
+Increase the number of iterations to improve the convergence (max_iter=500).
+You might also want to scale the data as shown in:
+    https://scikit-learn.org/stable/modules/preprocessing.html
+  self.n_iter_ = _check_optimize_result(
+[10:16:51]   poissonglm f3 ll=0.3020 (6s)
+/private/tmp/tabarena/.venv-ta/lib/python3.12/site-packages/sklearn/linear_model/_glm/glm.py:286: ConvergenceWarning: lbfgs failed to converge after 500 iteration(s) (status=1):
+STOP: TOTAL NO. OF ITERATIONS REACHED LIMIT
+
+Increase the number of iterations to improve the convergence (max_iter=500).
+You might also want to scale the data as shown in:
+    https://scikit-learn.org/stable/modules/preprocessing.html
+  self.n_iter_ = _check_optimize_result(
+[10:16:53]   poissonglm f4 ll=0.3047 (8s)
+[10:17:02]   rf f0 ll=0.2635 (9s)
+[10:17:09]   rf f1 ll=0.2553 (16s)
+[10:17:15]   rf f2 ll=0.2644 (22s)
+[10:17:21]   rf f3 ll=0.2575 (28s)
+[10:17:26]   rf f4 ll=0.2654 (33s)
+[10:17:35]   count cat: 63778 params (8s)
+[10:17:35]   count xgb: 4253 params (0s)
+[10:17:36]   count lgbm: 3100 params (1s)
+[10:17:41]   count rf: 434404 params (5s)
+00:00 Fitting... -00:00 Fitting... \00:00 Fitting... |00:00 Fitting... /00:00 Fitting... -00:01 Fitting... \00:01 Fitting... |00:01 Fitting... /00:01 Fitting... -00:01 Fitting... \00:02 Fitting... |00:02 Fitting... /00:02 Fitting... -00:02 Fitting... \00:02 Fitting... |00:03 Fitting... /00:03 Fitting... Done!
+00:00 Predicting... -00:00 Predicting... \00:00 Predicting... |00:00 Predicting... /00:00 Predicting... -00:01 Predicting... \00:01 Predicting... |00:01 Predicting... /00:01 Predicting... -00:01 Predicting... \00:02 Predicting... |00:02 Predicting... /00:02 Predicting... -00:02 Predicting... \00:02 Predicting... |00:03 Predicting... /00:03 Predicting... -00:03 Predicting... \00:03 Predicting... |00:03 Predicting... /00:04 Predicting... -00:04 Predicting... \00:04 Predicting... |00:04 Predicting... /00:04 Predicting... -00:05 Predicting... \00:05 Predicting... |00:05 Predicting... /00:05 Predicting... -00:05 Predicting... \00:06 Predicting... |00:06 Predicting... /00:06 Predicting... -00:06 Predicting... \00:07 Predicting... |00:07 Predicting... /00:07 Predicting... -00:07 Predicting... \00:07 Predicting... |00:08 Predicting... /00:08 Predicting... Done!
+/private/tmp/tabarena/.venv-ta/lib/python3.12/site-packages/sklearn/metrics/_classification.py:259: UserWarning: The y_prob values do not sum to one. Make sure to pass probabilities.
+  warnings.warn(
+[10:17:53]   tabpfn f0 ll=0.2408 (12s)
+00:00 Fitting... -00:00 Fitting... \00:00 Fitting... |00:00 Fitting... /00:00 Fitting... -00:01 Fitting... \00:01 Fitting... |00:01 Fitting... /00:01 Fitting... -00:01 Fitting... \00:02 Fitting... |00:02 Fitting... /00:02 Fitting... -00:02 Fitting... \00:02 Fitting... |00:02 Fitting... Done!
+00:00 Predicting... -00:00 Predicting... \00:00 Predicting... |00:00 Predicting... /00:00 Predicting... -00:01 Predicting... \00:01 Predicting... |00:01 Predicting... /00:01 Predicting... -00:01 Predicting... \00:02 Predicting... |00:02 Predicting... /00:02 Predicting... -00:02 Predicting... \00:02 Predicting... |00:03 Predicting... /00:03 Predicting... -00:03 Predicting... \00:03 Predicting... |00:03 Predicting... /00:04 Predicting... -00:04 Predicting... \00:04 Predicting... |00:04 Predicting... /00:04 Predicting... -00:05 Predicting... \00:05 Predicting... |00:05 Predicting... /00:05 Predicting... -00:05 Predicting... \00:06 Predicting... |00:06 Predicting... /00:06 Predicting... -00:06 Predicting... \00:07 Predicting... |00:07 Predicting... /00:07 Predicting... -00:07 Predicting... \00:07 Predicting... |00:07 Predicting... Done!
+/private/tmp/tabarena/.venv-ta/lib/python3.12/site-packages/sklearn/metrics/_classification.py:259: UserWarning: The y_prob values do not sum to one. Make sure to pass probabilities.
+  warnings.warn(
+[10:18:04]   tabpfn f1 ll=0.2371 (23s)
+00:00 Fitting... -00:00 Fitting... \00:00 Fitting... |00:00 Fitting... /00:00 Fitting... -00:01 Fitting... \00:01 Fitting... |00:01 Fitting... /00:01 Fitting... Done!
+00:00 Predicting... -00:00 Predicting... \00:00 Predicting... |00:00 Predicting... /00:00 Predicting... -00:01 Predicting... \00:01 Predicting... |00:01 Predicting... /00:01 Predicting... -00:01 Predicting... \00:02 Predicting... |00:02 Predicting... /00:02 Predicting... -00:02 Predicting... \00:02 Predicting... |00:03 Predicting... /00:03 Predicting... -00:03 Predicting... \00:03 Predicting... |00:03 Predicting... /00:04 Predicting... -00:04 Predicting... \00:04 Predicting... |00:04 Predicting... /00:04 Predicting... -00:05 Predicting... \00:05 Predicting... |00:05 Predicting... /00:05 Predicting... -00:05 Predicting... \00:06 Predicting... |00:06 Predicting... /00:06 Predicting... -00:06 Predicting... \00:06 Predicting... |00:07 Predicting... /00:07 Predicting... -00:07 Predicting... \00:07 Predicting... |00:07 Predicting... Done!
+/private/tmp/tabarena/.venv-ta/lib/python3.12/site-packages/sklearn/metrics/_classification.py:259: UserWarning: The y_prob values do not sum to one. Make sure to pass probabilities.
+  warnings.warn(
+[10:18:14]   tabpfn f2 ll=0.2355 (32s)
+00:00 Fitting... -00:00 Fitting... \00:00 Fitting... |00:00 Fitting... /00:00 Fitting... -00:01 Fitting... \00:01 Fitting... |00:01 Fitting... /00:01 Fitting... -00:01 Fitting... \00:02 Fitting... |00:02 Fitting... /00:02 Fitting... -00:02 Fitting... \00:02 Fitting... |00:02 Fitting... Done!
+00:00 Predicting... -00:00 Predicting... \00:00 Predicting... |00:00 Predicting... /00:00 Predicting... -00:01 Predicting... \00:01 Predicting... |00:01 Predicting... /00:01 Predicting... -00:01 Predicting... \00:02 Predicting... |00:02 Predicting... /00:02 Predicting... -00:02 Predicting... \00:02 Predicting... |00:03 Predicting... /00:03 Predicting... -00:03 Predicting... \00:03 Predicting... |00:03 Predicting... /00:04 Predicting... -00:04 Predicting... \00:04 Predicting... |00:04 Predicting... /00:04 Predicting... -00:05 Predicting... \00:05 Predicting... |00:05 Predicting... /00:05 Predicting... -00:05 Predicting... \00:06 Predicting... |00:06 Predicting... /00:06 Predicting... -00:06 Predicting... \00:07 Predicting... |00:07 Predicting... /00:07 Predicting... -00:07 Predicting... \00:07 Predicting... Done!
+/private/tmp/tabarena/.venv-ta/lib/python3.12/site-packages/sklearn/metrics/_classification.py:259: UserWarning: The y_prob values do not sum to one. Make sure to pass probabilities.
+  warnings.warn(
+[10:18:25]   tabpfn f3 ll=0.2354 (43s)
+00:00 Fitting... -00:00 Fitting... \00:00 Fitting... |00:00 Fitting... /00:00 Fitting... -00:01 Fitting... \00:01 Fitting... |00:01 Fitting... /00:01 Fitting... -00:01 Fitting... \00:02 Fitting... |00:02 Fitting... /00:02 Fitting... -00:02 Fitting... \00:02 Fitting... |00:02 Fitting... Done!
+00:00 Predicting... -00:00 Predicting... \00:00 Predicting... |00:00 Predicting... /00:00 Predicting... -00:01 Predicting... \00:01 Predicting... |00:01 Predicting... /00:01 Predicting... -00:01 Predicting... \00:02 Predicting... |00:02 Predicting... /00:02 Predicting... -00:02 Predicting... \00:02 Predicting... |00:03 Predicting... /00:03 Predicting... -00:03 Predicting... \00:03 Predicting... |00:03 Predicting... /00:04 Predicting... -00:04 Predicting... \00:04 Predicting... |00:04 Predicting... /00:04 Predicting... -00:05 Predicting... \00:05 Predicting... |00:05 Predicting... /00:05 Predicting... -00:05 Predicting... \00:06 Predicting... |00:06 Predicting... /00:06 Predicting... -00:06 Predicting... \00:06 Predicting... |00:07 Predicting... /00:07 Predicting... -00:07 Predicting... \00:07 Predicting... |00:07 Predicting... Done!
+/private/tmp/tabarena/.venv-ta/lib/python3.12/site-packages/sklearn/metrics/_classification.py:259: UserWarning: The y_prob values do not sum to one. Make sure to pass probabilities.
+  warnings.warn(
+[10:18:36]   tabpfn f4 ll=0.2414 (54s)
+     method   mean     se  n_params on_frontier
+     tabpfn 0.2380 0.0013  10000000         yes
+       lgbm 0.2398 0.0011      3100         yes
+        cat 0.2434 0.0010     63778          no
+        xgb 0.2514 0.0011      4253          no
+         rf 0.2612 0.0020    434404          no
+logisticglm 0.2631 0.0017        14         yes
+         lr 0.2632 0.0017        14         yes
+ poissonglm 0.3016 0.0038        14         yes
+ tweedieglm 0.6534 0.0000        14         yes
+SELF-CHECK OK: folds=5, methods=9, on-frontier=6
+[10:18:36] bemtl16 done -> /Users/Scott/Documents/Data Science/ADSWP/TabPFN-work-scott-worktrees/cumans/scripts/eval/insurance_benchmark_v1/frontier_results_bemtl16.csv, /Users/Scott/Documents/Data Science/ADSWP/TabPFN-work-scott-worktrees/cumans/scripts/eval/insurance_benchmark_v1/frontier_plot_bemtl16.png
+
+ALL DATASETS DONE in 344s

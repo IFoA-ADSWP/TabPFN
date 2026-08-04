@@ -101,13 +101,13 @@ CLASSIFICATION = {
     "eudirectlapse": {
         "file": "eudirectlapse.csv",
         "target": "lapse",
-        "n_splits": 2,
+        "n_splits": 5,
         "desc": "EU direct insurance lapse, 23K rows, 12.8% positive",
     },
     "spanish_motor_lapse": {
         "file": "spanish_motor_lapse.csv",
         "target": "LapseB",
-        "n_splits": 2,
+        "n_splits": 5,
         "desc": "Spanish motor lapse (last policy-year per ID), 53.5K rows, 35.4% positive",
     },
 }

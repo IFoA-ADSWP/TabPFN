@@ -7,6 +7,9 @@ result caches (test-split probas, matching v1's reported metric) and rescues
 the evidence without any refits.
 
 Usage: /tmp/tabarena/.venv-ta/bin/python scripts/eval/insurance_benchmark_v1/rescore_focused_imbalance_logloss.py
+
+Post-run only: requires scripts/experiments/ task caches from completed v1 + pilot
+runs (not committed).
 """
 from __future__ import annotations
 

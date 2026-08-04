@@ -17,16 +17,16 @@ This portfolio is the project's "custom benchmarking to assess insurance perform
 | 3 | Lapse benchmark | `scripts/run_lapse_benchmark.py` | Lapse classification + premium regression, ELO leaderboard; `eudirectlapse` + `spanish_motor_lapse` | done |
 | 4 | Imbalance study | `scripts/run_tabarena_insurance_imbalance_pilot.py` | Does `balance_probabilities` help on imbalanced insurance data? (`coil2000` + `uslapseagent`, 5 folds) | done |
 | 5 | Size sweep — small-data regime | `scripts/run_home_turf_size_sweep.py` + `scripts/finish_home_turf_sweep.py` + `scripts/finish_home_turf_sweep_v2.py` | Size sensitivity: 3 datasets × 1K/5K/full × 5 folds, log loss / Brier / 1−AUC | done |
-| 6 | Parsimony frontier | `scripts/eval/insurance_benchmark_v1/run_frontier_benchmark.py` | **THE core deliverable (issue #27):** accuracy-vs-complexity Pareto frontiers, 11 datasets (6 class + 5 reg), D1–D5 methodology, `--regression` mode | done |
+| 6 | Parsimony frontier | `scripts/eval/insurance_benchmark_v1/run_frontier_benchmark.py` | **THE core deliverable (issue #27):** accuracy-vs-complexity Pareto frontiers, 12 datasets (6 class + 6 reg), D1–D5 methodology, `--regression` mode | done |
 
 ## 3. Findings by benchmark
 
 1. **Smoke test:** TabPFN ranks #1 (ELO 2190) → harness works, proceed.
 2. **Default-config baseline:** TabPFN mostly loses (2 wins, 1 tie, 5 losses), 5–50× slower train; `bemtl97` label leak discovered and excluded (§6).
-3. **Lapse benchmark:** TabPFN wins premium regression (RMSE 19.07 vs 81.8); wins Spanish lapse (AUC 0.752 vs LGBM 0.745 vs Linear 0.684); Linear wins `eudirectlapse` classification (0.628). Caveat: 2-fold holdout panel — gaps are smaller than the frontier's beyond-SE threshold; a 5-fold re-run would settle it.
+3. **Lapse benchmark:** TabPFN wins premium regression (RMSE 19.07 vs 81.8); wins Spanish lapse (AUC 0.752 vs LGBM 0.745 vs Linear 0.684); Linear wins `eudirectlapse` classification (0.628). Settled by 5-fold re-run (§14.10): TabPFN 0.7553 vs LGBM 0.7500 on Spanish (wins 5/5 folds); Linear still wins eudirectlapse (0.6260).
 4. **Imbalance study:** hypothesis rejected — no 1−AUC gain; `balance_probabilities` hurts calibration (log loss 0.4716 vs 0.2008 on `coil2000`).
 5. **Size sweep — small-data regime:** **THE pivot finding** — TabPFN wins 8/9 cells at 1K–5K rows, loses at full size → small-data specialist (§13).
-6. **Parsimony frontier:** quantified verdict — TabPFN on frontier 7/11 datasets at 10M fixed params; off-frontier at scale 4× (`norauto`, `bemtl97_amount`, `freMTPL2freq`, `spanish_motor_freq`); 21-param GLMs within noise of it (§14.2–14.9).
+6. **Parsimony frontier:** quantified verdict — TabPFN on frontier 7/12 datasets at 10M fixed params; off-frontier at scale 5× (`norauto`, `bemtl97_amount`, `freMTPL2freq`, `spanish_motor_freq`, `spanish_motor_severity`); 21-param GLMs within noise of it (§14.2–14.10).
 
 ## 4. Naming canon
 
@@ -81,7 +81,6 @@ Each step was gated by the previous one: the smoke test validated the harness, t
 
 ## 7. Gaps and natural extensions
 
-- **5-fold re-run of the lapse benchmark** — the current 2-fold holdout is the one soft spot in the portfolio; a 5-fold re-run would settle whether the lapse gaps are real.
 - **Other foundation models** — TabFM was dropped for OOM; revisit on smaller data.
 - **Fine-tuned TabPFN in the frontier** — tested separately, never inside the parsimony framework.
 - **Ensembling across context windows** — the untested TabPFN lever; the v3 API accepts up to 1M rows — the server handles large contexts internally, but the mechanism is not exposed.

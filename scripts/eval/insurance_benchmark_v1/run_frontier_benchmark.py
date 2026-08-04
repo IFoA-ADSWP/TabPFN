@@ -125,6 +125,7 @@ REG_DATASETS = [
     dict(name="bemtl97_amount", file="bemtl97.csv", target="amount", drop=["claim"], metric="rmse"),
     dict(name="freMTPL2freq", file="freMTPL2freq.csv", target="ClaimNb", drop=["IDpol"], metric="poisson_deviance", transform="log_exposure"),
     dict(name="spanish_motor_freq", file="spanish_motor_freq.csv", target="N_claims_year", drop=[], metric="poisson_deviance"),
+    dict(name="spanish_motor_severity", file="spanish_motor_severity.csv", target="Cost_claims_year", drop=[], metric="rmse"),
 ]
 
 METRIC_LABELS = {  # plot y-axis per metric (metric_fn dispatch)

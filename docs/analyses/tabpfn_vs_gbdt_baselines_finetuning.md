@@ -852,7 +852,48 @@ beats TabPFN by ~10.8% deviance with 1/3,200 of the parameters, and the standard
 Poisson GLM is statistically indistinguishable from TabPFN — there is no actuarial
 case for TabPFN on frequency at this scale. On lapse, the picture flips: TabPFN
 edges LGBM (AUC 0.752 vs 0.745 on Spanish motor, 53.5K rows) and both far outrun
-LR (0.684); TabPFN also leads the combined lapse leaderboard (elo 1128).
+LR (0.684); TabPFN also leads the combined lapse leaderboard (elo 1128). The
+2-fold caveat on that lapse gap is settled by the 5-fold re-run in §14.10.
+
+## 14.10 Gap-closing addendum (2026-08-04)
+
+**5-fold lapse re-run** (`scripts/run_lapse_benchmark.py`, both classification
+entries now `n_splits: 5`; experiment cache cleared first — 0 cache_exists, so
+both datasets including eudirectlapse were freshly refit; premium regression task
+stays 2-fold). Mean AUC over 5 stratified folds, ±SE:
+
+| Dataset | TabPFN | LGBM | Linear |
+|---|---|---|---|
+| spanish_motor_lapse (53.5K rows, 35.4% pos) | **0.7553 ± 0.0026** | 0.7500 ± 0.0022 | 0.6841 ± 0.0015 |
+| eudirectlapse (23K rows, 12.8% pos) | 0.6101 ± 0.0049 | 0.6138 ± 0.0043 | **0.6260 ± 0.0037** |
+
+The Spanish lapse gap **survives 5 folds and widens slightly** (0.7553 vs 0.7500,
+~2 SE): TabPFN wins all five folds (0.7465–0.7621 vs 0.7416–0.7550). eudirectlapse
+still goes to Linear (wins all 5 folds). Combined leaderboard (2×5-fold lapse +
+2-fold premium): TabPFN elo 1099.0 > GBM 983.5 > LR 917.6 — TabPFN's lead is
+carried by the premium RMSE task (19.07 vs 26.34 vs 81.84) plus Spanish lapse.
+
+**Spanish severity frontier** (`data/raw/spanish_motor_severity.csv`: last
+policy-year per ID, 53,502 rows × 20 features, target log1p(Cost_claims_year) in
+place — bemtl97_amount precedent; N_claims_year excluded as a sibling target:
+cost==0 iff count==0, so the count would give away the zero/non-zero split).
+RMSE on the stored log1p scale, 5-fold KFold, 8 methods:
+
+| Method | RMSE (mean ± SE) | n_params | Frontier |
+|---|---|---|---|
+| lgbm | **1.8372 ± 0.0100** | 3,100 | yes |
+| cat | 1.8376 ± 0.0095 | 63,952 | yes |
+| rf | 1.8702 ± 0.0100 | 477,610 | no |
+| ols | 1.8781 ± 0.0104 | 21 | yes |
+| xgb | 1.8786 ± 0.0100 | 5,459 | no |
+| tabpfn | 1.8862 ± 0.0116 | 10,000,000 | no |
+| poissonglm / tweedieglm | 1.8876 ± 0.0106 | 21 | yes |
+
+TabPFN lands 5th of 8 (mid-pack) and off-frontier — 2.7% behind LGBM on RMSE.
+Severity shows the same at-scale pattern as frequency: LGBM/Cat extract the
+signal, TabPFN's 10M-param prior adds nothing. Files:
+`scripts/eval/insurance_benchmark_v1/frontier_results_spanish_motor_severity.csv`,
+`frontier_plot_spanish_motor_severity.png`.
 
 ## 9. Source Workbooks
 

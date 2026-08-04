@@ -161,6 +161,19 @@ def make_spanish_motor_lapse(df: pd.DataFrame) -> tuple[pd.DataFrame, list[str]]
     return out, ["LapseB"]
 
 
+def make_spanish_motor_severity(df: pd.DataFrame) -> tuple[pd.DataFrame, list[str]]:
+    """Severity variant (frontier regression mode, rmse). Target: log1p-transformed
+    Cost_claims_year in place (bemtl97_amount precedent: log1p zero-inflated target,
+    RMSE on the stored log-scale). Same leak exclusions as the freq variant
+    (N_claims_history / R_Claims_history include current-year claims) PLUS
+    N_claims_year: cost==0 iff N_claims_year==0 exactly, so the count would hand the
+    model the zero/non-zero split of the target for free (sibling target family)."""
+    base = _spanish_motor_base(df)
+    out = base[_SPANISH_FEATURES].copy()
+    out["Cost_claims_year"] = np.log1p(base["Cost_claims_year"])
+    return out, ["Cost_claims_year"]
+
+
 DATASETS = [
     ("uslapseagent", "uslapseagent.csv", make_uslapseagent),
     ("beMTPL97", "bemtl97.csv", make_bemtl97),
@@ -169,6 +182,7 @@ DATASETS = [
     ("norauto", "norauto.csv", make_norauto),
     ("spanish_motor", "spanish_motor_freq.csv", make_spanish_motor_freq),
     ("spanish_motor", "spanish_motor_lapse.csv", make_spanish_motor_lapse),
+    ("spanish_motor", "spanish_motor_severity.csv", make_spanish_motor_severity),
 ]
 
 
