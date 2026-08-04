@@ -138,7 +138,9 @@ won every classification task tested (8/9 sweep cells including the two full-siz
 - **Hosted v3 pin.** All hosted runs are pinned to `model_path="v3_default"` (tabpfn-client
   0.3.3) for reproducibility (§14.9). The §12.1 "~1K context ceiling" mechanism is
   superseded by the v3 model-version correction — API limits accept up to 1M rows — but
-  the measured size pattern stands as mechanism-independent (§12.1).
+  the measured size pattern stands as mechanism-independent (§12.1). Re-test procedure
+  when the client/model version changes: master report §15 (Version-Drift Re-Test
+  Policy, issue #55).
 - **Label-leak exclusions.** bemtl97 (`nclaims`/`amount` leak, §6) is leak-fixed
   everywhere here; bemtl97_amount drops `claim` (§14.8); Spanish motor drops the
   history-variable leak (pre-run AUC 0.76/0.92) and sibling targets `Cost_claims_year` /
