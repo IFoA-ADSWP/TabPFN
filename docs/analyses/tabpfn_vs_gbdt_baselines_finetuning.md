@@ -3,6 +3,31 @@
 Technical research report — engineering/data-science audience.
 Branch: `feat/tabarena-benchmark`. Date: 2026-08-01. Updated: 2026-08-02 (§11, §12, §13, §14); 2026-08-03 (§14.6 norauto first extension, §14.7 v1-suite extension, §14.8 regression Phase 2).
 
+## Results digest (12 datasets)
+
+Compact cross-dataset digest of the frontier runs — mean over folds from
+`scripts/eval/insurance_benchmark_v1/frontier_results_*.csv`; detail per dataset in
+§14.2–§14.10. Ratio = TabPFN metric ÷ best-method metric (error metrics, lower is better;
+1.000 = on par with the best).
+
+| Dataset | Task | Rows | Best method (metric) | TabPFN (metric) | Ratio | On frontier? |
+| --- | --- | ---: | --- | ---: | ---: | --- |
+| bemtl97 | classification — log loss (claim occurrence; leak-fixed) | 163,212 | lgbm 0.34177 | 0.34279 | 1.003 | yes |
+| coil2000 | classification — log loss (caravan purchase) | 9,822 | tabpfn 0.20059 | 0.20059 | 1.000 | yes |
+| uslapseagent | classification — log loss (lapse) | 29,317 | tabpfn 0.24909 | 0.24909 | 1.000 | yes |
+| norauto | classification — log loss (claim occurrence) | 183,999 | lgbm 0.17518 | 0.17619 | 1.006 | yes |
+| ausprivauto0405 | classification — log loss (claim occurrence) | 67,856 | logisticglm 0.23947 | 0.24026 | 1.003 | no |
+| bemtl16 | classification — log loss (liability claim) | 58,723 | tabpfn 0.23803 | 0.23803 | 1.000 | yes |
+| ausautoBI8999 | regression — RMSE (BI severity) | 22,036 | tabpfn 0.96491 | 0.96491 | 1.000 | yes |
+| ausprivauto0405_vehvalue | regression — RMSE (vehicle value) | 67,856 | tabpfn 0.71162 | 0.71162 | 1.000 | yes |
+| bemtl97_amount | regression — RMSE (severity, log1p) | 163,212 | lgbm 0.48499 | 0.72825 | 1.502 | no |
+| freMTPL2freq | frequency — Poisson deviance | 678,013 | lgbm 0.29113 | 0.38770 | 1.332 | no |
+| spanish_motor_freq | frequency — Poisson deviance | 53,502 | lgbm 0.89157 | 0.98764 | 1.108 | no |
+| spanish_motor_severity | regression — RMSE (severity, log1p) | 53,502 | lgbm 1.83719 | 1.88616 | 1.027 | no |
+
+\* bemtl97: excluded from the v1 baseline tally (label leak, §6); this row is the
+leak-fixed frontier re-run (§14.2).
+
 ## 1. Objective
 
 Answer two questions with reproducible evidence:
