@@ -281,6 +281,21 @@ context captures the learnable signal. The bemtl97 leak (§6) is unaffected by t
 single leaking feature is trivially learnable inside any context window, which is why
 exclusion is data-driven, not model-driven.
 
+**Model-version correction (2026-08-04).** The "~1K effective context" framing above
+was written from a v2.5-era architecture understanding and does **not** describe the
+model this benchmark actually ran. All hosted-API runs in this report used the
+**hosted v3 model** (auto-selection; pinned post-hoc to `model_path="v3_default"`,
+tabpfn-client 0.3.3 — see the §14.9 model version note). Live-verified API limits on
+2026-08-04 via the client's `/tabpfn/get_model_limits` (ModelLimit): **v3 supports up
+to 1,000,000 rows / 200,000,000 cells / 160 classes / 2,000 columns** (v2/v2.5 capped
+at 50,000 rows, v2.6 at 100,000), so there is **no 1K context ceiling at the API
+level** for v3. The server manages large training sets internally — plausibly a larger
+v3 context window and/or internal subsampling/ensembling — but the mechanism is not
+exposed by the client. What stands: the measured size-dependent pattern (TabPFN wins
+small data, ties mid-size, drops off the frontier at scale) is empirical and
+**mechanism-independent**. The operative v3-era limits are accuracy-per-parameter and
+accuracy-per-second against GBDTs/GLMs, not a hard 1K window.
+
 ### 12.2 Metric blindness — 1−AUC cannot see calibration
 
 v1 ranked methods on **1−AUC**, a rank-invariant metric that discards all probability
@@ -317,7 +332,8 @@ remains the one lever untested (§8(a), §11.5).
 ### 12.5 What this means for reading the results
 
 The v1 "TabPFN loses" headline **conflated genuine model limits with setup choices**:
-the context ceiling, the regression/severity gap, and inference cost are model limits;
+the context ceiling, the regression/severity gap, and inference cost are model limits
+(context-ceiling item amended by the §12.1 model-version correction, 2026-08-04);
 dataset scale, the 1−AUC metric, and the tuning asymmetry are setup choices. Correcting
 the setup choices (metric re-score, §11.3) flips classification from losing to
 competitive on calibration — the classification headline was substantially measurement.
@@ -781,7 +797,9 @@ regression axes TabPFN wins power only at small N — beyond SE at 22,036 rows
 scale: 163,212 rows (bemtl97_amount) and 678,013 rows (freMTPL2freq). This transfers the
 §12.1 size-ceiling hypothesis to the regression axis: at ~1K effective context the model
 holds its edge on small/medium severity problems and loses it where every row of signal
-matters. It also flags a protocol sensitivity worth recording — the frontier protocol's
+matters. (The "~1K effective context" mechanism is amended by the §12.1 model-version
+correction, 2026-08-04; the size-dependent pattern stands.) It also flags a protocol
+sensitivity worth recording — the frontier protocol's
 TabPFNRegressor does not reproduce v1's vehvalue +67.2%, so v1's regression verdicts are
 harness-specific. The GLMs are far more competitive on frequency than on classification;
 on severity the GBDTs dominate outright.
@@ -832,8 +850,9 @@ benchmark scripts now pin `model_path="v3_default"` explicitly for reproducibili
 **Actuary takeaway:** on this real Spanish motor frequency book, a default LGBM
 beats TabPFN by ~10.8% deviance with 1/3,200 of the parameters, and the standard
 Poisson GLM is statistically indistinguishable from TabPFN — there is no actuarial
-case for TabPFN on frequency at this scale; the lapse variant remains a pending
-extension.
+case for TabPFN on frequency at this scale. On lapse, the picture flips: TabPFN
+edges LGBM (AUC 0.752 vs 0.745 on Spanish motor, 53.5K rows) and both far outrun
+LR (0.684); TabPFN also leads the combined lapse leaderboard (elo 1128).
 
 ## 9. Source Workbooks
 

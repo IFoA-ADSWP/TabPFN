@@ -40,8 +40,16 @@ One-off experiment scripts, infrastructure, and debug tools. Ordered by purpose.
 
 | Script | Purpose |
 |--------|---------|
+| `prepare_insurance_datasets.py` | Convert CASdatasets `.rda` + raw CSV sources to cleaned CSVs in `data/raw/` (incl. Spanish motor portfolio makers; `--only <stem>` filter) |
 | `run_tabarena_insurance_benchmark.py` | Run TabArena benchmark on 7 insurance datasets across foundation / tree / statistical model families |
 | `run_smoke_tabarena.py` | Smoke test — single dataset (coil2000), 3 models, validates TabArena setup end-to-end in ~2 min |
+| `run_lapse_benchmark.py` | Lapse benchmark — classification (lapse) + regression (premium) on eudirectlapse + spanish_motor_lapse, holdout mode, 3 models |
+| `run_tabarena_insurance_imbalance_pilot.py` | Imbalance pilot — `balance_probabilities` vs v1 on coil2000 + uslapseagent (5 folds, reuses v1 splits) |
+| `run_home_turf_size_sweep.py` | Home-turf size sweep — 3 datasets × 3 sizes × 5 folds, log loss / Brier / 1−AUC |
+| `finish_home_turf_sweep.py` | Resume/finish partial sweep CSV (n_estimators=1 arm, 300s per-fit timeout) |
+| `finish_home_turf_sweep_v2.py` | Revised sweep assembly — drops n_estimators=1, adds n_estimators=8 per cell, retries errored rows, 35-min wall budget |
+| `eval/insurance_benchmark_v1/run_frontier_benchmark.py` | Pareto frontier benchmark (power vs parsimony, D1–D5) — log loss / RMSE / Poisson deviance vs n_params, `--regression` mode, 11 datasets |
+| `eval/insurance_benchmark_v1/rescore_focused_imbalance_logloss.py` | Re-score cached pilot probas on log loss / Brier (post-run only — needs `scripts/experiments/` caches) |
 
 ## Analysis
 

@@ -95,7 +95,7 @@ def make_regression_task(
 
 
 # ---------------------------------------------------------------------------
-# Datasets — eudirectlapse only
+# Datasets — eudirectlapse + spanish_motor_lapse
 # ---------------------------------------------------------------------------
 CLASSIFICATION = {
     "eudirectlapse": {
@@ -103,6 +103,12 @@ CLASSIFICATION = {
         "target": "lapse",
         "n_splits": 2,
         "desc": "EU direct insurance lapse, 23K rows, 12.8% positive",
+    },
+    "spanish_motor_lapse": {
+        "file": "spanish_motor_lapse.csv",
+        "target": "LapseB",
+        "n_splits": 2,
+        "desc": "Spanish motor lapse (last policy-year per ID), 53.5K rows, 35.4% positive",
     },
 }
 
