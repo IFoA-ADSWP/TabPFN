@@ -10,8 +10,8 @@ Tracked from GitHub issues. Updated manually.
 | 🔲 | #54 | TabPFN levers in the parsimony framework — fine-tuning, HPO, ensembling — assessment shipped (PR #63), run decision pending | — |
 | ✅ | #53 | Regime characterization — why does TabPFN win lapse at 53.5K but lose frequency/severity? — PR #61 | — |
 | ✅ | #52 | Conclusion & adoption guidance for the TabPFN benchmark — PR #61 | — |
-| 🔲 | #35 | Pipeline for Insurance/Actuarial Predictions — 4/5 criteria done (#47–#50); #46 open (generic CLI) | — |
-| 🔲 | #46 | Pipeline: CLI entrypoint (dataset path + target column) — partial: registry-based filter, not arbitrary path+target | — |
+| ✅ | #35 | Pipeline for Insurance/Actuarial Predictions — 5/5 criteria done (#47–#50 + #46 generic CLI) | — |
+| ✅ | #46 | Pipeline: CLI entrypoint (dataset path + target column) — PR #65 | — |
 | 🔲 | #29 | Funding Request #1 | Cillian-Williamson |
 | 🔲 | #28 | Funding Request #2 | Cillian-Williamson |
 | ✅ | #27 | Review TabArena (frontier benchmark D1–D5 + v1-suite + regression Phase 2) — MERGED to main via PR #51; follow-ups #52–#57 | scotthawes |
