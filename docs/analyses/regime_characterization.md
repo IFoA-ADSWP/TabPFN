@@ -66,8 +66,8 @@ signal (Spanish freq: Poisson GLM at the null floor). Classify each dataset:
 **Result — the hypothesis is half-right, and the freq example misreads its own evidence.**
 
 *Confirmed direction (b): when GLMs already capture the signal, TabPFN has no edge on
-log loss/calibration — but holds a significant AUC ranking edge on 3 of the 4
-GLM-captured tasks (§14.11.3).* ausprivauto0405 was TabPFN's only outright frontier
+log loss/calibration — but holds a significant AUC ranking edge on 2 of the 4
+GLM-captured tasks (norauto, bemtl97; ausprivauto0405 at +1.5 SE, §14.11.3).* ausprivauto0405 was TabPFN's only outright frontier
 domination (7-param logisticglm beats it beyond SE on log loss, §14.7; retracted on the
 full metric set, §14.11.3); eudirectlapse goes to LR all 5 folds (§14.10); norauto and
 bemtl97 reduce TabPFN to a beyond-SE fold-noise tie on log loss (§14.6, §14.3) while

@@ -14,7 +14,7 @@ Tracked from GitHub issues. Updated manually.
 | 🔲 | #46 | Pipeline: CLI entrypoint (dataset path + target column) — partial: registry-based filter, not arbitrary path+target | — |
 | 🔲 | #29 | Funding Request #1 | Cillian-Williamson |
 | 🔲 | #28 | Funding Request #2 | Cillian-Williamson |
-| ✅ | #27 | Review TabArena (frontier benchmark D1–D5 + v1-suite + regression Phase 2) — MERGED to main via PR #51; follow-ups #52–#57 | scotthawes |
+| ✅ | #27 | Review TabArena (frontier benchmark D1–D5 + v1-suite + regression Phase 2) — MERGED to main via PR #51; follow-ups #52–#57. AUC/Brier rescore addendum implemented 2026-08-06 (spec 4e7912c, code + §14.11 9037b26) | scotthawes |
 | ✅ | #27a | Spanish motor portfolio extension — MERGED via PR #51 (freq + severity frontiers, 5-fold lapse settlement: TabPFN AUC 0.7553 vs LGBM 0.7500) | scotthawes |
 | ✅ | #26 | List Available Foundational Models — closed on GitHub | — |
 | 🔲 | #25 | Draft Insurance/Actuarial Use Cases — task mapping exists in frontier spec §8 + report §14; formal use-case doc pending | — |
