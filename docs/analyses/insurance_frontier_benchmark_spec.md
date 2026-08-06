@@ -42,7 +42,7 @@ This spec captures the agreed interpretation of that request and the design of t
 - Foundation: TabPFN
 
 ### Predictive-power axis
-- Classification (v1): **log loss** as the primary metric (the insurance-native metric, per §11.3 of `docs/analyses/tabpfn_vs_gbdt_baselines_finetuning.md`); Brier as secondary. Reported as **mean ± SE over the 5 folds** (see D3).
+- Classification (v1): **log loss** as the primary metric (the insurance-native metric, per §11.3 of `docs/analyses/tabpfn_vs_gbdt_baselines_finetuning.md`); Brier as secondary. Reported as **mean ± SE over the 5 folds** (see D3). AUC/Brier per-fold columns added 2026-08-06 (frontier_auc_brier_rescore_spec.md; master report §14.11).
 - Regression (Phase 2 only, per D4): RMSE / Poisson deviance.
 
 ### Parsimony axis — parameter-count rule table (critical consistency decision)

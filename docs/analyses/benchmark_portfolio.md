@@ -26,7 +26,7 @@ This portfolio is the project's "custom benchmarking to assess insurance perform
 3. **Lapse benchmark:** TabPFN wins premium regression (RMSE 19.07 vs 81.8); wins Spanish lapse (AUC 0.752 vs LGBM 0.745 vs Linear 0.684); Linear wins `eudirectlapse` classification (0.628). Settled by 5-fold re-run (§14.10): TabPFN 0.7553 vs LGBM 0.7500 on Spanish (wins 5/5 folds); Linear still wins eudirectlapse (0.6260).
 4. **Imbalance study:** hypothesis rejected — no 1−AUC gain; `balance_probabilities` hurts calibration (log loss 0.4716 vs 0.2008 on `coil2000`).
 5. **Size sweep — small-data regime:** **THE pivot finding** — TabPFN wins 8/9 cells at 1K–5K rows, loses at full size → small-data specialist (§13).
-6. **Parsimony frontier:** quantified verdict — TabPFN on frontier 7/12 datasets at 10M fixed params; off-frontier at scale 5× (`norauto`, `bemtl97_amount`, `freMTPL2freq`, `spanish_motor_freq`, `spanish_motor_severity`); 21-param GLMs within noise of it (§14.2–14.10).
+6. **Parsimony frontier:** quantified verdict — TabPFN on frontier 7/12 datasets at 10M fixed params; off-frontier at scale 5× (`ausprivauto0405`, `bemtl97_amount`, `freMTPL2freq`, `spanish_motor_freq`, `spanish_motor_severity`); 21-param GLMs within noise of it (§14.2–14.11).
 
 ## 4. Naming canon
 
@@ -76,7 +76,7 @@ Each step was gated by the previous one: the smoke test validated the harness, t
 
 ### Reports
 
-- Master report: `docs/analyses/tabpfn_vs_gbdt_baselines_finetuning.md` (§1–§14.9)
+- Master report: `docs/analyses/tabpfn_vs_gbdt_baselines_finetuning.md` (§1–§14.11)
 - Design spec: `docs/analyses/insurance_frontier_benchmark_spec.md` (D1–D5)
 
 ## 7. Gaps and natural extensions

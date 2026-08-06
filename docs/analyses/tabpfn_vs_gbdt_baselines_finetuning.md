@@ -554,7 +554,8 @@ RandomForest is catastrophic (0.59530 ± 0.01219) — worst by a wide margin, do
 both axes, consistent with §13's sweep pattern. On expected result (b): TabPFN's §13
 0.0010 lead over LGBM does **not** survive the parsimony constraint here — LGBM holds the
 power edge and the GLMs hold parsimony; TabPFN survives the frontier only on the
-beyond-SE tie.
+beyond-SE tie (AUC nuance: §14.11.3 — TabPFN wins AUC at 2.6 SE even in the log-loss
+tie).
 
 **coil2000 — TabPFN leads, GLMs hold the low-complexity end, CatBoost beats LightGBM.**
 TabPFN is the power winner (0.20059) and the top-right anchor. LR (0.20554) and
@@ -589,7 +590,8 @@ parsimony again closing but not removing the gap.
   but at a constant 10,000,000 params it is always the top-right anchor — never a
   parsimony answer. The spec's expected result (b) resolves as: TabPFN's accuracy lead
   survives the frontier only where it is the outright power winner; where it merely ties
-  (bemtl97), parsimony pressure removes the advantage.
+  (bemtl97), parsimony pressure removes the advantage (AUC nuance: §14.11.3 — TabPFN
+  wins AUC at 2.6 SE even in the log-loss tie).
 - **RandomForest at default config is a frontier failure** — dominated on all three
   datasets, catastrophic on bemtl97 (0.59530), consistent with §13 and the v1 baseline.
   No further RF exploration is warranted at default settings.
@@ -654,7 +656,8 @@ CatBoost and XGBoost are dominated — beaten on power by LGBM/TabPFN and on par
 the GLMs; RF is catastrophic at scale (0.73544 ± 0.00929, 593,042 params), dominated on
 both axes, consistent with §13 and §14.3. **D5 verdict — the size-ceiling hypothesis
 transfers to the frontier axis:** LGBM takes the power edge at scale (0.17518 vs TabPFN
-0.17619), and TabPFN survives the frontier **only** on the beyond-SE tie
+0.17619), and TabPFN survives the frontier **only** on the beyond-SE tie (AUC nuance: §14.11.3 —
+TabPFN wins AUC at 2.5 SE even inside the log-loss tie)
 (`lgbm mean+SE` = 0.17565 vs `tabpfn mean−SE` = 0.17558) — the same fold-noise
 membership as bemtl97 at 163K rows (§14.3). Files:
 `scripts/eval/insurance_benchmark_v1/frontier_results_norauto.csv`,
@@ -694,6 +697,10 @@ no reusable power; `run_frontier_benchmark.py` uses the same fallback path as no
 | lr | 0.26319 | 0.00172 | 14 | yes |
 | poissonglm | 0.30162 | 0.00383 | 14 | yes |
 | tweedieglm | 0.65338 | 0.00001 | 14 | yes |
+
+*Verdict update (2026-08-06): the DOMINATED verdict is retracted by §14.11.3
+(calibration tie; TabPFN best AUC of the suite, 0.6622) — the log-loss mechanics below
+remain as recorded.*
 
 **ausprivauto0405 — the first outright TabPFN domination.** The frontier is exactly the
 four 7-param GLMs (logisticglm/lr tied at 0.23947, then poissonglm 0.23956, tweedieglm
@@ -1228,7 +1235,7 @@ fires.
 
 1. **Record versions before running**: `python -c "from importlib.metadata import version; print(version('tabpfn-client'))"` plus the `model_path` used — every TabPFN call site pins `model_path="v3_default"` (`run_frontier_benchmark.py:469,610`; `run_home_turf_size_sweep.py:102`; `finish_home_turf_sweep_v2.py:89`; `run_smoke_tabarena.py:82`; `run_tabarena_insurance_benchmark.py:262,265`; `run_tabarena_insurance_imbalance_pilot.py:219,222,265`). The installed version is authoritative — the committed range is loose (§15.1).
 2. **Run the same datasets/commands as the v3 baselines** (§15.2) — same folds (seed 42), same metrics, same D3 beyond-SE rule (§14.1).
-3. **Diff `scripts/eval/insurance_benchmark_v1/frontier_results_*.csv`** (the 12 committed v3 baselines, §14.2–§14.10) — compare `mean` ± `se` per method and the `on_frontier` flag (columns are stable: `method, mean, se, n_params, on_frontier`, lines 506–508).
+3. **Diff `scripts/eval/insurance_benchmark_v1/frontier_results_*.csv`** (the 12 committed v3 baselines, §14.2–§14.10) — compare `mean` ± `se` per method and the `on_frontier` flag (columns are stable: `method,mean,se,mean_auc,se_auc,mean_brier,se_brier,n_params,on_frontier` on the 6 classification CSVs, `run_frontier_benchmark.py` L569 — regression CSVs keep `method,mean,se,n_params,on_frontier`, L720; `mean`/`se` stay log loss, no protocol drift, §14.11.5).
 4. **Append a §14.x-style addendum** (this section becomes §16/§17 for the re-run, or a dated `§15.x` sub-section) documenting client + model versions, the command log, and the diff outcome.
 5. **Update the one-pager verdict / adoption rule only if the pattern changes** — wins/losses flip or beyond-SE shifts (`docs/reports/TABPFN_BENCHMARK_SUMMARY.md` "Conclusion & adoption guidance"; regime descriptor `docs/analyses/regime_characterization.md` §3). No change → note "pattern unchanged" in the addendum; do not re-derive the adoption rule.
 6. **Close-out**: registry evidence update (`docs/reports/REPORT_REGISTRY.md`) + a TASKS.md row (owned by the orchestrator).

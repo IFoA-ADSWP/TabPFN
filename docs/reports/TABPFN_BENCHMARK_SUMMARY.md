@@ -38,9 +38,9 @@ Earlier generations could effectively attend to only ~1K training rows, a contex
 
 **Decision rule** (regime analysis `docs/analyses/regime_characterization.md` §3; evidence in master report §8, §14.9, §14.10):
 
-> **Adopt default TabPFN (v3)** when data is scarce — ≤ ~5K training rows (8/9 size-sweep cells won, §13.2) — **or** on classification/lapse-style tasks where the linear floor is far from achievable: best LR/GLM ≥ ~3% behind the best model, or ≥ ~0.05 AUC gap. Every TabPFN win satisfies this — coil2000, bemtl16, uslapseagent, ausautoBI8999, vehvalue, and Spanish lapse (LR 0.684 vs TabPFN 0.7553, 5/5 folds, §14.10).
+> **Adopt default TabPFN (v3)** when data is scarce — ≤ ~5K training rows (8/9 size-sweep cells won, §13.2) — **or** on classification/lapse-style tasks where the linear floor is far from achievable: best LR/GLM ≥ ~3% behind the best model, or ≥ ~0.05 AUC gap. Every TabPFN win satisfies this — coil2000, bemtl16, uslapseagent, ausautoBI8999, vehvalue, and Spanish lapse (LR 0.684 vs TabPFN 0.7553, 5/5 folds, §14.10, §14.11).
 >
-> **Otherwise, expect TabPFN to be dominated on the accuracy-per-complexity trade-off at scale** (≥ ~50K rows): every off-frontier point sits at ≥53.5K rows (money chart); no edge when the GLM floor is within ~2% of achievable (ausprivauto0405, eudirectlapse, norauto, bemtl97 — GLM gap ≈ 0, 0/4 wins); and no edge on frequency targets at scale even with a weak GLM floor, because the signal there is tree-extractable only (Spanish freq: LGBM 0.8916 vs TabPFN 0.9876, Poisson GLM at the 1.0123 null floor, §14.9; freMTPL2freq at 678K rows, §14.8).
+> **Otherwise, expect TabPFN to be dominated on the accuracy-per-complexity trade-off at scale** (≥ ~50K rows): every off-frontier point sits at ≥53.5K rows (money chart); no edge when the GLM floor is within ~2% of achievable (ausprivauto0405, eudirectlapse, norauto, bemtl97 — GLM gap ≈ 0, 0/4 wins); and no edge on frequency targets at scale even with a weak GLM floor, because the signal there is tree-extractable only (Spanish freq: LGBM 0.8916 vs TabPFN 0.9876, Poisson GLM at the 1.0123 null floor, §14.9; freMTPL2freq at 678K rows, §14.8). The "no edge" reading is calibration-only — §14.11.4 shows TabPFN holds a significant AUC ranking edge even in GLM-captured regimes (norauto, bemtl97, ausprivauto0405).
 >
 > **Between the regimes, prefer the GLM**: the 11–86-param GLM family is never dominated on any dataset (§14.4), and it is statistically indistinguishable from TabPFN on frequency at 21 params (§14.9).
 
@@ -53,7 +53,7 @@ The two open questions are settled: the 5-fold lapse re-run confirms the Spanish
 
 ## References
 
-- Master report: `docs/analyses/tabpfn_vs_gbdt_baselines_finetuning.md` (§1–§14.10; verdict §8)
+- Master report: `docs/analyses/tabpfn_vs_gbdt_baselines_finetuning.md` (§1–§14.11; verdict §8)
 - Regime analysis: `docs/analyses/regime_characterization.md` (decision rule §3, hypothesis test §2)
 - Benchmark portfolio: `docs/analyses/benchmark_portfolio.md`
 - Merge plan: `docs/analyses/merge_plan_tabarena.md`

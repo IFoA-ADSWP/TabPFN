@@ -1,7 +1,7 @@
 # Frontier AUC/Brier Re-score — Design Spec
 
-Status: proposed addendum to issue #27 (repo IFoA-ADSWP/TabPFN); implementation is a
-follow-up after approval. Extends `docs/analyses/insurance_frontier_benchmark_spec.md`
+Status: implemented 2026-08-06 (commit 9037b26); §14.11 delivered, acceptance criteria
+met (see §14.11.5 of the master report). Extends `docs/analyses/insurance_frontier_benchmark_spec.md`
 (D1–D5) with AUC and Brier power columns on the same canonical 5-fold protocol. No
 existing evidence files are modified — only `frontier_results_*.csv` regenerated with
 new columns.
@@ -70,7 +70,7 @@ logs store only the per-fold log-loss scalar; `frontier_results_*.csv` only mean
 they need fresh TabPFN power: **15 hosted API calls total**. GLM/RF are refit fresh on
 every run anyway (CPU, cheap).
 
-### 3.2 Code change — described only, implement after approval
+### 3.2 Code change — implemented (9037b26)
 
 All inside `run_dataset` (L367–534). No new CLI flag: the run is one-pass and
 idempotent (all methods fitted regardless), so `--metrics`/`--rescore-only` add
@@ -94,8 +94,8 @@ nothing. Smallest change:
 
 - 6 regenerated `frontier_results_<dataset>.csv` with `mean_auc,se_auc,mean_brier,se_brier`.
 - No plot change (y-axis stays log loss).
-- Future (after approval): results table + per-dataset TabPFN-vs-best-GLM deltas
-  (Δ log loss, Δ AUC, Δ Brier) + regime verdict added to the master report as §14.11.
+- Delivered as §14.11 (commit 9037b26): results table + per-dataset TabPFN-vs-best-GLM
+  deltas (Δ log loss, Δ AUC, Δ Brier) + regime verdict added to the master report.
 
 ## 5. Cost & runtime estimate (from run logs, 2026-08-05)
 
