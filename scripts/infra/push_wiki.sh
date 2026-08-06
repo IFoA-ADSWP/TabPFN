@@ -20,6 +20,7 @@ CONTENT_DIR="$(cd "$(dirname "$0")/.." && pwd)/.wiki-content"
 mkdir -p "$CONTENT_DIR"
 cp docs/reports/TABPFN_BENCHMARK_SUMMARY.md "$CONTENT_DIR/Benchmark-Summary.md"
 cp docs/analyses/regime_characterization.md "$CONTENT_DIR/Adoption-Guidance.md"
+cp docs/analyses/metrics_explained.md "$CONTENT_DIR/Metrics-Explained.md"
 
 echo "==> Cloning $REPO.wiki.git into $WIKI_DIR"
 if [[ -d "$WIKI_DIR" ]]; then
@@ -47,6 +48,7 @@ else
 
 - Benchmark-Summary: TabPFN v8.2 one-pager for actuarial colleagues
 - Adoption-Guidance: regime characterization / when to use TabPFN
+- Metrics-Explained: log loss vs AUC vs Brier, insurance reading guide
 - Maintenance-Backlog + tier pages: 36-issue backlog
 - _Sidebar / _Footer: navigation"
   git push

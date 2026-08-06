@@ -5,6 +5,10 @@ Answers: what distinguishes the datasets where default TabPFN wins from those wh
 dominated, so the adoption rule is predictive rather than descriptive. Desk analysis over
 committed evidence only — no new fits, no new numbers without a source.
 
+Verdicts here are log-loss verdicts. To read them correctly — what a metric does and does
+not measure, and why log loss and AUC disagree on imbalanced data — see
+`docs/analyses/metrics_explained.md` (wiki: Metrics-Explained).
+
 Central puzzle (from issue #53): TabPFN loses frequency/severity on Spanish motor at
 53,502 rows but wins lapse at the same size (AUC 0.7553 vs 0.7500, 5/5 folds). If the
 adoption rule is "small data only", Spanish lapse at 53.5K rows should not be a win.

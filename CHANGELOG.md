@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Metrics explainer — log loss vs AUC vs Brier, imbalance mechanism, insurance reading guide — `docs/analyses/metrics_explained.md` (wiki: Metrics-Explained)
+
 ## [v8.2.0] — 2026-08-06
 
 Benchmark suite release: TabArena harness, parsimony frontier, lapse settlement, Spanish motor portfolio, regression Phase 2, adoption regime.
