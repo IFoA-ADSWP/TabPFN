@@ -365,6 +365,7 @@ def pareto_frontier(rows: list[dict]) -> list[str]:
 # One dataset
 # ---------------------------------------------------------------------------
 def run_dataset(ds: dict, out_csv: Path, out_png: Path) -> pd.DataFrame:
+    from sklearn.metrics import brier_score_loss, roc_auc_score
     from sklearn.model_selection import StratifiedKFold
 
     def say(msg: str) -> None:
@@ -391,18 +392,43 @@ def run_dataset(ds: dict, out_csv: Path, out_png: Path) -> pd.DataFrame:
         r = sweep_full[sweep_full.method == m].sort_values("fold")
         if len(r) == N_FOLDS:
             ll = r["log_loss"].to_numpy(dtype=float)
-            return {"method": m, "mean": ll.mean(), "se": ll.std(ddof=1) / np.sqrt(len(ll))}
+            auc = r["roc_auc"].to_numpy(dtype=float)
+            brier = r["brier"].to_numpy(dtype=float)
+            return {
+                "method": m,
+                "mean": ll.mean(),
+                "se": ll.std(ddof=1) / np.sqrt(len(ll)),
+                "mean_auc": auc.mean(),
+                "se_auc": auc.std(ddof=1) / np.sqrt(len(auc)),
+                "mean_brier": brier.mean(),
+                "se_brier": brier.std(ddof=1) / np.sqrt(len(brier)),
+                "_fold_auc": auc,
+                "_fold_brier": brier,
+            }
         assert fresh, f"sweep missing fold rows for {m}"
         maker = {"cat": make_cat, "lgbm": make_lgbm, "xgb": make_xgb}[m]
-        fold_ll = []
+        fold_ll, fold_auc, fold_brier = [], [], []
         t1 = time.time()
         for fold, (tr, te) in enumerate(folds):
             model = maker()
             model.fit(X[tr], y[tr])
-            fold_ll.append(metric(y[te], model.predict_proba(X[te])))
+            pp = model.predict_proba(X[te])
+            fold_ll.append(metric(y[te], pp))
+            fold_auc.append(roc_auc_score(y[te], pp[:, 1]))
+            fold_brier.append(brier_score_loss(y[te], pp[:, 1]))
             say(f"  {m} f{fold} ll={fold_ll[-1]:.4f} ({time.time() - t1:.0f}s)")
-        ll = np.array(fold_ll)
-        return {"method": m, "mean": ll.mean(), "se": ll.std(ddof=1) / np.sqrt(len(ll))}
+        ll, auc, brier = np.array(fold_ll), np.array(fold_auc), np.array(fold_brier)
+        return {
+            "method": m,
+            "mean": ll.mean(),
+            "se": ll.std(ddof=1) / np.sqrt(len(ll)),
+            "mean_auc": auc.mean(),
+            "se_auc": auc.std(ddof=1) / np.sqrt(len(auc)),
+            "mean_brier": brier.mean(),
+            "se_brier": brier.std(ddof=1) / np.sqrt(len(brier)),
+            "_fold_auc": auc,
+            "_fold_brier": brier,
+        }
 
     for m in ("cat", "lgbm", "xgb"):
         rows.append(reuse_or_fresh(m))
@@ -417,7 +443,7 @@ def run_dataset(ds: dict, out_csv: Path, out_png: Path) -> pd.DataFrame:
     }
     for m in FAST_METHODS:
         maker = d1_makers[m]
-        fold_ll = []
+        fold_ll, fold_auc, fold_brier = [], [], []
         t1 = time.time()
         for fold, (tr, te) in enumerate(folds):
             Xtr, Xte, ytr, yte = X[tr], X[te], y[tr], y[te]
@@ -430,9 +456,21 @@ def run_dataset(ds: dict, out_csv: Path, out_png: Path) -> pd.DataFrame:
             else:
                 pp = model.predict_proba(Xte)
             fold_ll.append(metric(yte, pp))
+            fold_auc.append(roc_auc_score(yte, pp[:, 1]))
+            fold_brier.append(brier_score_loss(yte, pp[:, 1]))
             say(f"  {m} f{fold} ll={fold_ll[-1]:.4f} ({time.time() - t1:.0f}s)")
-        ll = np.array(fold_ll)
-        rows.append({"method": m, "mean": ll.mean(), "se": ll.std(ddof=1) / np.sqrt(len(ll))})
+        ll, auc, brier = np.array(fold_ll), np.array(fold_auc), np.array(fold_brier)
+        rows.append({
+            "method": m,
+            "mean": ll.mean(),
+            "se": ll.std(ddof=1) / np.sqrt(len(ll)),
+            "mean_auc": auc.mean(),
+            "se_auc": auc.std(ddof=1) / np.sqrt(len(auc)),
+            "mean_brier": brier.mean(),
+            "se_brier": brier.std(ddof=1) / np.sqrt(len(brier)),
+            "_fold_auc": auc,
+            "_fold_brier": brier,
+        })
 
     # ---- 3. D2: refit GBDTs + RF on fold-0 train purely to count leaves ----
     # (tree structure is seed-insensitive for counting, spec §5 D2 — one fold suffices)
@@ -457,13 +495,25 @@ def run_dataset(ds: dict, out_csv: Path, out_png: Path) -> pd.DataFrame:
     r = sweep_full[sweep_full.method == "tabpfn"].sort_values("fold")
     if len(r) == N_FOLDS:
         ll = r["log_loss"].to_numpy(dtype=float)
-        rows.append({"method": "tabpfn", "mean": ll.mean(), "se": ll.std(ddof=1) / np.sqrt(len(ll))})
+        auc = r["roc_auc"].to_numpy(dtype=float)
+        brier = r["brier"].to_numpy(dtype=float)
+        rows.append({
+            "method": "tabpfn",
+            "mean": ll.mean(),
+            "se": ll.std(ddof=1) / np.sqrt(len(ll)),
+            "mean_auc": auc.mean(),
+            "se_auc": auc.std(ddof=1) / np.sqrt(len(auc)),
+            "mean_brier": brier.mean(),
+            "se_brier": brier.std(ddof=1) / np.sqrt(len(brier)),
+            "_fold_auc": auc,
+            "_fold_brier": brier,
+        })
     else:
         assert fresh, "sweep missing fold rows for tabpfn"
         from tabpfn_client import TabPFNClassifier
 
         _load_api_key()  # env or .env candidates, same as the sweep
-        fold_ll = []
+        fold_ll, fold_auc, fold_brier = [], [], []
         t1 = time.time()
         for fold, (tr, te) in enumerate(folds):
             model = TabPFNClassifier(model_path="v3_default", random_state=0)  # default n_estimators=None
@@ -483,9 +533,21 @@ def run_dataset(ds: dict, out_csv: Path, out_png: Path) -> pd.DataFrame:
             if pp.ndim == 1 or pp.shape[1] == 1:  # single-class fallback (sweep pattern)
                 pp = np.column_stack([1 - pp, pp]) if pp.ndim == 1 else np.column_stack([1 - pp[:, 0], pp[:, 0]])
             fold_ll.append(metric(y[te], pp))
+            fold_auc.append(roc_auc_score(y[te], pp[:, 1]))
+            fold_brier.append(brier_score_loss(y[te], pp[:, 1]))
             say(f"  tabpfn f{fold} ll={fold_ll[-1]:.4f} ({time.time() - t1:.0f}s)")
-        ll = np.array(fold_ll)
-        rows.append({"method": "tabpfn", "mean": ll.mean(), "se": ll.std(ddof=1) / np.sqrt(len(ll))})
+        ll, auc, brier = np.array(fold_ll), np.array(fold_auc), np.array(fold_brier)
+        rows.append({
+            "method": "tabpfn",
+            "mean": ll.mean(),
+            "se": ll.std(ddof=1) / np.sqrt(len(ll)),
+            "mean_auc": auc.mean(),
+            "se_auc": auc.std(ddof=1) / np.sqrt(len(auc)),
+            "mean_brier": brier.mean(),
+            "se_brier": brier.std(ddof=1) / np.sqrt(len(brier)),
+            "_fold_auc": auc,
+            "_fold_brier": brier,
+        })
 
     # ---- 5. n_params for every method ----
     glm_n = n_cols + 1  # post-encoding column count + 1 intercept (harness uses cat.codes)
@@ -503,11 +565,9 @@ def run_dataset(ds: dict, out_csv: Path, out_png: Path) -> pd.DataFrame:
     on_frontier = set(pareto_frontier(rows))
     for r in rows:
         r["on_frontier"] = "yes" if r["method"] in on_frontier else "no"
-    table = pd.DataFrame(rows)[["method", "mean", "se", "n_params", "on_frontier"]].sort_values(
-        "mean", ignore_index=True
-    )
-    table.to_csv(out_csv, index=False)
-    print(table.to_string(index=False, float_format=lambda v: f"{v:.4f}"))
+    table = pd.DataFrame(rows)[
+        ["method", "mean", "se", "mean_auc", "se_auc", "mean_brier", "se_brier", "n_params", "on_frontier", "_fold_auc", "_fold_brier"]
+    ].sort_values("mean", ignore_index=True)
 
     # ---- 6. Plot ----
     import matplotlib
@@ -531,6 +591,9 @@ def run_dataset(ds: dict, out_csv: Path, out_png: Path) -> pd.DataFrame:
 
     # ---- 7. Self-check (repo assert convention) ----
     sanity_check(sweep_full, folds, table, on_frontier)
+    table = table.drop(columns=["_fold_auc", "_fold_brier"])
+    table.to_csv(out_csv, index=False)
+    print(table.to_string(index=False, float_format=lambda v: f"{v:.4f}"))
     return table
 
 
@@ -542,6 +605,8 @@ def sanity_check(sweep_full: pd.DataFrame, folds: list[tuple[np.ndarray, np.ndar
         n = sweep_full[sweep_full.method == "lgbm"]["fold"].nunique()
         assert n == N_FOLDS, f"expected {N_FOLDS} sweep folds, got {n}"
         assert sweep_full["log_loss"].notna().all(), "sweep reused log-loss has NaNs"
+        assert sweep_full["brier"].notna().all(), "sweep reused brier has NaNs"
+        assert sweep_full["roc_auc"].notna().all(), "sweep reused roc_auc has NaNs"
     # split is a valid 5-fold partition of the full index set with no train/test
     # overlap within a fold (checked for fresh and reused runs alike)
     n_total = sum(len(te) for _, te in folds)
@@ -553,6 +618,14 @@ def sanity_check(sweep_full: pd.DataFrame, folds: list[tuple[np.ndarray, np.ndar
     assert table["method"].nunique() == len(table), "duplicate methods in table"
     # (c) frontier rule returns at least one on-frontier model
     assert len(on_frontier) >= 1, "frontier is empty"
+    # (d) AUC/Brier addendum (spec 2026-08): classification only — regression tables
+    # have no AUC columns. mean_auc in [0.5, 1], brier >= 0, per-fold AUC > 0.4
+    # (legit folds dip below 0.5 — sweep min 0.4196).
+    if "mean_auc" in table.columns:
+        assert table["mean_auc"].between(0.5, 1.0).all(), "mean_auc outside [0.5, 1]"
+        assert (table["mean_brier"] >= 0).all(), "negative mean_brier"
+        assert (table["_fold_auc"].explode() > 0.4).all(), "per-fold AUC <= 0.4"
+        assert (table["_fold_brier"].explode() >= 0).all(), "negative per-fold brier"
     print(f"SELF-CHECK OK: folds={N_FOLDS}, methods={len(table)}, on-frontier={len(on_frontier)}")
 
 
