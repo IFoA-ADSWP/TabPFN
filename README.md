@@ -96,6 +96,8 @@ See [`CONTRIBUTING.md`](CONTRIBUTING.md) for detailed setup and contribution gui
 
 ## Key Findings
 
+**Current verdict (2026-08-06):** TabPFN is the best risk-ranking model in the suite — AUC #1 over GLMs, LightGBM, CatBoost, XGBoost and RF on all six canonical classification datasets (deltas +0.006 to +0.033 over the best GLM, three ≥2.5 SE; calibration never significantly worse, log loss better or tied), holding #1 at production scale up to 184K rows (master report §14.11; [`TABPFN_BENCHMARK_SUMMARY.md`](docs/reports/TABPFN_BENCHMARK_SUMMARY.md)). It wins the business case where the question is which policies are risky — underwriting triage, lapse/surrender propensity, claim/no-claim targeting — and stays on the bench for pricing/regression targets where GBDTs win. The eudirectlapse loss below is the known exception.
+
 On the eudirectlapse lapse-prediction task (13% lapse rate):
 
 | Aspect | Result |
