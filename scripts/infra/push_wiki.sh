@@ -30,7 +30,7 @@ else
 fi
 
 echo "==> Syncing content from $CONTENT_DIR"
-rsync -av --delete \
+rsync -av \
   --exclude='.git' \
   --exclude='Home.md' \
   "$CONTENT_DIR/" "$WIKI_DIR/"
