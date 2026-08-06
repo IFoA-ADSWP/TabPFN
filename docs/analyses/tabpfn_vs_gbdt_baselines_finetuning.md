@@ -1184,10 +1184,11 @@ already strongest.
   head-to-head, ranked on 1−AUC, GLM `class_weight='balanced'` and TabPFN
   `random_state=42` — neither config matches the frontier protocol). This addendum is
   the first per-fold AUC/Brier on the canonical 5-fold protocol.
-- **Registry:** no new entry — §14.11 is an addendum to this already-registered master
+- **Registry:** no new entry for §14.11 itself — it is an addendum to this already-registered master
   report (topic key `tabpfn-vs-gbdt-baselines-finetuning`,
-  `docs/reports/REPORT_REGISTRY.md`); the registry file is untouched per the
-  documentation-only scope.
+  `docs/reports/REPORT_REGISTRY.md`); the master-report row was bumped to 2026-08-06
+  with the AUC/Brier scope noted, and the rescore spec gained its own row
+  (`frontier-auc-brier-rescore-spec`, 2026-08-06).
 
 ## 15. Addendum — Version-Drift Re-Test Policy (issue #55, 2026-08-04)
 

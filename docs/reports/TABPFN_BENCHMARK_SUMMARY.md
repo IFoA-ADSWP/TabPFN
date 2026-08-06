@@ -21,7 +21,7 @@ We built a custom benchmark on real insurance datasets — claims, lapse, freque
 ## The evidence
 
 - **Size sweep** — TabPFN wins 8/9 cells at ≤5K rows; the small-data regime is real.
-- **Parsimony frontier** — on the frontier for 7 of 12 datasets, but off it 5× at scale; 21-param GLMs sit within noise of the 10M-param model.
+- **Parsimony frontier** — on the frontier for 7 of 12 datasets (log-loss axis), but off it 5× at scale; 21-param GLMs sit within noise of the 10M-param model.
 - **Regression** — the lead does not survive at scale: wins `ausautoBI8999`, ties `vehvalue`, loses the rest.
 - **Lapse** — a real win at 5-fold: AUC 0.7553 vs 0.7500 on Spanish motor (wins all 5 folds), plus the premium-regression win.
 
