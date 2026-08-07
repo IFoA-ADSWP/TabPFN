@@ -2,7 +2,7 @@
 
 One-page answer to the question: **Is TabPFN worth adopting for insurance modeling?** Written for actuarial colleagues — the full evidence and methods live in the technical report (references at the end).
 
-**Verdict: TabPFN is the best risk-ranking model in the suite — AUC #1 over GLMs, LightGBM, CatBoost, XGBoost and RF on all six canonical classification datasets (deltas +0.006 to +0.033 over the best GLM, five ≥2.5 SE), with calibration (Brier) never significantly worse and log loss better or tied vs the best GLM. It holds #1 at production scale (up to 184K rows), not just on small data. Data efficiency is a secondary strength, not its identity.**
+**Verdict: TabPFN is the best risk-ranking model in the suite — AUC and PR AUC #1 over GLMs, LightGBM, CatBoost, XGBoost and RF on all six canonical classification datasets (AUC deltas +0.006 to +0.033 over the best GLM, five ≥2.5 SE; paired per-fold tests significant on all six; stable across split seeds), with calibration (Brier) never significantly worse and log loss better or tied vs the best GLM. It holds #1 at production scale (up to 184K rows), not just on small data. Data efficiency is a secondary strength, not its identity. Caveat: at the extreme top decile the ranking edge is dataset-dependent (rank 1 on 4/6 by lift) — validate triage cutoffs on your own book.**
 
 ## Where TabPFN fits — at a glance
 

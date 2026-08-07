@@ -1190,6 +1190,87 @@ already strongest.
   with the AUC/Brier scope noted, and the rescore spec gained its own row
   (`frontier-auc-brier-rescore-spec`, 2026-08-06).
 
+## 14.12 Ranking-robustness addendum — PR AUC, top-decile lift, paired + seed tests (2026-08-06)
+
+Follow-up to §14.11 answering three questions the AUC/Brier rescore left open: (1) does
+the ranking edge survive **PR AUC and top-decile lift** (the metrics that matter where
+triage decisions actually cut), (2) do the per-dataset edges hold under **paired
+per-fold tests** (the §14.11 z-scores were conservative unpaired), (3) does the 6/6 AUC
+record survive **split-seed variation** on the marginal datasets.
+
+### 14.12.1 Protocol
+
+`run_frontier_benchmark.py` gains `--pr-auc` (forces fresh fits for all methods — the
+sweep CSV stores no predictions, so PR AUC/lift need real fits; 30 hosted API calls for
+the 6 datasets) and `--seed N` (StratifiedKFold random_state, default 42). Per fold:
+`pr_auc = average_precision_score`, `lift10` = positives-in-top-decile ÷ base rate.
+Per-fold rows → `frontier_pr_auc_results.csv`; summary → `frontier_pr_auc_summary.csv`;
+analysis → `analyze_pr_auc.py` (paired t, df=4). Runs A (seed 42, all 6), B/C (seeds
+7/123, ausprivauto0405/bemtl97/norauto): 540 per-fold rows, zero API retries, zero
+426/version errors. Drift check: seed-42 log loss reproduces §14.11/9037b26 CSVs in
+52/54 cells to full precision; the 2 exceptions are xgb on bemtl97/uslapseagent
+(0.34503→0.34539, 0.26419→0.26447 — sweep-reuse rows refit under the venv's xgboost
+3.4.0; environmental, xgb is off-frontier in both eras; pin the xgboost version if the
+sweep CSVs are reused for fresh-fit comparisons).
+
+### 14.12.2 PR AUC — TabPFN rank and paired tests (seed 42; delta = TabPFN − best GLM)
+
+| dataset | metric | best_glm | TabPFN | GLM | delta | z | t (df=4) | p | rank |
+|---|---|---|---|---|---|---|---|---|---|
+| bemtl97 | pr_auc | logisticglm | 0.1705 ± 0.0023 | 0.1605 | +0.0101 | 3.35 | 7.11 | 0.0021 | **1** |
+| coil2000 | pr_auc | lr | 0.1869 ± 0.0110 | 0.1671 | +0.0199 | 1.53 | 2.74 | 0.0521 | **1** |
+| uslapseagent | pr_auc | poissonglm | 0.8866 ± 0.0040 | 0.8245 | +0.0622 | 10.58 | 15.92 | <0.0001 | **1** |
+| norauto | pr_auc | lr | 0.1069 ± 0.0030 | 0.1019 | +0.0050 | 1.26 | 9.02 | 0.0008 | **1** |
+| ausprivauto0405 | pr_auc | poissonglm | 0.1129 ± 0.0017 | 0.1098 | +0.0032 | 1.40 | 6.03 | 0.0038 | **1** |
+| bemtl16 | pr_auc | lr | 0.9032 ± 0.0015 | 0.8891 | +0.0141 | 5.43 | 5.88 | 0.0042 | **1** |
+
+**PR AUC: rank #1 on 6/6; paired-significant on 5/6** (coil2000 p=0.052 borderline).
+The paired t is dramatically more powerful than the unpaired z — e.g. norauto pr_auc
+z=1.26 (ns) vs t=9.02 (p=0.0008). **Every AUC edge from §14.11 is real, not fold
+noise**: paired p ≤ 0.0063 on all 6 datasets, including ausprivauto0405 (t=13.93,
+p=0.0002) and norauto (t=18.25, p<0.0001).
+
+### 14.12.3 Top-decile lift — the honest weak spot
+
+| dataset | TabPFN lift10 | best GLM lift10 | delta | t | p | rank (of 9) |
+|---|---|---|---|---|---|---|
+| bemtl97 | 1.837 ± 0.033 | 1.717 (lr) | +0.120 | 5.23 | 0.0064 | **1** |
+| coil2000 | 3.335 ± 0.168 | 3.130 (logisticglm) | +0.206 | 1.19 | 0.2995 | **1** |
+| uslapseagent | 2.458 ± 0.014 | 2.275 (poissonglm) | +0.183 | 13.20 | 0.0002 | **1** |
+| norauto | 2.560 ± 0.057 | 2.540 (lr) | +0.020 | 1.16 | 0.3100 | 2 (lgbm) |
+| ausprivauto0405 | 1.873 ± 0.044 | 1.845 (tweedieglm) | +0.028 | 0.65 | 0.5484 | **1** |
+| bemtl16 | 2.607 ± 0.006 | 2.596 (poissonglm) | +0.011 | 1.04 | 0.3571 | 3 (lgbm, cat) |
+
+**Lift10: rank #1 on 4/6, paired-significant on 2/6** (bemtl97, uslapseagent). On
+norauto and bemtl16 the GBDTs edge TabPFN in the extreme top decile and the GLM
+comparison is a tie. Lift is a noisier, thinner statistic than AUC (one 10% slice), and
+the reading is clear: **TabPFN's ranking edge concentrates in the mid-to-upper rank
+region; at the extreme top of the distribution it is dataset-dependent, not
+universal.** "Use for triage" should be read as "strong global ranker; validate
+top-decile behaviour on your own book" — consistent with the §14.4 adoption posture.
+
+### 14.12.4 Seed stability (ausprivauto0405, bemtl97, norauto × seeds 7/42/123)
+
+| dataset | Δ AUC vs best GLM, seed 7 | seed 42 | seed 123 | TabPFN AUC rank |
+|---|---|---|---|---|
+| ausprivauto0405 | +0.0051 | +0.0055 | +0.0049 | **1 on all 3** |
+| bemtl97 | +0.0121 | +0.0117 | +0.0120 | **1 on all 3** |
+| norauto | +0.0164 | +0.0165 | +0.0166 | **1 on all 3** |
+
+The AUC record holds on all 9 dataset×seed cells, deltas stable to ±0.0004. The §14.11
+verdict is not a split-seed artifact.
+
+### 14.12.5 Bottom line
+
+The ranking story from §14.11 **survives and strengthens**: AUC and PR AUC both rank
+#1 on all 6 datasets, paired tests significant on 5–6/6, seed-stable. Calibration/log
+loss remains the weak axis (unchanged: LL still goes to the best GLM on
+bemtl97/norauto/ausprivauto0405). The one new nuance: **top-decile lift is
+dataset-dependent** (4/6 rank 1, 2/6 significant) — the triage claim holds globally on
+AUC/PR-AUC but not at the extreme tail. Artifacts: `frontier_pr_auc_results.csv`,
+`frontier_pr_auc_summary.csv`, `analyze_pr_auc.py`, 6 extended canonical CSVs + 6
+seed-run CSVs/plots.
+
 ## 15. Addendum — Version-Drift Re-Test Policy (issue #55, 2026-08-04)
 
 The benchmark verdict is pinned to hosted v3 (`model_path="v3_default"`, tabpfn-client
