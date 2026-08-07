@@ -81,6 +81,6 @@ Each step was gated by the previous one: the smoke test validated the harness, t
 
 ## 7. Gaps and natural extensions
 
-- **Other foundation models** — TabFM was dropped for OOM; revisit on smaller data.
+- **Other foundation models** — TabFM assessed but **not run** on the frontier suite: the full-context ICL fit OOM-killed the process on this 8 GB machine (a row-capped fallback was scripted but never executed), and its non-commercial weights block production use regardless (master report §14.13; `tabular_foundation_models_catalog.md`). No claim is made about other foundation models.
 - **Fine-tuned TabPFN in the frontier** — tested separately, never inside the parsimony framework.
 - **Ensembling across context windows** — the untested TabPFN lever; the v3 API accepts up to 1M rows — the server handles large contexts internally, but the mechanism is not exposed.

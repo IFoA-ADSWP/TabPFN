@@ -43,6 +43,7 @@ For our insurance research with no GPU:
 - **TabPFN Client** remains the only practical option for hosted inference on full datasets
 - **TabDPT or TabSwift** could be added to our local benchmark scripts if we want another FM comparison — both are Apache 2.0, CPU-friendly, and pip-installable from GitHub
 - **TabFM** is interesting but non-commercial weights block production use, and no hosted API
+- **TabFM on the frontier suite (2026-08-07): assessed but not run** — the full-context in-context-learning fit OOM-killed the process on coil2000 on this 8 GB machine (hard kill, not catchable); a row-capped fallback was scripted (`run_tabfm.py`) but never executed; non-commercial weights block production use regardless. TabFM remains outside the benchmark comparison by assessment, not by measurement (master report §14.13).
 
 ## Links
 
