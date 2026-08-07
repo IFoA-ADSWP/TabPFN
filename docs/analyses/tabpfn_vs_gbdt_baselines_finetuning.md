@@ -1,7 +1,7 @@
 # TabPFN vs GBDT Baselines on Insurance Datasets, and Domain Fine-Tuning Effectiveness
 
 Technical research report — engineering/data-science audience.
-Branch: `feat/tabarena-benchmark`. Date: 2026-08-01. Updated: 2026-08-02 (§11, §12, §13, §14); 2026-08-03 (§14.6 norauto first extension, §14.7 v1-suite extension, §14.8 regression Phase 2).
+Branch: `feat/tabarena-benchmark`. Date: 2026-08-01. Updated: 2026-08-02 (§11, §12, §13, §14); 2026-08-03 (§14.6 norauto first extension, §14.7 v1-suite extension, §14.8 regression Phase 2); 2026-08-07 (§14.13 finality test — tuned/engineered classical baselines).
 
 ## Results digest (12 datasets)
 
@@ -192,7 +192,9 @@ leakage:
 ## 7. Limitations and Risks
 
 1. **Default configs only** — `can_hpo=False` for all methods; HPO-tuned TabPFN (e.g. TabPFN's
-   `auto` mode) could change rankings, as could tuned GBDTs.
+   `auto` mode) could change rankings, as could tuned GBDTs (tuned/feature-engineered classical
+   baselines have since been tested on the canonical folds — §14.13; they do not change the
+   ranking verdict, only the calibration picture gains two small exceptions).
 2. **Fine-tuning protocol mismatch** — finetune studies used 2,500-row subsets and different
    targets; they never ran inside the benchmark harness. A direct "fine-tuned TabPFN vs GBDT"
    head-to-head is still missing.
@@ -1155,7 +1157,11 @@ already strongest.
   ranking (AUC) is best-in-suite everywhere. The one-pager's adoption rule
   (`docs/reports/TABPFN_BENCHMARK_SUMMARY.md`) is unaffected on the log-loss leg; the
   AUC evidence adds a "ranking edge even in GLM-captured regimes" nuance for
-  underwriting-scorecard contexts.
+  underwriting-scorecard contexts. Qualification (2026-08-07, §14.13): "at worst a
+  tie" holds against the default-config suite; vs tuned/feature-engineered baselines
+  the calibration claim gains two small paired-significant exceptions
+  (ausprivauto0405 log loss and Brier vs the linear family, bemtl97 Brier vs lgbm —
+  ~1e-4 margins, ranking metrics untouched).
 
 ### 14.11.5 Files & reproducibility
 
@@ -1267,9 +1273,111 @@ The ranking story from §14.11 **survives and strengthens**: AUC and PR AUC both
 loss remains the weak axis (unchanged: LL still goes to the best GLM on
 bemtl97/norauto/ausprivauto0405). The one new nuance: **top-decile lift is
 dataset-dependent** (4/6 rank 1, 2/6 significant) — the triage claim holds globally on
-AUC/PR-AUC but not at the extreme tail. Artifacts: `frontier_pr_auc_results.csv`,
+AUC/PR-AUC but not at the extreme tail. Two open questions remained after this
+addendum — tuned/feature-engineered classical baselines, and other foundation models
+(TabFM). Both are closed in §14.13: the tuned baselines do not change any ranking
+verdict (TabPFN stays AUC/PR-AUC #1 of 14 on all 6 datasets), and TabFM was closed out
+by assessment, not run (OOM on this hardware + non-commercial weights).
+Artifacts: `frontier_pr_auc_results.csv`,
 `frontier_pr_auc_summary.csv`, `analyze_pr_auc.py`, 6 extended canonical CSVs + 6
 seed-run CSVs/plots.
+
+## 14.13 Finality test — tuned/feature-engineered classical baselines on the canonical folds (2026-08-07)
+
+The last standing baseline threat to the default-config verdict — §7.1's "as could
+tuned GBDTs", §8's "what would change the answer" — is now measured. This addendum
+runs tuned/feature-engineered versions of the classical baselines on the exact
+canonical folds used by §14.11/§14.12, and closes out the other-foundation-models
+question (TabFM) by assessment.
+
+### 14.13.1 Protocol
+
+Same canonical folds as §14.12 (StratifiedKFold 5, `random_state=42`); fold identity
+verified — a plain LR (`C=1`) reproduces the stored canonical per-fold `lr` rows
+exactly (built into the runner as the fold-identity check). Five new baselines, all
+tuned by **ROC AUC** (documented choice — the metric under contest). Ranks below are
+among **14 methods** (9 canonical + 5 new). Script: `run_tuned_baselines.py`
+(docstring documents exact protocols; folds/metrics imported unmodified from
+`run_frontier_benchmark.py`).
+
+- `lr_tuned` — StandardScaler + LogisticRegression, C ∈ {0.01, 0.1, 1, 10} by inner
+  3-fold CV AUC on the training fold, refit on the full fold.
+- `glm_eng` — PolynomialFeatures(degree 2, interaction-only) + scaler + LR, same C
+  grid; if >100k features, keep interactions of the top-30 features by |corr| with
+  the target.
+- `lgbm_tuned` — lr ∈ {0.05, 0.1} × num_leaves ∈ {31, 127}, early stopping (max
+  1000 rounds, patience 10) on a 10% stratified slice of the training fold, refit on
+  the full fold.
+- `cat_tuned` — lr × depth ∈ {6, 10}, same early-stopping protocol (10 min/fold
+  soft cap).
+- `rf_tuned` — 300 trees, max_features ∈ {sqrt, 0.5} × min_samples_leaf ∈ {1, 10}.
+
+Tests: paired t, df=4, two-sided; delta = TabPFN − baseline. Outputs:
+`frontier_tuned_baseline_summary.csv` (per-dataset × metric × baseline:
+tabpfn_mean/se, base_mean/se, delta, t_paired, p_paired, tabpfn_rank, n_folds=5),
+`frontier_tuned_baseline_results.csv` (per fold, incl. fit/infer seconds and chosen
+config); analysis: `analyze_tuned_baselines.py` (untracked).
+
+### 14.13.2 Ranking metrics — TabPFN stays #1 of 14 on AUC and PR-AUC
+
+| dataset | AUC rank (closest competitor: delta, p) | PR-AUC rank (closest competitor: delta, p) |
+|---|---|---|
+| bemtl97 | 1 (lgbm: +0.0055, p=0.0007) | 1 (lgbm: +0.0054, p=0.0009) |
+| coil2000 | 1 (cat: +0.0263, p=0.0016) | 1 (cat: +0.0240, p=0.0005) |
+| uslapseagent | 1 (cat: +0.0027, p=0.0219) | 1 (cat: +0.0077, p=0.0298) |
+| norauto | 1 (lgbm: +0.0045, p=0.0064) | 1 (lgbm: +0.0038, p=0.0102) |
+| ausprivauto0405 | 1 (glm_eng: +0.0036, p=0.0029) | 1 (glm_eng: +0.0017, p=0.0765, ns) |
+| bemtl16 | 1 (lgbm: +0.0008, p=0.0020) | 1 (lgbm: +0.0019, p=0.0239) |
+
+**No baseline beats TabPFN on AUC at p<0.05 on any dataset** — every delta positive
+and paired-significant. The closest edges: glm_eng on ausprivauto0405 (+0.0036,
+p=0.003 — TabPFN 0.6622 vs 0.6586), lgbm on bemtl16 (+0.0008, p=0.002), cat on
+uslapseagent (+0.0027, p=0.022). PR-AUC: rank #1 on all 6, paired-significant on
+5/6 — the one non-significant win is glm_eng on ausprivauto0405 (delta +0.0017,
+p=0.077). The §14.12 lift10 caveat is unchanged: lgbm still beats TabPFN on bemtl16
+(delta −0.018, p=0.015); the norauto lgbm edge stays non-significant (p=0.949).
+
+### 14.13.3 Calibration — two small documented exceptions
+
+- **log_loss (new):** on ausprivauto0405 the entire linear family beats TabPFN:
+  glm_eng (+0.0010, p=0.004), lr / lr_tuned / logisticglm (≈+0.0008, p≈0.003),
+  poissonglm (+0.0007, p=0.005), tweedieglm (+0.0004, p=0.049). The known lgbm
+  log-loss wins are unchanged: bemtl97 (+0.0010, p<0.001) and norauto (+0.0010,
+  p=0.005).
+- **Brier (new):** "never significantly worse" is now strictly false on 2/6
+  datasets, by ~1e-4 margins: ausprivauto0405 vs glm_eng (+0.0001, p=0.031) and vs
+  lr / lr_tuned / logisticglm / poissonglm (p≈0.008–0.015); bemtl97 vs lgbm
+  (+0.0001, p=0.016).
+- Both exceptions are calibration-axis only (majority-class bulk, per the §14.11.4
+  imbalance-artifact reading) — the ranking metrics are untouched on the same
+  datasets.
+
+### 14.13.4 Tuning-effectiveness honesty note + TabFM closure
+
+- **The tuned GBDTs regressed vs their shipped defaults on AUC on 5/6 datasets**
+  (e.g. norauto: lgbm_tuned 0.640 vs lgbm 0.697; cat_tuned 0.663 vs cat 0.688). The
+  2×2 grid + 10%-slice early-stopping protocol did not improve on defaults, so
+  "properly tuned GBDT" was only partially achieved; the credible engineered
+  baseline is glm_eng, and it still lost on every ranking metric (AUC/PR-AUC rank 1
+  TabPFN).
+- **TabFM: NOT RUN** — closed out by assessment. The full-context in-context-learning
+  fit OOM-killed the process on coil2000 on this 8 GB machine (hard kill, not
+  catchable); a row-capped fallback (`max_num_rows=6000`, `n_estimators=4`) was
+  scripted in `run_tabfm.py` but never executed; and per
+  `docs/analyses/tabular_foundation_models_catalog.md` the non-commercial weights
+  already block production use. Verdict: no claim about other foundation models;
+  TabFM remains outside the comparison by assessment, not by measurement.
+
+### 14.13.5 Bottom line
+
+The "best in suite at default configs" scoping **survives contact with
+tuned/engineered classical baselines on the ranking metrics**: AUC and PR-AUC rank
+#1 on all 6 datasets among 14 methods. The calibration claims gain two small
+documented exceptions — ausprivauto0405 log loss and Brier vs the linear family
+(glm_eng closest), and bemtl97 Brier vs lgbm — both ~1e-4 paired-significant edges
+on the calibration axis. Artifacts: `frontier_tuned_baseline_summary.csv`,
+`frontier_tuned_baseline_results.csv`, `run_tuned_baselines.py`, `run_tabfm.py`
+(written, never executed), `analyze_tuned_baselines.py`.
 
 ## 15. Addendum — Version-Drift Re-Test Policy (issue #55, 2026-08-04)
 

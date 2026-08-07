@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- docs: finality test — §14.13 (2026-08-07): tuned/feature-engineered classical baselines (lr_tuned, glm_eng, lgbm_tuned, cat_tuned, rf_tuned) on the canonical folds; TabPFN stays AUC/PR-AUC #1 of 14 methods on all 6 datasets, no baseline beats it at p<0.05; calibration gains two small documented exceptions (ausprivauto0405 log loss/Brier vs the linear family, bemtl97 Brier vs lgbm, ~1e-4); tuned GBDTs regressed vs defaults (5/6 datasets); TabFM closed out by assessment (not run — OOM on 8 GB + non-commercial weights); one-pager + report registry updated
 - docs: human-voice cleanup pass — removed AI-assistant framing and phantom file references (papers/status/analyses/notebooks/data)
 - docs: frontier AUC/Brier rescore — §14.11 addendum (2026-08-06): per-fold AUC/Brier in `frontier_results_*.csv`; ausprivauto0405 "DOMINATED" retracted to calibration tie + ranking edge; verdict reframed to best risk-ranking model (TabPFN AUC #1 of 9 methods on all 6 classification datasets); stale-verdict reconciliation across regime/portfolio/papers + wiki reframe (commits 4e7912c, 9037b26, cea967d, ced3ac9)
 - docs: ranking-robustness addendum — §14.12 (2026-08-06): PR AUC #1 on all 6 (paired-significant 5/6), all AUC edges significant under paired fold tests, seed-stable across 3 seeds; top-decile lift dataset-dependent (4/6 rank 1) — triage claim scoped accordingly
