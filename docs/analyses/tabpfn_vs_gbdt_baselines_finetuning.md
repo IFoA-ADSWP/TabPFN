@@ -1,7 +1,7 @@
 # TabPFN vs GBDT Baselines on Insurance Datasets, and Domain Fine-Tuning Effectiveness
 
 Technical research report — engineering/data-science audience.
-Branch: `feat/tabarena-benchmark`. Date: 2026-08-01. Updated: 2026-08-02 (§11, §12, §13, §14); 2026-08-03 (§14.6 norauto first extension, §14.7 v1-suite extension, §14.8 regression Phase 2); 2026-08-07 (§14.13 finality test — tuned/engineered classical baselines).
+Branch: `feat/tabarena-benchmark`. Date: 2026-08-01. Updated: 2026-08-02 (§11, §12, §13, §14); 2026-08-03 (§14.6 norauto first extension, §14.7 v1-suite extension, §14.8 regression Phase 2); 2026-08-07 (§14.13 finality test — tuned/engineered classical baselines; §14.14 count/frequency classification reframe — issue #67).
 
 ## Results digest (12 datasets)
 
@@ -890,7 +890,9 @@ benchmark scripts now pin `model_path="v3_default"` explicitly for reproducibili
 **Actuary takeaway:** on this real Spanish motor frequency book, a default LGBM
 beats TabPFN by ~10.8% deviance with 1/3,200 of the parameters, and the standard
 Poisson GLM is statistically indistinguishable from TabPFN — there is no actuarial
-case for TabPFN on frequency at this scale. On lapse, the picture flips: TabPFN
+case for TabPFN on frequency at this scale. The scope of that sentence is the
+count model: the same target reframed as claim/no-claim classification inverts
+the ranking picture — §14.14. On lapse, the picture flips: TabPFN
 edges LGBM (AUC 0.752 vs 0.745 on Spanish motor, 53.5K rows) and both far outrun
 LR (0.684); TabPFN also leads the combined lapse leaderboard (elo 1128). The
 2-fold caveat on that lapse gap is settled by the 5-fold re-run in §14.10.
@@ -1379,6 +1381,115 @@ on the calibration axis. Artifacts: `frontier_tuned_baseline_summary.csv`,
 `frontier_tuned_baseline_results.csv`, `run_tuned_baselines.py`, `run_tabfm.py`
 (written, never executed), `analyze_tuned_baselines.py`.
 
+## 14.14 Count/frequency targets reframed as classification — issue #67 (2026-08-07)
+
+Issue #67's question: can TabPFN's weakest axis be sidestepped by re-expressing the
+target? The count targets on which TabPFN is dominated (Poisson deviance, §14.8/§14.9)
+are read as classification problems instead — claim/no-claim and 0/1/2+ claim count —
+moving the contest from TabPFN's weakest metric axis (count regression) to its
+strongest (ranking). Hypothesis: on the classification reframe of a count target,
+TabPFN's AUC edge applies. **Confirmed — the count axis was the loss; classification
+is the win.**
+
+### 14.14.1 Protocol
+
+Same dataset and prep as §14.9: Spanish motor freq (`make_spanish_motor_freq` in
+`scripts/infra/prepare_insurance_datasets.py`), 53,502 policies, leak-fixed loaders
+via `run_frontier_benchmark.py`. The count target `N_claims_year` is reframed into two
+new targets:
+
+- **binary** — claim vs no-claim (11.1% positive);
+- **ordinal** — 0 / 1 / 2+ claims (88.9 / 6.3 / 4.8%).
+
+Protocol mirrors the canonical suite: StratifiedKFold(5, shuffle, `random_state=42`)
+per target; binary also run at seed 7 for the stability check (§14.12 precedent).
+Methods — binary: the canonical 9 (tabpfn, cat, lgbm, xgb, lr, logisticglm, tweedieglm,
+poissonglm, rf); ordinal: the multiclass 6 (tabpfn, cat, lgbm, xgb, lr, rf) —
+poissonglm/tweedieglm excluded because single-output GLMs cannot feed multiclass
+metrics (documented deviation). Metrics — binary: log loss, AUC, Brier, PR-AUC, lift10;
+ordinal: one-vs-rest macro AUC, multiclass log loss, multiclass Brier (MSE of the
+one-hot encoding), lift10 on P(≥1). Paired t, df=4, two-sided; delta = TabPFN −
+baseline; rank among all methods on that target. 15 hosted TabPFN API calls, zero
+failures. Scripts: `run_reframe_frequency.py` (runner; docstring documents exact
+targets/folds), `analyze_reframe_frequency.py` (summary + paired tests). Outputs:
+`reframe_frequency_results.csv` (121 lines, per fold × method),
+`reframe_frequency_summary.csv` (per baseline × metric × seed).
+
+### 14.14.2 Binary claim/no-claim, seed 42 — rank #1 on all 5 metrics
+
+| metric | TabPFN | best competitor | delta | p (paired t) | rank |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| AUC | 0.7170 | lgbm 0.7090 | +0.0080 | 0.0010 | 1 |
+| PR-AUC | 0.2428 | cat 0.2374 | +0.0054 | 0.1165 (n.s.) | 1 |
+| lift10 | 2.6018 | cat 2.5127 | +0.0891 | 0.0279 | 1 |
+| log loss | 0.3206 | lgbm 0.3209 | −0.0003 (tie) | 0.3630 | 1 |
+| Brier | 0.0927 | lgbm 0.0929 | −0.0002 | 0.0441 | 1 |
+
+**TabPFN ranks #1 on all five binary metrics.** The AUC edge is paired-significant
+(+0.0080 over lgbm, p=0.0010), lift10 is significant (+0.0891, p=0.0279), and Brier is
+a significant ~1e-4 win (p=0.0441). The one within-noise result is PR-AUC: rank #1 but
++0.0054 over cat at p=0.1165. Note what is *not* the weak spot here: calibration. Log
+loss and Brier both go to TabPFN (ties-to-better) — the inverse of the §14.12/§14.13
+classification picture, where calibration carried the caveats.
+
+### 14.14.3 Binary seed 7 — seed-stable
+
+| metric | TabPFN | delta vs best | p (paired t) | rank |
+| --- | ---: | ---: | ---: | ---: |
+| AUC | 0.7165 | +0.0098 | 0.0020 | 1 |
+| log loss / Brier / PR-AUC / lift10 | rank #1 (details in `reframe_frequency_summary.csv`) | — | — | 1 |
+
+AUC 0.7165 at seed 7 vs 0.7170 at seed 42: the reframe win is not fold-luck —
+paired-significant at both seeds (p=0.0020) and rank #1 on all five metrics at both
+seeds.
+
+### 14.14.4 Ordinal 0/1/2+ — rank #1 on all 4 metrics
+
+| metric | TabPFN | best competitor | delta | p (paired t) | rank |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| AUC (ovr-macro) | 0.7167 | lgbm 0.7056 | +0.0111 | 0.0085 | 1 |
+| lift10 (P(≥1)) | 2.7370 | lgbm 2.6491 | +0.0878 | 0.1338 (n.s.) | 1 |
+| log loss (multiclass) | 0.3935 | lgbm 0.3944 | −0.0009 (tie) | 0.3428 | 1 |
+| Brier (MSE of one-hot) | 0.0647 | lgbm 0.0647 | 0.0000 (tie) | 0.8790 | 1 |
+
+The ordinal reframe reproduces the binary result: AUC rank #1 with the largest edge of
+the two reframes (+0.0111 over lgbm, p=0.0085); multiclass log loss and Brier tie with
+lgbm at rank 1; lift10 on P(≥1) is rank 1 but within noise (p=0.1338) — the same tail
+caveat as binary.
+
+### 14.14.5 §14.9 contrast — the count axis was the loss
+
+On Poisson deviance TabPFN is off-frontier on this same dataset: 0.9876 vs lgbm
+0.8916, rank 5/8, +0.096 worse (§14.9). Reframed as classification, the same rows put
+TabPFN ahead of lgbm on AUC with paired significance at both seeds (+0.0080, p=0.0010
+seed 42; +0.0098, p=0.0020 seed 7). Same data, different target encoding: TabPFN's
+prior does not extract the count signal the GBDT extracts, but it ranks the claim
+propensity the GBDT ranks.
+
+### 14.14.6 Caveats
+
+- **PR-AUC is the honest weak spot — not calibration.** Binary PR-AUC is rank #1 but
+  within noise vs CatBoost (+0.0054, p=0.1165); ordinal lift10 on P(≥1) likewise
+  (p=0.1338). The caveat the issue expected (calibration) did not materialize: log
+  loss and Brier rank #1, ties-to-better.
+- **GLM collapse.** poissonglm and tweedieglm predict a constant on claim/no-claim:
+  AUC exactly 0.5000, log loss at the base rate (0.3490). Their count-domain edge
+  (frontier anchors in §14.9) does not transfer to the classification reframe.
+- **Ordinal PR-AUC is NaN by design** — no standard PR-AUC for multiclass; lift10 on
+  P(≥1) is the substitute (§14.14.1), and it is within noise.
+- **Single dataset, single portfolio.** One count target (Spanish motor freq), two
+  reframings; freMTPL2freq (678K rows) was not reframed.
+
+### 14.14.7 Bottom line
+
+"Regression/frequency stays GBDT territory" gains a scoping footnote: on the
+classification reframe of a count target — claim vs no-claim, or 0/1/2+ — TabPFN's
+ranking edge applies, paired-significant and seed-stable, while the count model
+itself (Poisson deviance) and the pricing/calibration story are unchanged. Use case:
+triage on claim propensity from the same loss-cost data the count model prices.
+Artifacts: `run_reframe_frequency.py`, `analyze_reframe_frequency.py`,
+`reframe_frequency_results.csv`, `reframe_frequency_summary.csv`.
+
 ## 15. Addendum — Version-Drift Re-Test Policy (issue #55, 2026-08-04)
 
 The benchmark verdict is pinned to hosted v3 (`model_path="v3_default"`, tabpfn-client
@@ -1445,6 +1556,9 @@ gets CI.
 - `scripts/eval/insurance_benchmark_v1/run_frontier_benchmark.py` — insurance frontier
   benchmark (D1/D2 combined pass, 3 datasets × 9 methods, D3 beyond-SE Pareto rule;
   §14, commit `ed3e119`).
+- `scripts/eval/insurance_benchmark_v1/run_reframe_frequency.py` +
+  `analyze_reframe_frequency.py` — count/frequency targets reframed as binary/ordinal
+  classification (§14.14, issue #67).
 - `scripts/benchmarks/finish_home_turf_sweep_v2.py` — sweep result assembly, fold/cell bookkeeping,
   flaky-config dedup, error handling (§13; supersedes `finish_home_turf_sweep.py`).
 - `scripts/benchmarks/run_tabarena_insurance_benchmark.py` — benchmark runner (task registry, target
@@ -1489,3 +1603,7 @@ gets CI.
   per-fold timings and log loss (§14.1).
 - `scripts/eval/insurance_benchmark_v1/frontier_norauto_run.log` — norauto run log,
   per-fold timings and log loss (§14.6).
+- `scripts/eval/insurance_benchmark_v1/reframe_frequency_results.csv` — per-fold reframe
+  metrics, 121 lines (primary evidence for §14.14).
+- `scripts/eval/insurance_benchmark_v1/reframe_frequency_summary.csv` — reframe paired-t
+  summary, per baseline × metric × seed (§14.14).

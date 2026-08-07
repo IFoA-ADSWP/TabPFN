@@ -94,7 +94,7 @@ rows the two Spanish motor tasks split because of *which* model extracts the sig
 | task | linear floor | TabPFN | LGBM | reading |
 |---|---|---|---|---|
 | Spanish lapse (AUC) | LR 0.6841 — far from achievable | 0.7553 (best, 5/5 folds) | 0.7500 | linear cannot extract it; TabPFN extracts it best (§14.10) |
-| Spanish freq (Poisson dev) | GLM 1.01250 — at the null floor 1.0123 | 0.98764 (≈ floor +2.5%) | 0.89157 (floor −12%) | linear cannot extract it; **TabPFN cannot either**; only LGBM can (§14.9) |
+| Spanish freq (Poisson dev) | GLM 1.01250 — at the null floor 1.0123 | 0.98764 (≈ floor +2.5%) | 0.89157 (floor −12%) | linear cannot extract it; TabPFN cannot either **on the count axis** (§14.14 reframe flips it); only LGBM can (§14.9) |
 
 The discriminator is not "thin vs captured" — both are thin. It is whether TabPFN's prior
 extracts the signal that linear models miss, at parity or better with the trees:
@@ -106,7 +106,10 @@ extracts the signal that linear models miss, at parity or better with the trees:
   (norauto, bemtl97) — 4/4 GLM-captured tasks — plus the tree-only-signal tasks:
   both frequency tasks (spanish_freq, freMTPL2freq) and zero-inflated severity at 163K
   (bemtl97_amount), where TabPFN cannot beat even the GLM floor (spanish_sev, +2.2% gap,
-  also loses — 5th of 8, worse than ols).
+  also loses — 5th of 8, worse than ols). Scoping footnote (2026-08-07, issue #67,
+  §14.14): "tree-only" holds on the **count axis** — the same Spanish motor target
+  reframed as claim/no-claim classification puts TabPFN at AUC rank #1,
+  paired-significant at both seeds (p=0.0010/0.0020).
 
 Consistency check with the size axis: all five off-frontier frontier datasets are ≥53.5K
 rows (money chart docstring), but ≥53.5K is the *onset* zone, not a death zone — bemtl16
@@ -129,7 +132,9 @@ won every classification task tested (8/9 sweep cells including the two full-siz
 > ausprivauto0405)), and no edge on frequency targets at scale even
 > when the GLM floor is weak, because there the signal is tree-extractable only (Spanish
 > freq: LGBM 0.8916 vs TabPFN 0.9876, Poisson GLM at the 1.0123 null floor; freMTPL2freq
-> at 678K rows). Between the two regimes, prefer the GLM: the 11–86-param GLM family is
+> at 678K rows). "Tree-extractable only" is scoped to the count axis: reframed as
+> claim/no-claim classification (binary or ordinal), TabPFN wins the ranking axis —
+> AUC rank #1, paired-significant, seed-stable (§14.14). Between the two regimes, prefer the GLM: the 11–86-param GLM family is
 > never dominated on any dataset (§14.4), and on frequency it is statistically
 > indistinguishable from TabPFN at 21 params (§14.9).
 
@@ -167,9 +172,12 @@ won every classification task tested (8/9 sweep cells including the two full-siz
   constant), §14.2/§14.3 (frontier results + narratives), §14.4 (actuary takeaways),
   §14.6 (norauto), §14.7 (ausprivauto0405, bemtl16), §14.8 (regression Phase 2),
   §14.9 (Spanish freq), §14.10 (5-fold lapse + Spanish severity), §14.11 (AUC/Brier
-  re-score, DOMINATED retraction).
+  re-score, DOMINATED retraction), §14.14 (count/frequency classification reframe,
+  issue #67).
 - Frontier CSVs: `scripts/eval/insurance_benchmark_v1/frontier_results_*.csv` (12
   datasets: 6 classification + 4 regression + Spanish freq + Spanish severity).
+- Reframe (issue #67): `scripts/eval/insurance_benchmark_v1/reframe_frequency_results.csv`,
+  `reframe_frequency_summary.csv`.
 - Sweep: `scripts/eval/insurance_benchmark_v1/home_turf_sweep_results.csv`.
 - Lapse: `scripts/eval/lapse_benchmark_v1/tabarena_leaderboard.csv` (ELO),
   `results_per_split.csv` (per-fold AUC).
