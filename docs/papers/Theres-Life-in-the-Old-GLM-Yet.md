@@ -3,6 +3,8 @@
 
 Cillian Williamson, Scott Hawes, Jin Cui, Karol Gawlowski
 
+> **Status: historical record — round-1 single-dataset study (TabPFN v2.0 era, eudirectlapse).** The eudirectlapse result is the disclosed exception to the 2026-08-06 verdict: on the canonical 6-dataset classification frontier, TabPFN is AUC #1 of 9 methods on all 6 datasets (master report §14.11). This paper's methods and round-1 findings are unchanged.
+
 ## The Surprising Question
 
 When TabPFN emerged as a breakthrough in tabular machine learning, the hype was justified - zero hyperparameter tuning, minimal feature engineering and state of the art performance straight out of the box. The question seemed obvious: why would any actuary still use logistic regression?

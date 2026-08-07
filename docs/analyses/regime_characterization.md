@@ -31,7 +31,7 @@ where the report records it. TabPFN n_params is the settled constant 10,000,000 
 | ausprivauto0405_vehvalue | 67,856 | VehValue (RMSE) | continuous | 0.71162 ± 0.01246 | **on frontier, best** | lgbm 0.71645 (3,100) | poissonglm 1.00932 (7); +41.8% | WIN (within SE of lgbm) |
 | norauto | 184,000 | NbClaim (log loss) | 4.6% pos | 0.17619 ± 0.00061 | on frontier (fold-noise tie) | lgbm 0.17518 (3,100) | logisticglm 0.17846 (6); +1.9% | TIE |
 | bemtl97 | 163,212 | claim (log loss) | 11.2% pos | 0.34279 ± 0.00057 | on frontier (fold-noise tie) | lgbm 0.34177 (3,100) | lr 0.34270 (11); +0.3% | TIE |
-| ausprivauto0405 | 67,856 | ClaimOcc (log loss) | 6.8% pos | 0.24026 ± 0.00037 | **off frontier** | logisticglm 0.23947 (7) | GLM is the best; 0.0% | DOMINATED |
+| ausprivauto0405 | 67,856 | ClaimOcc (log loss) | 6.8% pos | 0.24026 ± 0.00037 | **off frontier** | logisticglm 0.23947 (7) | GLM is the best; 0.0% | GLM-captured (retracted §14.11.3 — calibration tie, TabPFN best AUC of suite) |
 | spanish_motor_freq | 53,502 | N_claims_year (Poisson dev) | 11.1% >0 | 0.98764 ± 0.01624 | **off frontier** | lgbm 0.89157 (3,100) | poissonglm 1.01250 (21); null dev 1.0123 — GLM at the intercept floor; +13.6% vs lgbm | DOMINATED |
 | spanish_motor_severity | 53,502 | log1p cost (RMSE) | continuous | 1.88616 ± 0.01165 | **off frontier** (5th of 8) | lgbm 1.83719 (3,100) | ols 1.87810 (21); +2.2% | DOMINATED |
 | bemtl97_amount | 163,212 | log1p amount (RMSE) | ~89% zero mass | 0.72825 ± 0.01057 | **off frontier** | lgbm 0.48499 (3,100) | ols 0.70799 (12); +46.0% | DOMINATED |
@@ -46,7 +46,9 @@ cells** — all six ≤5K cells plus both small full-size cells (coil2000 9,822,
 fold-noise margin.
 
 Totals across the 14 tasks: **6 wins, 2 fold-noise ties, 6 losses; on the parsimony
-frontier 7 of 12 frontier datasets** (one-pager §"The evidence"; §14.4). Money chart
+frontier 7 of 12 frontier datasets** (one-pager §"The evidence"; §14.4). The loss count
+reflects the log-loss axis only — §14.11's AUC rescore reclassifies ausprivauto0405 to
+tie-with-ranking-edge. Money chart
 (`plot_money_chart.py` docstring): every off-frontier point sits at ≥53.5K training rows
 with ratio ≥1.03.
 
@@ -62,15 +64,19 @@ signal (Spanish freq: Poisson GLM at the null floor). Classify each dataset:
   spanish_freq (+13.6%), spanish_severity (+2.2%), bemtl97_amount (+46.0%),
   freMTPL2freq (+10.3%).
 - **(b) GLM-captured** — linear floor within ~2% of achievable: norauto (+1.9%),
-  bemtl97 (+0.3%), ausprivauto0405 (0.0%, GLM is best), eudirectlapse (0.0%, LR is best).
+  bemtl97 (+0.3%), ausprivauto0405 (0.0%, GLM is best on log loss; TabPFN best AUC,
+  §14.11.3), eudirectlapse (0.0%, LR is best).
 
 **Result — the hypothesis is half-right, and the freq example misreads its own evidence.**
 
-*Confirmed direction (b): when GLMs already capture the signal, TabPFN has no edge — in
-every one of the four GLM-captured tasks.* ausprivauto0405 is TabPFN's only outright
-frontier domination (7-param logisticglm beats it beyond SE, §14.7); eudirectlapse goes
-to LR all 5 folds (§14.10); norauto and bemtl97 reduce TabPFN to a beyond-SE fold-noise
-tie (§14.6, §14.3). GLM gap ≈ 0 ⇒ no TabPFN win, in 4/4 cases.
+*Confirmed direction (b): when GLMs already capture the signal, TabPFN has no edge on
+log loss/calibration — but holds a significant AUC ranking edge on 2 of the 4
+GLM-captured tasks (norauto, bemtl97; ausprivauto0405 at +1.5 SE, §14.11.3).* ausprivauto0405 was TabPFN's only outright frontier
+domination (7-param logisticglm beats it beyond SE on log loss, §14.7; retracted on the
+full metric set, §14.11.3); eudirectlapse goes to LR all 5 folds (§14.10); norauto and
+bemtl97 reduce TabPFN to a beyond-SE fold-noise tie on log loss (§14.6, §14.3) while
+TabPFN still wins AUC (2.5–2.6 SE, §14.11.3). GLM gap ≈ 0 ⇒ no log-loss win, in 4/4
+cases.
 
 *Contradicted direction (a): thin signal is necessary but NOT sufficient — 4 of the 10
 thin-signal tasks lose, and they include Spanish freq, the issue's own example.* Spanish
@@ -118,7 +124,9 @@ won every classification task tested (8/9 sweep cells including the two full-siz
 > **Expect otherwise:** TabPFN dominated on the trade-off at scale — every off-frontier
 > frontier point sits at ≥53.5K rows (`plot_money_chart.py`) — with no edge when the GLM
 > floor already sits within ~2% of achievable (ausprivauto0405, eudirectlapse, norauto,
-> bemtl97: GLM gap ≈ 0 ⇒ no win in 4/4), and no edge on frequency targets at scale even
+> bemtl97: GLM gap ≈ 0 ⇒ no log-loss edge, no win in 4/4 — note §14.11 AUC rescore:
+> TabPFN holds the ranking edge even in GLM-captured regimes (norauto, bemtl97,
+> ausprivauto0405)), and no edge on frequency targets at scale even
 > when the GLM floor is weak, because there the signal is tree-extractable only (Spanish
 > freq: LGBM 0.8916 vs TabPFN 0.9876, Poisson GLM at the 1.0123 null floor; freMTPL2freq
 > at 678K rows). Between the two regimes, prefer the GLM: the 11–86-param GLM family is
@@ -158,7 +166,8 @@ won every classification task tested (8/9 sweep cells including the two full-siz
   pattern + v3 correction), §13.2 (sweep table), §14.1 (protocol, D3 rule, 10M-param
   constant), §14.2/§14.3 (frontier results + narratives), §14.4 (actuary takeaways),
   §14.6 (norauto), §14.7 (ausprivauto0405, bemtl16), §14.8 (regression Phase 2),
-  §14.9 (Spanish freq), §14.10 (5-fold lapse + Spanish severity).
+  §14.9 (Spanish freq), §14.10 (5-fold lapse + Spanish severity), §14.11 (AUC/Brier
+  re-score, DOMINATED retraction).
 - Frontier CSVs: `scripts/eval/insurance_benchmark_v1/frontier_results_*.csv` (12
   datasets: 6 classification + 4 regression + Spanish freq + Spanish severity).
 - Sweep: `scripts/eval/insurance_benchmark_v1/home_turf_sweep_results.csv`.

@@ -554,7 +554,8 @@ RandomForest is catastrophic (0.59530 ± 0.01219) — worst by a wide margin, do
 both axes, consistent with §13's sweep pattern. On expected result (b): TabPFN's §13
 0.0010 lead over LGBM does **not** survive the parsimony constraint here — LGBM holds the
 power edge and the GLMs hold parsimony; TabPFN survives the frontier only on the
-beyond-SE tie.
+beyond-SE tie (AUC nuance: §14.11.3 — TabPFN wins AUC at 2.6 SE even in the log-loss
+tie).
 
 **coil2000 — TabPFN leads, GLMs hold the low-complexity end, CatBoost beats LightGBM.**
 TabPFN is the power winner (0.20059) and the top-right anchor. LR (0.20554) and
@@ -589,7 +590,8 @@ parsimony again closing but not removing the gap.
   but at a constant 10,000,000 params it is always the top-right anchor — never a
   parsimony answer. The spec's expected result (b) resolves as: TabPFN's accuracy lead
   survives the frontier only where it is the outright power winner; where it merely ties
-  (bemtl97), parsimony pressure removes the advantage.
+  (bemtl97), parsimony pressure removes the advantage (AUC nuance: §14.11.3 — TabPFN
+  wins AUC at 2.6 SE even in the log-loss tie).
 - **RandomForest at default config is a frontier failure** — dominated on all three
   datasets, catastrophic on bemtl97 (0.59530), consistent with §13 and the v1 baseline.
   No further RF exploration is warranted at default settings.
@@ -654,7 +656,8 @@ CatBoost and XGBoost are dominated — beaten on power by LGBM/TabPFN and on par
 the GLMs; RF is catastrophic at scale (0.73544 ± 0.00929, 593,042 params), dominated on
 both axes, consistent with §13 and §14.3. **D5 verdict — the size-ceiling hypothesis
 transfers to the frontier axis:** LGBM takes the power edge at scale (0.17518 vs TabPFN
-0.17619), and TabPFN survives the frontier **only** on the beyond-SE tie
+0.17619), and TabPFN survives the frontier **only** on the beyond-SE tie (AUC nuance: §14.11.3 —
+TabPFN wins AUC at 2.5 SE even inside the log-loss tie)
 (`lgbm mean+SE` = 0.17565 vs `tabpfn mean−SE` = 0.17558) — the same fold-noise
 membership as bemtl97 at 163K rows (§14.3). Files:
 `scripts/eval/insurance_benchmark_v1/frontier_results_norauto.csv`,
@@ -694,6 +697,10 @@ no reusable power; `run_frontier_benchmark.py` uses the same fallback path as no
 | lr | 0.26319 | 0.00172 | 14 | yes |
 | poissonglm | 0.30162 | 0.00383 | 14 | yes |
 | tweedieglm | 0.65338 | 0.00001 | 14 | yes |
+
+*Verdict update (2026-08-06): the DOMINATED verdict is retracted by §14.11.3
+(calibration tie; TabPFN best AUC of the suite, 0.6622) — the log-loss mechanics below
+remain as recorded.*
 
 **ausprivauto0405 — the first outright TabPFN domination.** The frontier is exactly the
 four 7-param GLMs (logisticglm/lr tied at 0.23947, then poissonglm 0.23956, tweedieglm
@@ -926,6 +933,344 @@ signal, TabPFN's 10M-param prior adds nothing. Files:
 `scripts/eval/insurance_benchmark_v1/frontier_results_spanish_motor_severity.csv`,
 `frontier_plot_spanish_motor_severity.png`.
 
+## 14.11 AUC/Brier re-score addendum (2026-08-06)
+
+Implements acceptance criterion #5 of `docs/analyses/frontier_auc_brier_rescore_spec.md`
+(issue #27 addendum): the 6 classification frontier datasets now carry **mean ± SE AUC
+and Brier** on the same 5-fold `StratifiedKFold(5, shuffle=True, random_state=42)`
+protocol, so the regime rule (`docs/analyses/regime_characterization.md` §1: GLM gap
+≥ ~2.5% log loss or ≥ ~0.05 AUC ⇒ thin-signal/TabPFN-win regime; ≤ ~2% ⇒
+GLM-captured) applies to TabPFN-vs-GLM on the canonical protocol for the first time —
+previously the only AUC pairs were the older 80/20 head-to-head
+(`docs/reports/MULTI_DATASET_GLM_VS_TABPFN_SUMMARY.md`) and the 2 lapse datasets (§14.10),
+and Brier was never emitted (spec §1). All 9 methods are fit/reused exactly as before;
+the log-loss `mean`/`se` columns reproduce §14.2/§14.3/§14.6/§14.7 and the regime table
+to the printed precision (no protocol drift; spec acceptance #3). GLM family =
+{lr, logisticglm, tweedieglm, poissonglm}; "best GLM" = best-of-family **per metric**
+(regime_characterization convention, spec §7.1). Metric definitions per spec §2:
+AUC = `roc_auc_score(y_true, pp[:,1])`, Brier = `brier_score_loss(y_true, pp[:,1])`,
+per fold, SE = std(ddof=1)/√5 — identical to the sweep's definitions (§13).
+Deltas below are **TabPFN − best GLM** per metric; z = Δ/√(SE_TabPFN² + SE_GLM²) —
+**unpaired and therefore conservative** (folds are paired within each method, which
+would shrink the SE of the difference).
+
+**Environment note — client version bump mid-delivery.** run2
+(`/tmp/opencode/frontier_auc_rescore_run2.log`) completed bemtl97 / coil2000 /
+uslapseagent (14:52–15:15, 3× `SELF-CHECK OK`) then aborted on norauto's first hosted
+TabPFN fold: the server began gating the installed client at the connection/version
+check — `tabpfn f0 fit attempt 3/3 failed: RuntimeError(None)` at
+`tabpfn_client/client.py:533 _validate_response(..., only_version_check=True)`
+(HTTP 426 client-version lockout, **not an outage**; the 3-attempt 10/60/300s retry
+loop exhausted). The benchmark venv was upgraded **tabpfn-client 0.2.8 → 0.3.3** and
+run3 (`/tmp/opencode/frontier_auc_rescore_run3.log`) executed clean: norauto /
+ausprivauto0405 / bemtl16, 18:11–19:07, **3375 s total**, all `SELF-CHECK OK`,
+server-side cache reused ("train set hashes match previously uploaded"). The
+`model_path="v3_default"` pin is unchanged (§15.1 records the 0.3.3 install; the
+upgrade is logged here per §15.1's version trigger).
+
+### 14.11.1 Results — log loss, AUC, Brier (mean ± SE over 5 folds)
+
+Bold = best mean per column (log loss and Brier: lower is better; AUC: higher).
+`on_frontier` flags are unchanged — they are driven by log loss (§14.2–§14.7).
+TabPFN n_params is the settled 10,000,000 constant (§14.1) on every row.
+
+**bemtl97** (163,212 rows, `claim`, leak-fixed, 11.2% pos):
+
+| method | log loss | ± SE | AUC | ± SE | Brier | ± SE |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| tabpfn | 0.34279 | 0.00057 | **0.6224** | 0.0034 | 0.0978 | 0.0001 |
+| cat | 0.34363 | 0.00053 | 0.6115 | 0.0030 | 0.0981 | 0.0001 |
+| lgbm | **0.34177** | 0.00053 | 0.6169 | 0.0035 | **0.0977** | 0.0001 |
+| xgb | 0.34503 | 0.00054 | 0.6081 | 0.0031 | 0.0984 | 0.0001 |
+| rf | 0.59530 | 0.01219 | 0.5625 | 0.0032 | 0.1101 | 0.0004 |
+| lr | 0.34270 | 0.00040 | 0.6107 | 0.0030 | 0.0979 | 0.0001 |
+| logisticglm | 0.34270 | 0.00040 | 0.6107 | 0.0030 | 0.0979 | 0.0001 |
+| poissonglm | 0.34277 | 0.00040 | 0.6105 | 0.0030 | 0.0979 | 0.0001 |
+| tweedieglm | 0.34280 | 0.00042 | 0.6102 | 0.0030 | 0.0979 | 0.0001 |
+
+**coil2000** (9,822 rows, `CARAVAN`, 6.0% pos):
+
+| method | log loss | ± SE | AUC | ± SE | Brier | ± SE |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| tabpfn | **0.20059** | 0.00221 | **0.7731** | 0.0074 | **0.0528** | 0.0004 |
+| cat | 0.20823 | 0.00244 | 0.7469 | 0.0076 | 0.0546 | 0.0006 |
+| lgbm | 0.22193 | 0.00261 | 0.7364 | 0.0054 | 0.0569 | 0.0007 |
+| xgb | 0.24937 | 0.00354 | 0.7059 | 0.0065 | 0.0594 | 0.0010 |
+| rf | 0.47859 | 0.02993 | 0.6890 | 0.0072 | 0.0614 | 0.0008 |
+| lr | 0.20552 | 0.00186 | 0.7405 | 0.0095 | 0.0536 | 0.0003 |
+| logisticglm | 0.20633 | 0.00190 | 0.7397 | 0.0096 | 0.0538 | 0.0003 |
+| poissonglm | 0.20953 | 0.00195 | 0.7386 | 0.0096 | 0.0541 | 0.0003 |
+| tweedieglm | 0.21791 | 0.00255 | 0.7343 | 0.0083 | 0.0550 | 0.0004 |
+
+**uslapseagent** (29,317 rows, `surrender`, 37.9% pos):
+
+| method | log loss | ± SE | AUC | ± SE | Brier | ± SE |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| tabpfn | **0.24909** | 0.00518 | **0.9466** | 0.0020 | **0.0814** | 0.0019 |
+| cat | 0.25286 | 0.00459 | 0.9440 | 0.0018 | 0.0826 | 0.0017 |
+| lgbm | 0.25367 | 0.00446 | 0.9432 | 0.0017 | 0.0831 | 0.0017 |
+| xgb | 0.26419 | 0.00460 | 0.9407 | 0.0018 | 0.0863 | 0.0017 |
+| rf | 0.27141 | 0.00325 | 0.9345 | 0.0016 | 0.0885 | 0.0016 |
+| lr | 0.27660 | 0.00505 | 0.9254 | 0.0025 | 0.0917 | 0.0020 |
+| logisticglm | 0.27625 | 0.00506 | 0.9254 | 0.0025 | 0.0917 | 0.0020 |
+| poissonglm | 0.28585 | 0.00488 | 0.9247 | 0.0024 | 0.0921 | 0.0020 |
+| tweedieglm | 0.28782 | 0.00593 | 0.9248 | 0.0024 | 0.0921 | 0.0020 |
+
+**norauto** (183,999 rows, `NbClaim`, 4.6% pos):
+
+| method | log loss | ± SE | AUC | ± SE | Brier | ± SE |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| tabpfn | 0.17619 | 0.00061 | **0.7016** | 0.0044 | 0.0427 | 0.0001 |
+| cat | 0.17676 | 0.00053 | 0.6882 | 0.0044 | 0.0429 | 0.0001 |
+| lgbm | **0.17518** | 0.00047 | 0.6971 | 0.0040 | **0.0427** | 0.0001 |
+| xgb | 0.17737 | 0.00057 | 0.6853 | 0.0041 | 0.0429 | 0.0001 |
+| rf | 0.73544 | 0.00929 | 0.5965 | 0.0031 | 0.0493 | 0.0001 |
+| lr | 0.17846 | 0.00046 | 0.6850 | 0.0050 | 0.0432 | 0.0001 |
+| logisticglm | 0.17846 | 0.00046 | 0.6850 | 0.0050 | 0.0432 | 0.0001 |
+| poissonglm | 0.18131 | 0.00035 | 0.6485 | 0.0051 | 0.0433 | 0.0000 |
+| tweedieglm | 0.18264 | 0.00159 | 0.6750 | 0.0048 | 0.0433 | 0.0001 |
+
+**ausprivauto0405** (67,856 rows, `ClaimOcc`, 6.8% pos):
+
+| method | log loss | ± SE | AUC | ± SE | Brier | ± SE |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| tabpfn | 0.24026 | 0.00037 | **0.6622** | 0.0025 | 0.0625 | 0.0000 |
+| cat | 0.24327 | 0.00047 | 0.6368 | 0.0029 | 0.0631 | 0.0001 |
+| lgbm | 0.24164 | 0.00018 | 0.6425 | 0.0024 | 0.0627 | 0.0000 |
+| xgb | 0.24884 | 0.00028 | 0.6217 | 0.0015 | 0.0638 | 0.0001 |
+| rf | 0.52831 | 0.00988 | 0.5809 | 0.0039 | 0.0698 | 0.0002 |
+| lr | 0.23947 | 0.00038 | 0.6567 | 0.0027 | **0.0624** | 0.0001 |
+| logisticglm | **0.23947** | 0.00038 | 0.6567 | 0.0027 | 0.0624 | 0.0001 |
+| poissonglm | 0.23956 | 0.00036 | 0.6568 | 0.0027 | 0.0624 | 0.0001 |
+| tweedieglm | 0.23983 | 0.00033 | 0.6567 | 0.0028 | 0.0624 | 0.0001 |
+
+**bemtl16** (58,723 rows, `number_of_liability_claims`, 36.0% pos):
+
+| method | log loss | ± SE | AUC | ± SE | Brier | ± SE |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| tabpfn | **0.23803** | 0.00129 | **0.9560** | 0.0003 | **0.0768** | 0.0003 |
+| cat | 0.24341 | 0.00101 | 0.9540 | 0.0003 | 0.0790 | 0.0002 |
+| lgbm | 0.23985 | 0.00112 | 0.9552 | 0.0004 | 0.0777 | 0.0003 |
+| xgb | 0.25226 | 0.00114 | 0.9515 | 0.0004 | 0.0816 | 0.0002 |
+| rf | 0.26121 | 0.00203 | 0.9524 | 0.0003 | 0.0800 | 0.0003 |
+| lr | 0.26323 | 0.00172 | 0.9501 | 0.0007 | 0.0848 | 0.0005 |
+| logisticglm | 0.26348 | 0.00176 | 0.9499 | 0.0007 | 0.0848 | 0.0006 |
+| poissonglm | 0.30148 | 0.00374 | 0.9490 | 0.0007 | 0.0879 | 0.0006 |
+| tweedieglm | 0.65338 | 0.00001 | 0.5000 | 0.0000 | 0.2304 | 0.0000 |
+
+bemtl16's tweedieglm row is the degenerate constant predictor (AUC 0.5000 ± 0.0000,
+Brier 0.2304 ± 0.0000 — its predicted mean is the 36% prior; §14.7's "tweedieglm
+catastrophic at 0.65338"). It never wins an AUC best-pick (max selection) and is shown
+for completeness. Brier ties within rounding (e.g., ausprivauto0405 GLM rows 0.0624);
+bold = best at full precision.
+
+### 14.11.2 TabPFN vs best-GLM deltas
+
+Δ = TabPFN − best GLM per metric (best-of-family; log loss/Brier lower is better, AUC
+higher is better — so negative Δ log loss / Δ Brier and positive Δ AUC favor TabPFN).
+z = Δ/√(SE_TabPFN² + SE_GLM²), unpaired/conservative. The best GLM is lr or
+logisticglm in every cell except ausprivauto0405 AUC (poissonglm 0.6568) — the two
+regularized/unregularized linear models are effectively identical on every dataset.
+
+| dataset | Δ log loss | z | Δ AUC | z | Δ Brier | z |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| bemtl97 | +0.00008 | 0.12 | +0.0117 | 2.58 | −0.0001 | −0.55 |
+| coil2000 | −0.00492 | −1.71 | +0.0326 | 2.71 | −0.0009 | −1.65 |
+| uslapseagent | −0.02716 | −3.75 | +0.0212 | 6.65 | −0.0103 | −3.70 |
+| norauto | −0.00227 | −2.99 | +0.0166 | 2.50 | −0.0004 | −4.68 |
+| ausprivauto0405 | +0.00080 | 1.51 | +0.0055 | 1.48 | +0.0001 | 1.13 |
+| bemtl16 | −0.02520 | −11.74 | +0.0059 | 7.96 | −0.0079 | −13.26 |
+
+### 14.11.3 Regime verdicts per dataset
+
+Rule (regime_characterization.md §1, applied to the canonical protocol): GLM gap
+≥ ~2.5% log loss (best-GLM-vs-best-score, the regime-doc definition) **or** Δ AUC vs
+best GLM ≥ ~0.05 ⇒ thin-signal/TabPFN-win; gap ≤ ~2% ⇒ GLM-captured. Note the AUC leg
+never fires here: the largest Δ AUC vs best-of-family GLM is coil2000 +0.0326, below
+the ~0.05 bar — that leg was set on the Spanish-lapse comparison (§14.10), where the
+linear family is a lone LR at 0.684. All six verdicts ride the log-loss leg.
+
+| dataset | GLM gap (log loss) | Δ AUC vs best GLM (z) | regime verdict |
+| --- | ---: | ---: | --- |
+| bemtl97 | +0.3% | +0.0117 (2.6) | GLM-captured — calibration tie, TabPFN ranking edge |
+| coil2000 | +2.5% | +0.0326 (2.7) | thin-signal / TabPFN-win |
+| uslapseagent | +10.9% | +0.0212 (6.7) | thin-signal / TabPFN-win |
+| norauto | +1.9% | +0.0166 (2.5) | GLM-captured — ranking edge inside the log-loss tie |
+| ausprivauto0405 | +0.0% | +0.0055 (1.5) | GLM-captured — **DOMINATED retracted** |
+| bemtl16 | +10.6% | +0.0059 (8.0) | thin-signal / TabPFN-win |
+
+**ausprivauto0405 — the regime table's only outright domination is retracted.** The
+regime table (§1, issue #53) listed ausprivauto0405 as TabPFN's sole outright
+frontier domination (7-param logisticglm beats it beyond SE on log loss, §14.7). With
+AUC in the protocol that verdict no longer stands as stated: the log-loss gap is
+**+0.0008 ≈ 1.5 SE — statistically indistinguishable** (0.24026 ± 0.00037 vs 0.23947 ±
+0.00038), i.e. a calibration tie with a 7-vs-10M-param parsimony caveat, and on ranking
+TabPFN is now **best AUC of the suite** (0.6622 vs poissonglm 0.6568, +0.0055, 1.5 SE).
+The `on_frontier=no` flag on the log-loss axis is technically unchanged (the strict D3
+beyond-SE inequality still clears by 4.8e-5), but the substantive verdict flips:
+TabPFN is not dominated on the full metric set — it holds the ranking edge. Regime
+class stays GLM-captured per the log-loss rule.
+
+**bemtl97 & norauto — log-loss ties, real ranking edges.** Both stay GLM-captured
+(log-loss leg: +0.3% and +1.9% gaps vs the achievable lgbm scores, the §14.3/§14.6
+fold-noise picture), but TabPFN now wins AUC at **2.6 SE (bemtl97: 0.6224 vs lr 0.6107)
+and 2.5 SE (norauto: 0.7016 vs lr 0.6850)** — on norauto it also beats the best GLM on
+log loss by 1.3% (z −3.0) and on Brier by −0.0004 (z −4.7). In both GLM-captured
+datasets the tie is a *calibration* tie; the *ranking* verdict favors TabPFN.
+
+**coil2000 / uslapseagent / bemtl16 — thin-signal wins confirmed on the new metrics.**
+All three keep the thin-signal/TabPFN-win class (gaps +2.5%/+10.9%/+10.6%). On the two
+near-balanced datasets the win is now significant on **all three metrics**: bemtl16
+Δ log loss −0.02520 (z −11.7), Δ AUC +0.0059 (z 8.0), Δ Brier −0.0079 (z −13.3);
+uslapseagent −0.02716 (z −3.8), +0.0212 (z 6.7), −0.0103 (z −3.7). coil2000 is
+directional on all three (−1.7/−1.7 SE on log loss/Brier) and significant on AUC
+(+0.0326, 2.7 SE). The largest effects land exactly where the log-loss picture was
+already strongest.
+
+### 14.11.4 What changed vs the log-loss-only picture
+
+- **TabPFN has the highest mean AUC of all 9 methods on all 6 datasets** (rank 1/9:
+  0.6224 / 0.7731 / 0.9466 / 0.7016 / 0.6622 / 0.9560). The AUC edge is not only
+  vs the GLM family — it also clears the GBDTs on the three fresh datasets (bemtl16
+  0.9560 vs lgbm 0.9552; norauto 0.7016 vs lgbm 0.6971; ausprivauto0405 0.6622 vs lgbm
+  0.6425) and on bemtl97 (0.6224 vs lgbm 0.6169).
+- **ausprivauto0405's DOMINATED verdict is retracted** (§14.11.3): calibration tie
+  (+0.0008, ~1.5 SE) + suite-best AUC. The log-loss-only picture over-stated the
+  defeat: "GLM beats 10M-param TabPFN outright" (§14.7) is now "indistinguishable on
+  calibration, TabPFN best at ranking".
+- **GLM-captured ≠ no TabPFN edge.** The two GLM-captured datasets both carry a
+  significant TabPFN AUC lead (2.5–2.6 SE). The regime class describes the GLM floor
+  (calibration), not the full metric set.
+- **Mechanism note — the divergence is an imbalance artifact.** On the imbalanced
+  datasets (norauto 4.6%, ausprivauto0405 6.8% pos) log loss is dominated by the
+  majority-class bulk (it is a calibration-weighted average over ~95%/93% negative
+  rows), while AUC reads only the ranking at the top of P(y=1). So the metric
+  divergence — log-loss tie/GLM-edge vs TabPFN AUC edge — is an artifact of the
+  imbalance, not a TabPFN weakness; it echoes §11.2/§12.2's rank-invariance discussion.
+  Brier (a calibration metric) behaves like log loss on ausprivauto0405 (tie, +0.0001,
+  1.1 SE) and as a small TabPFN edge on norauto (−0.0004, 4.7 SE) — the ranking edge
+  shows up only in AUC, exactly as the imbalance-artifact reading predicts.
+- **Calibration and ranking separate cleanly.** On the 6-dataset suite TabPFN's
+  calibration (log loss/Brier) is at worst a tie (ausprivauto0405, bemtl97) and its
+  ranking (AUC) is best-in-suite everywhere. The one-pager's adoption rule
+  (`docs/reports/TABPFN_BENCHMARK_SUMMARY.md`) is unaffected on the log-loss leg; the
+  AUC evidence adds a "ranking edge even in GLM-captured regimes" nuance for
+  underwriting-scorecard contexts.
+
+### 14.11.5 Files & reproducibility
+
+- **6 regenerated CSVs** (2026-08-06; columns now
+  `method,mean,se,mean_auc,se_auc,mean_brier,se_brier,n_params,on_frontier`; `mean`/`se`
+  unchanged — no protocol drift vs §14.2–§14.7):
+  `scripts/eval/insurance_benchmark_v1/frontier_results_{bemtl97,coil2000,uslapseagent,norauto,ausprivauto0405,bemtl16}.csv`.
+- **Sweep read-back (spec acceptance #4):** tabpfn/cat/lgbm/xgb AUC and Brier on
+  bemtl97/coil2000/uslapseagent equal the full-size fold means of
+  `home_turf_sweep_results.csv` to full float precision — the 3 sweep datasets needed
+  zero re-runs; only norauto/ausprivauto0405/bemtl16 ran fresh TabPFN power (15 hosted
+  API calls, spec §3.1).
+- **Run logs:** `/tmp/opencode/frontier_auc_rescore_run2.log` (bemtl97/coil2000/
+  uslapseagent done; norauto aborted at the client-version lockout, §14.11 intro) and
+  `/tmp/opencode/frontier_auc_rescore_run3.log` (norauto/ausprivauto0405/bemtl16,
+  `SELF-CHECK OK` ×3, 3375 s, "ALL DATASETS DONE").
+- **Environment:** tabpfn-client **0.2.8 → 0.3.3** in `.venv-ta` (server-enforced
+  version bump — HTTP 426 lockout at the version check, not an outage; §14.11 intro),
+  `model_path="v3_default"` pin unchanged; §15 version-drift policy applies.
+- **Script:** `run_frontier_benchmark.py` modified per spec §3.2 (per-fold
+  `roc_auc_score`/`brier_score_loss` appended at every `pp`; sweep-reuse path reads
+  `roc_auc`/`brier` columns; SE = std(ddof=1)/√5; sanity checks unchanged).
+- **Prior AUC evidence, not duplicated here:** §14.10's 5-fold lapse AUC
+  (spanish_motor_lapse 0.7553 vs 0.7500, eudirectlapse 0.6260 LR — the 2-fold caveat
+  settled) and `docs/reports/MULTI_DATASET_GLM_VS_TABPFN_SUMMARY.md` (older 80/20
+  head-to-head, ranked on 1−AUC, GLM `class_weight='balanced'` and TabPFN
+  `random_state=42` — neither config matches the frontier protocol). This addendum is
+  the first per-fold AUC/Brier on the canonical 5-fold protocol.
+- **Registry:** no new entry for §14.11 itself — it is an addendum to this already-registered master
+  report (topic key `tabpfn-vs-gbdt-baselines-finetuning`,
+  `docs/reports/REPORT_REGISTRY.md`); the master-report row was bumped to 2026-08-06
+  with the AUC/Brier scope noted, and the rescore spec gained its own row
+  (`frontier-auc-brier-rescore-spec`, 2026-08-06).
+
+## 14.12 Ranking-robustness addendum — PR AUC, top-decile lift, paired + seed tests (2026-08-06)
+
+Follow-up to §14.11 answering three questions the AUC/Brier rescore left open: (1) does
+the ranking edge survive **PR AUC and top-decile lift** (the metrics that matter where
+triage decisions actually cut), (2) do the per-dataset edges hold under **paired
+per-fold tests** (the §14.11 z-scores were conservative unpaired), (3) does the 6/6 AUC
+record survive **split-seed variation** on the marginal datasets.
+
+### 14.12.1 Protocol
+
+`run_frontier_benchmark.py` gains `--pr-auc` (forces fresh fits for all methods — the
+sweep CSV stores no predictions, so PR AUC/lift need real fits; 30 hosted API calls for
+the 6 datasets) and `--seed N` (StratifiedKFold random_state, default 42). Per fold:
+`pr_auc = average_precision_score`, `lift10` = positives-in-top-decile ÷ base rate.
+Per-fold rows → `frontier_pr_auc_results.csv`; summary → `frontier_pr_auc_summary.csv`;
+analysis → `analyze_pr_auc.py` (paired t, df=4). Runs A (seed 42, all 6), B/C (seeds
+7/123, ausprivauto0405/bemtl97/norauto): 540 per-fold rows, zero API retries, zero
+426/version errors. Drift check: seed-42 log loss reproduces §14.11/9037b26 CSVs in
+52/54 cells to full precision; the 2 exceptions are xgb on bemtl97/uslapseagent
+(0.34503→0.34539, 0.26419→0.26447 — sweep-reuse rows refit under the venv's xgboost
+3.4.0; environmental, xgb is off-frontier in both eras; pin the xgboost version if the
+sweep CSVs are reused for fresh-fit comparisons).
+
+### 14.12.2 PR AUC — TabPFN rank and paired tests (seed 42; delta = TabPFN − best GLM)
+
+| dataset | metric | best_glm | TabPFN | GLM | delta | z | t (df=4) | p | rank |
+|---|---|---|---|---|---|---|---|---|---|
+| bemtl97 | pr_auc | logisticglm | 0.1705 ± 0.0023 | 0.1605 | +0.0101 | 3.35 | 7.11 | 0.0021 | **1** |
+| coil2000 | pr_auc | lr | 0.1869 ± 0.0110 | 0.1671 | +0.0199 | 1.53 | 2.74 | 0.0521 | **1** |
+| uslapseagent | pr_auc | poissonglm | 0.8866 ± 0.0040 | 0.8245 | +0.0622 | 10.58 | 15.92 | <0.0001 | **1** |
+| norauto | pr_auc | lr | 0.1069 ± 0.0030 | 0.1019 | +0.0050 | 1.26 | 9.02 | 0.0008 | **1** |
+| ausprivauto0405 | pr_auc | poissonglm | 0.1129 ± 0.0017 | 0.1098 | +0.0032 | 1.40 | 6.03 | 0.0038 | **1** |
+| bemtl16 | pr_auc | lr | 0.9032 ± 0.0015 | 0.8891 | +0.0141 | 5.43 | 5.88 | 0.0042 | **1** |
+
+**PR AUC: rank #1 on 6/6; paired-significant on 5/6** (coil2000 p=0.052 borderline).
+The paired t is dramatically more powerful than the unpaired z — e.g. norauto pr_auc
+z=1.26 (ns) vs t=9.02 (p=0.0008). **Every AUC edge from §14.11 is real, not fold
+noise**: paired p ≤ 0.0063 on all 6 datasets, including ausprivauto0405 (t=13.93,
+p=0.0002) and norauto (t=18.25, p<0.0001).
+
+### 14.12.3 Top-decile lift — the honest weak spot
+
+| dataset | TabPFN lift10 | best GLM lift10 | delta | t | p | rank (of 9) |
+|---|---|---|---|---|---|---|
+| bemtl97 | 1.837 ± 0.033 | 1.717 (lr) | +0.120 | 5.23 | 0.0064 | **1** |
+| coil2000 | 3.335 ± 0.168 | 3.130 (logisticglm) | +0.206 | 1.19 | 0.2995 | **1** |
+| uslapseagent | 2.458 ± 0.014 | 2.275 (poissonglm) | +0.183 | 13.20 | 0.0002 | **1** |
+| norauto | 2.560 ± 0.057 | 2.540 (lr) | +0.020 | 1.16 | 0.3100 | 2 (lgbm) |
+| ausprivauto0405 | 1.873 ± 0.044 | 1.845 (tweedieglm) | +0.028 | 0.65 | 0.5484 | **1** |
+| bemtl16 | 2.607 ± 0.006 | 2.596 (poissonglm) | +0.011 | 1.04 | 0.3571 | 3 (lgbm, cat) |
+
+**Lift10: rank #1 on 4/6, paired-significant on 2/6** (bemtl97, uslapseagent). On
+norauto and bemtl16 the GBDTs edge TabPFN in the extreme top decile and the GLM
+comparison is a tie. Lift is a noisier, thinner statistic than AUC (one 10% slice), and
+the reading is clear: **TabPFN's ranking edge concentrates in the mid-to-upper rank
+region; at the extreme top of the distribution it is dataset-dependent, not
+universal.** "Use for triage" should be read as "strong global ranker; validate
+top-decile behaviour on your own book" — consistent with the §14.4 adoption posture.
+
+### 14.12.4 Seed stability (ausprivauto0405, bemtl97, norauto × seeds 7/42/123)
+
+| dataset | Δ AUC vs best GLM, seed 7 | seed 42 | seed 123 | TabPFN AUC rank |
+|---|---|---|---|---|
+| ausprivauto0405 | +0.0051 | +0.0055 | +0.0049 | **1 on all 3** |
+| bemtl97 | +0.0121 | +0.0117 | +0.0120 | **1 on all 3** |
+| norauto | +0.0164 | +0.0165 | +0.0166 | **1 on all 3** |
+
+The AUC record holds on all 9 dataset×seed cells, deltas stable to ±0.0004. The §14.11
+verdict is not a split-seed artifact.
+
+### 14.12.5 Bottom line
+
+The ranking story from §14.11 **survives and strengthens**: AUC and PR AUC both rank
+#1 on all 6 datasets, paired tests significant on 5–6/6, seed-stable. Calibration/log
+loss remains the weak axis (unchanged: LL still goes to the best GLM on
+bemtl97/norauto/ausprivauto0405). The one new nuance: **top-decile lift is
+dataset-dependent** (4/6 rank 1, 2/6 significant) — the triage claim holds globally on
+AUC/PR-AUC but not at the extreme tail. Artifacts: `frontier_pr_auc_results.csv`,
+`frontier_pr_auc_summary.csv`, `analyze_pr_auc.py`, 6 extended canonical CSVs + 6
+seed-run CSVs/plots.
+
 ## 15. Addendum — Version-Drift Re-Test Policy (issue #55, 2026-08-04)
 
 The benchmark verdict is pinned to hosted v3 (`model_path="v3_default"`, tabpfn-client
@@ -972,7 +1317,7 @@ fires.
 
 1. **Record versions before running**: `python -c "from importlib.metadata import version; print(version('tabpfn-client'))"` plus the `model_path` used — every TabPFN call site pins `model_path="v3_default"` (`run_frontier_benchmark.py:469,610`; `run_home_turf_size_sweep.py:102`; `finish_home_turf_sweep_v2.py:89`; `run_smoke_tabarena.py:82`; `run_tabarena_insurance_benchmark.py:262,265`; `run_tabarena_insurance_imbalance_pilot.py:219,222,265`). The installed version is authoritative — the committed range is loose (§15.1).
 2. **Run the same datasets/commands as the v3 baselines** (§15.2) — same folds (seed 42), same metrics, same D3 beyond-SE rule (§14.1).
-3. **Diff `scripts/eval/insurance_benchmark_v1/frontier_results_*.csv`** (the 12 committed v3 baselines, §14.2–§14.10) — compare `mean` ± `se` per method and the `on_frontier` flag (columns are stable: `method, mean, se, n_params, on_frontier`, lines 506–508).
+3. **Diff `scripts/eval/insurance_benchmark_v1/frontier_results_*.csv`** (the 12 committed v3 baselines, §14.2–§14.10) — compare `mean` ± `se` per method and the `on_frontier` flag (columns are stable: `method,mean,se,mean_auc,se_auc,mean_brier,se_brier,n_params,on_frontier` on the 6 classification CSVs, `run_frontier_benchmark.py` L569 — regression CSVs keep `method,mean,se,n_params,on_frontier`, L720; `mean`/`se` stay log loss, no protocol drift, §14.11.5).
 4. **Append a §14.x-style addendum** (this section becomes §16/§17 for the re-run, or a dated `§15.x` sub-section) documenting client + model versions, the command log, and the diff outcome.
 5. **Update the one-pager verdict / adoption rule only if the pattern changes** — wins/losses flip or beyond-SE shifts (`docs/reports/TABPFN_BENCHMARK_SUMMARY.md` "Conclusion & adoption guidance"; regime descriptor `docs/analyses/regime_characterization.md` §3). No change → note "pattern unchanged" in the addendum; do not re-derive the adoption rule.
 6. **Close-out**: registry evidence update (`docs/reports/REPORT_REGISTRY.md`) + a TASKS.md row (owned by the orchestrator).

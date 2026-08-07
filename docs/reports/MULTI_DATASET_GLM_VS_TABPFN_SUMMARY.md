@@ -2,7 +2,7 @@
 
 Date: 2026-03-29
 
-Canonical current summary: docs/reports/TABPFN_BENCHMARK_SUMMARY.md (2026-08 frontier-era verdict refines this report's "dataset-dependent" conclusion).
+Canonical current summary: docs/reports/TABPFN_BENCHMARK_SUMMARY.md (2026-08 frontier-era verdict refines this report's "dataset-dependent" conclusion; master report §14.11 AUC/Brier re-score supersedes the ranking story on the canonical 5-fold protocol).
 
 ## Objective
 Evaluate whether TabPFN (client backend) outperforms a logistic regression baseline (GLM) across multiple insurance datasets, not only on EU Direct Lapse.
@@ -43,6 +43,7 @@ Source: `data/processed/glm_vs_tabpfn_head_to_head.csv`
 - PR AUC: TabPFN wins on 2/4 datasets.
 - EU Direct Lapse is behaviorally different from the other datasets:
   - GLM is stronger on ROC there, while TabPFN only slightly improves PR.
+- Caveat: the 80/20 numbers above are historical record — on the canonical 5-fold protocol, §14.11 of the master report shows TabPFN at #1 AUC on all 6 classification datasets.
 - Conclusion: performance is dataset-dependent; no universal winner across all metrics and datasets.
 
 ## Repeatability Protocol
