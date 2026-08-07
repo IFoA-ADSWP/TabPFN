@@ -16,6 +16,12 @@ REPO="IFoA-ADSWP/TabPFN"
 WIKI_DIR="${1:-/tmp/tabpfn-wiki}"
 CONTENT_DIR="$(cd "$(dirname "$0")/.." && pwd)/.wiki-content"
 
+# Stage release-facing pages for colleagues (browser-viewable, no repo clone needed)
+mkdir -p "$CONTENT_DIR"
+cp docs/reports/TABPFN_BENCHMARK_SUMMARY.md "$CONTENT_DIR/Benchmark-Summary.md"
+cp docs/analyses/regime_characterization.md "$CONTENT_DIR/Adoption-Guidance.md"
+cp docs/analyses/metrics_explained.md "$CONTENT_DIR/Metrics-Explained.md"
+
 echo "==> Cloning $REPO.wiki.git into $WIKI_DIR"
 if [[ -d "$WIKI_DIR" ]]; then
   echo "    (directory exists, will pull instead)"
@@ -25,7 +31,7 @@ else
 fi
 
 echo "==> Syncing content from $CONTENT_DIR"
-rsync -av --delete \
+rsync -av \
   --exclude='.git' \
   --exclude='Home.md' \
   "$CONTENT_DIR/" "$WIKI_DIR/"
@@ -38,12 +44,12 @@ if git diff --cached --quiet; then
   echo "==> No changes to commit"
 else
   git -c user.name="scotthawes" -c user.email="scottlhawes@gmail.com" \
-    commit -m "docs(wiki): sync maintenance backlog from docs/MAINTENANCE_BACKLOG.md
+    commit -m "docs(wiki): sync release-facing pages + maintenance backlog
 
-- Home: landing page with quick links
-- Maintenance-Backlog: full 36-issue backlog
-- Tier-1-Critical / Tier-2-Important / Tier-3-Polish: split by priority
-- Production-Readiness-Audit: original audit findings
+- Benchmark-Summary: TabPFN v8.2 one-pager for actuarial colleagues
+- Adoption-Guidance: regime characterization / when to use TabPFN
+- Metrics-Explained: log loss vs AUC vs Brier, insurance reading guide
+- Maintenance-Backlog + tier pages: 36-issue backlog
 - _Sidebar / _Footer: navigation"
   git push
   echo "==> Pushed to $REPO.wiki"
