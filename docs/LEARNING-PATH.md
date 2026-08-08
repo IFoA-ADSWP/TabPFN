@@ -40,6 +40,7 @@ Read:
 - `docs/` tree: `reports/REPORT_REGISTRY.md` (the index of every report + evidence), `analyses/` (specs/studies for current era)
 - `outputs/current/` — skim `tables/` and `logs/domain_finetune_logbook.md` (this is the "source of truth" for results)
 - `CHANGELOG.md` + `TASKS.md` (history + current state)
+- `0_roadmap and project dashboard/` — the workstream roadmap (Excel dashboard: current state, milestones)
 
 Exit test: you can name 5 datasets, the two eras, and where results accumulate.
 
@@ -120,7 +121,7 @@ The evidence spine of everything above: `docs/analyses/tabpfn_vs_gbdt_baselines_
 5. **§14.11–§14.14** — the 2026-08 verdict arc: rescore, ranking robustness, finality test, reframe
 6. **§15** — version-drift policy (skim)
 
-Pair each with its evidence CSVs (`scripts/eval/insurance_benchmark_v1/frontier_results_*.csv`, `reframe_frequency_results.csv`). The wiki page `Findings-Overview.md` is the "so what" version (local clone: `TabPFN-work-scott/.wiki-content/Findings-Overview.md`). When you need the arc without the detail: `docs/MASTER-REPORT-DIGEST.md` (one paragraph per addendum). To run the experiments yourself and see the exact code behind them: `notebooks/reproducibility/` (README first — three notebooks reproducing §14.11, §14.13, §14.14 by calling the canonical scripts).
+Pair each with its evidence CSVs (`scripts/eval/insurance_benchmark_v1/frontier_results_*.csv`, `reframe_frequency_results.csv`). The wiki (`TabPFN-work-scott/.wiki-content/` or live GitHub wiki) is the summary layer: `Findings-Overview.md` (the "so what" page), `Adoption-Guidance.md` (the decision rule — read this before quoting verdicts), `Findings-Report-Index.md`, `Metrics-Explained.md`, `Reproduction-Guide.md`, `Codebase-Overview.md`. When you need the arc without the detail: `docs/MASTER-REPORT-DIGEST.md` (one paragraph per addendum). To run the experiments yourself and see the exact code behind them: `notebooks/reproducibility/` (README first — three notebooks reproducing §14.11, §14.13, §14.14 by calling the canonical scripts).
 
 Exit test: explain what changed between §4 and §14.14 and *why*; name the three most robust results (GLM never dominated; AUC #1 on 6/6 classification; regression stays GBDT).
 
@@ -140,7 +141,11 @@ Exit test: given a new research question, you can name which skill(s) you'd invo
 - TabArena harness: `scripts/benchmarks/run_tabarena_insurance_benchmark.py` (needs external `/tmp/tabarena` env), `docs/analyses/tabarena_reference.md`
 - Embeddings: `notebooks/adswp_project/04_tabpfn_embedding_workflow.ipynb`
 - Model catalog context: `docs/analyses/tabular_foundation_models_catalog.md`
+- Side studies: `docs/reports/CLASSIFIER_HOMOGENEITY_HYPOTHESIS_METHOD.md` (round 2/3 — does a homogeneous fine-tuning pool beat a heterogeneous one? inconclusive; read for the method, not the verdict)
+- The paper layer: `docs/papers/` — the GLM paper, the round-2 journal follow-ups (`FOLLOW_UP_ROUND2_JOURNAL_SHORT.md` / `FOLLOW_UP_ROUND2_JOURNAL_PLAIN.md`; *historical record — the "no universal winner" conclusion is superseded on AUC by §14.11*, the docs themselves carry this banner), `APPENDIX_REPRODUCIBILITY.md`, and `docs/REPLICATION_SETUP_GUIDE.md` (step-by-step paper replication)
 - Repo hygiene history: `docs/audit/CODEBASE-GAP-2026-08-07.md`, `docs/status/STATUS_REPORT_FINAL.md`
+
+**Deliberately not in this path** (look here only if you must): `docs/analyses/tabpfn_finetune_limit_test_plan.md` (superseded by the executed limit study), `docs/sessions/2026-07-28-tabarena-benchmark-setup.md` (session log), `docs/status/SECURITY_INCIDENT_RESOLVED.md` (ops record), `tests/` (smoke-only coverage), `legacy/` (deprecated R scripts).
 
 ---
 
@@ -219,7 +224,7 @@ flowchart LR
 
 **Hosted vs local:** this repo evolved from a local `torch` install (notebook era) to the **hosted API** (`tabpfn-client`, `TABPFN_API_KEY`) in the scripts era — the frontier benchmark calls the API with retry/backoff.
 
-**Fine-tuning (optional):** TabPFN can be trained *further* on your own data (a few epochs, small learning rate, limited context) — this is the "fine-tune" track of the research. Repo findings to date: works on tiny data (128–500 rows), context sizes 64–128, 1 epoch smoke tests; on Apple Silicon `cpu` beat `mps`; **save/load reliability was a real bug class** (issue #851); and **regressor fine-tuning on claim counts was numerically unstable** (non-finite loss — the `claimnb_finiteness_checkpoints` ledger). Conclusions live in `docs/reports/TABPFN_FINE_TUNING_LIMIT_STUDY.md` and `INSURANCE_DOMAIN_FINETUNING_METHOD_PROTOCOL.md`.
+**Fine-tuning (optional):** TabPFN can be trained *further* on your own data (a few epochs, small learning rate, limited context) — this is the "fine-tune" track of the research. Repo findings to date: works on tiny data (128–500 rows), context sizes 64–128, 1 epoch smoke tests; on Apple Silicon `cpu` beat `mps`; **save/load reliability was a real bug class** (issue #851); and **regressor fine-tuning on claim counts was numerically unstable** (non-finite loss — the `claimnb_finiteness_checkpoints` ledger). Conclusions live in `docs/reports/TABPFN_FINE_TUNING_LIMIT_STUDY.md`, `INSURANCE_DOMAIN_FINETUNING_METHOD_PROTOCOL.md` (protocol) and `STAGE_A_B_FINDINGS_AND_RECOMMENDATIONS.md` (non-technical summary).
 
 Where it lives: `docs/reports/TABPFN_BENCHMARK_SUMMARY.md` + `TECHNICAL_COMPANION.md` (repo's own intro), skills `tabpfn-classify` / `tabpfn-regress` / `tabpfn-finetune` (runbooks), `docs/analyses/tabular_foundation_models_catalog.md` (context: other tabular FMs).
 
@@ -240,7 +245,7 @@ Two distinct things "a good model" can mean, and the repo carefully separates th
 
 **Why the distinction is the research:** a model can rank perfectly (high AUC) while being useless for pricing (probabilities off by 2×), or be perfectly calibrated but not rank well. GLMs are calibration-native; GBDTs need probability calibration (e.g. Platt/isotonic); TabPFN's claim is good calibration *without* post-hoc. The repo's arc: `02_tabpfn_vs_glm_lapse.ipynb` (calibration-first study, Tables 2/4, Figures 1–6) → `04_probability_calibration.ipynb` (isotonic post-hoc, production assessment) → frontier benchmark now records AUC **and** Brier (`docs/analyses/frontier_auc_brier_rescore_spec.md`).
 
-Where it lives: `docs/analyses/metrics_explained.md` (the repo's own metric explainer), `src/evaluation_metrics.py`, `src/baseline_utils.py::calibration_error`.
+Where it lives: `docs/analyses/metrics_explained.md` (the repo's own metric explainer), `docs/reports/POST_HOC_OPTIMISATION.md` (the 04-notebook calibration study), `src/evaluation_metrics.py`, `src/baseline_utils.py::calibration_error`.
 
 ## S5. The experimental methodology (how claims get tested)
 
