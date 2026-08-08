@@ -72,6 +72,7 @@ Usage:
     python scripts/eval/insurance_benchmark_v1/run_frontier_benchmark.py coil2000 # subset, case-insensitive
     python scripts/eval/insurance_benchmark_v1/run_frontier_benchmark.py --regression
     python scripts/eval/insurance_benchmark_v1/run_frontier_benchmark.py --regression ausautoBI8999
+    python scripts/eval/insurance_benchmark_v1/run_frontier_benchmark.py --data data/raw/some.csv --target TARGET [--drop a,b]
     python scripts/eval/insurance_benchmark_v1/run_frontier_benchmark.py --pr-auc                # PR-AUC/lift10 robustness: fresh-fit ALL methods, append per-fold rows to
                                                                                                  #   frontier_pr_auc_results.csv (dataset,seed,method,fold,log_loss,auc,brier,pr_auc,lift10),
                                                                                                  #   and extend the summary CSVs with mean_pr_auc/se_pr_auc/mean_lift10/se_lift10
@@ -90,8 +91,8 @@ deviance clip-guard check.
 """
 from __future__ import annotations
 
+import argparse
 import os
-import sys
 import time
 from pathlib import Path
 
@@ -169,7 +170,8 @@ def load_Xy(ds: dict, regression: bool = False) -> tuple[np.ndarray, np.ndarray]
     (freMTPL2freq): the Exposure column is replaced by log(Exposure) — Exposure is the
     natural Poisson offset (verified: no Exposure=0 rows), and log-offset is the
     standard GLM form."""
-    df = pd.read_csv(DATA_RAW / ds["file"])
+    path = ds["file"] if os.path.isabs(ds["file"]) else DATA_RAW / ds["file"]
+    df = pd.read_csv(path)
     df = df.dropna(subset=[ds["target"]]).reset_index(drop=True)
     y = df[ds["target"]].to_numpy(dtype=np.float64 if regression else np.int64)
     X = df.drop(columns=[ds["target"]] + ds["drop"])
@@ -827,25 +829,63 @@ def sanity_check_regression(ds: dict, folds: list[tuple[np.ndarray, np.ndarray]]
 # ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
+def make_parser() -> argparse.ArgumentParser:
+    """CLI: legacy positional dataset filters + --regression, plus generic
+    --data/--target/--drop for arbitrary CSVs (issue #46)."""
+    parser = argparse.ArgumentParser(
+        prog="run_frontier_benchmark.py",
+        description="Pareto frontier benchmark (power vs parsimony, D1-D5) on the v1 "
+                    "insurance datasets, or on any single CSV supplied via --data.",
+    )
+    parser.add_argument(
+        "filters", nargs="*", metavar="DATASET",
+        help="case-insensitive dataset-name filter(s); empty = all registered datasets "
+             "(ignored when --data is given)",
+    )
+    parser.add_argument("--regression", action="store_true",
+                        help="regression mode: continuous/count targets, KFold splits")
+    parser.add_argument("--pr-auc", action="store_true",
+                        help="PR-AUC/lift10 robustness: fresh-fit ALL methods, append per-fold rows "
+                             "to frontier_pr_auc_results.csv (ignored with --data)")
+    parser.add_argument("--seed", type=int, default=42, metavar="N",
+                        help="StratifiedKFold random_state (default 42; seed != 42 writes "
+                             "frontier_results_<ds>_seed<N>.csv/.png so canonical seed-42 files are not clobbered)")
+    parser.add_argument("--data", metavar="CSV",
+                        help="run a single arbitrary dataset CSV (absolute path, or relative to repo root)")
+    parser.add_argument("--target", metavar="COL",
+                        help="target column name (required when --data is given)")
+    parser.add_argument("--drop", metavar="COLS",
+                        help="comma-separated leak columns to drop (with --data; default: none)")
+    return parser
+
+
+def select_datasets(args: argparse.Namespace) -> tuple[list[dict], set[str] | None]:
+    """Dataset selection: registry (filtered case-insensitively) or a single synthetic
+    --data entry. Returns (datasets, wanted_filter) — filter is None for --data."""
+    datasets = REG_DATASETS if args.regression else DATASETS
+    if args.data is not None:
+        # relative --data paths are repo-root-relative; load_Xy treats non-absolute
+        # paths as data/raw/-relative (registry behavior), so resolve here
+        data = args.data if os.path.isabs(args.data) else str(REPO / args.data)
+        ds = dict(name=Path(args.data).stem, file=data, target=args.target,
+                  metric="rmse" if args.regression else "log_loss",
+                  drop=[c.strip() for c in args.drop.split(",")] if args.drop else [])
+        return [ds], None  # --data wins; filters ignored
+    wanted = {f.lower() for f in args.filters} if args.filters else None
+    return datasets, wanted
+
+
 def main() -> None:
     global SEED, PR_AUC_MODE
     t0 = time.time()
-    args = sys.argv[1:]
-    regression = "--regression" in args
-    args = [a for a in args if a != "--regression"]
-    pr_auc = "--pr-auc" in args
-    args = [a for a in args if a != "--pr-auc"]
-    seed = 42
-    if "--seed" in args:
-        i = args.index("--seed")
-        seed = int(args[i + 1])
-        del args[i:i + 2]
-    SEED = seed
-    PR_AUC_MODE = pr_auc
-    # CLI filter: dataset names from args (case-insensitive); empty = all.
-    wanted = {a.lower() for a in args} if args else None
-    datasets = REG_DATASETS if regression else DATASETS
-    runner = run_dataset_regression if regression else run_dataset
+    parser = make_parser()
+    args = parser.parse_args()
+    if args.data is not None and args.target is None:
+        parser.error("--target is required when --data is given")
+    SEED = args.seed
+    PR_AUC_MODE = args.pr_auc and args.data is None  # --pr-auc is a registry-run mode
+    datasets, wanted = select_datasets(args)
+    runner = run_dataset_regression if args.regression else run_dataset
     for ds in datasets:
         name = ds["name"]
         if wanted is not None and name.lower() not in wanted:
