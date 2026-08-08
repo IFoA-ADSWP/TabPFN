@@ -121,7 +121,7 @@ The three numbers you'll see everywhere:
 | Platt scaling | 0.1103 | +0.45% |
 | Isotonic regression | 0.1098 | +0.87% |
 
-![Table4 Brier vs constant-predictor floor](figures/lp_brier.png)
+![Table4 Brier vs constant-predictor floor (axis zoomed — the gaps are <1%)](figures/lp_brier.png)
 
 And the same idea in the picture form you'll see in the notebooks — a **reliability diagram** (schematic; the notebook-era figures are the real ones):
 
