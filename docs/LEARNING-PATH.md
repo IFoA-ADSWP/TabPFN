@@ -120,7 +120,7 @@ The evidence spine of everything above: `docs/analyses/tabpfn_vs_gbdt_baselines_
 5. **§14.11–§14.14** — the 2026-08 verdict arc: rescore, ranking robustness, finality test, reframe
 6. **§15** — version-drift policy (skim)
 
-Pair each with its evidence CSVs (`scripts/eval/insurance_benchmark_v1/frontier_results_*.csv`, `reframe_frequency_results.csv`). The wiki page `Findings-Overview.md` is the "so what" version (local clone: `TabPFN-work-scott/.wiki-content/Findings-Overview.md`). When you need the arc without the detail: `docs/MASTER-REPORT-DIGEST.md` (one paragraph per addendum).
+Pair each with its evidence CSVs (`scripts/eval/insurance_benchmark_v1/frontier_results_*.csv`, `reframe_frequency_results.csv`). The wiki page `Findings-Overview.md` is the "so what" version (local clone: `TabPFN-work-scott/.wiki-content/Findings-Overview.md`). When you need the arc without the detail: `docs/MASTER-REPORT-DIGEST.md` (one paragraph per addendum). To run the experiments yourself and see the exact code behind them: `notebooks/reproducibility/` (README first — three notebooks reproducing §14.11, §14.13, §14.14 by calling the canonical scripts).
 
 Exit test: explain what changed between §4 and §14.14 and *why*; name the three most robust results (GLM never dominated; AUC #1 on 6/6 classification; regression stays GBDT).
 
