@@ -31,7 +31,13 @@ This document provides step-by-step instructions to replicate the experiments fr
 
 The notebook uses the **eudirectlapse dataset** from the public **CASdatasets R package** (CRAN).
 
-### Option A: Automatic Load via R + pyreadr (Recommended)
+### Option 0: Bundled CSV (Easiest — No R Required)
+
+A copy of the dataset ships in the repo at `data/raw/eudirectlapse.csv`. The notebook's
+data-loading cell checks this file first, so if you cloned the repo you can skip R
+entirely — just run the notebook.
+
+### Option A: Automatic Load via R + pyreadr (Recommended if you have R)
 
 If you have R installed:
 

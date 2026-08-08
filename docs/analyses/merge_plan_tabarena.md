@@ -80,7 +80,7 @@ Status legend: all five stages are DONE — the work exists committed on the bra
 - `scripts/eval/insurance_benchmark_v1/run_frontier_benchmark.py` (Pareto frontiers, `--regression` flag, D1–D5), 11 `frontier_results_*.csv` + plots, `rescore_focused_imbalance_logloss.py` + `focused_imbalance_logloss.csv`.
 - Depends on sweep results: reuses power for cat/lgbm/xgb/tabpfn on bemtl97/coil2000/uslapseagent; fresh fits for the rest.
 - Status: DONE — Spanish motor frequency extension in `87844a4` (with `model_path=v3_default` pin), Spanish motor lapse benchmark in `58dde49`.
-- Headlines: lead erodes at scale (norauto LGBM wins; ausprivauto0405 7-param GLMs beat 10M-param TabPFN).
+- Headlines: lead erodes at scale (norauto LGBM wins; ausprivauto0405 7-param GLMs beat 10M-param TabPFN — since retracted to calibration-tie + TabPFN best-AUC, §14.11.3).
 - Regression Phase 2 (§14.8): wins ausautoBI8999, vehvalue within SE (v1's +67.2% not reproduced — protocol-specific), dominated at scale on bemtl97_amount + freMTPL2freq.
 - Spanish motor frequency result (53,502 policies, `N_claims_year`, Poisson deviance, ~453s run): LGBM wins (0.8916 ± 0.0124); TabPFN off-frontier (0.9876 ± 0.0162, dominated beyond SE); ols/poissonglm/tweedieglm (21 params) anchor the frontier within noise of TabPFN; null deviance 1.0123. Fourth at-scale dataset (after norauto, bemtl97_amount, freMTPL2freq) where TabPFN falls off the frontier.
 - Spanish motor lapse benchmark (`spanish_motor_lapse` vs `eudirectlapse`, `58dde49`): TabPFN AUC 0.752 vs LGBM 0.745 vs LR 0.684, elo 1128 (#1); caveat: 2-fold holdout panel. Tracks `TASKS.md` #27a (closed).
@@ -107,7 +107,7 @@ Open action items: **none** — #2 and #3 were resolved in `f72c57f`; all others
 
 - **11-dataset frontier** (6 classification + 5 regression), 9/8 methods; actuary takeaways in §14.4.
 - **Home-turf sweep:** TabPFN wins 8/9 cells at ≤5K rows; the single loss is bemtl97@full (LGBM 0.3418 vs 0.3428); 3,045 s cold fit at 163K rows.
-- **At-scale erosion:** norauto (LGBM wins), ausprivauto0405 (GLMs dominate), regression frontier (lead does not survive except ausautoBI8999).
+- **At-scale erosion:** norauto (LGBM wins), ausprivauto0405 (GLMs dominate — since retracted to calibration-tie + TabPFN best-AUC, §14.11.3), regression frontier (lead does not survive except ausautoBI8999).
 - **Spanish motor frequency frontier** (53,502 policies): LGBM 0.8916 vs TabPFN 0.9876 — TabPFN off-frontier, GLM anchors (21 params) within noise of it; 4th at-scale confirmation that the lead does not survive.
 - **Spanish motor lapse** (53,502 rows): TabPFN AUC 0.752 edges LGBM 0.745, LR 0.684 (elo 1128, #1) — a lapse flip vs the frequency result at the same row count; 2-fold holdout caveat.
 - **bemtl97 label leak excluded;** imbalance null + calibration harm; fine-tuning degrades 3/4 targets (§5).

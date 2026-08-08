@@ -88,6 +88,15 @@ def test_synthetic_ds_default_drop_and_relative_path():
     assert ds[0]["file"] == str(mod.REPO / "data/raw/foo.csv")  # repo-root-relative
 
 
+def test_synthetic_ds_metric_by_mode():
+    # The plot step does METRIC_LABELS[ds["metric"]] — the synthetic entry must
+    # carry a metric or --data crashes at the plot (regression mode especially).
+    cls, _ = mod.select_datasets(parse(["--data", "X.csv", "--target", "Y"]))
+    reg, _ = mod.select_datasets(parse(["--data", "X.csv", "--target", "Y", "--regression"]))
+    assert cls[0]["metric"] == "log_loss"
+    assert reg[0]["metric"] == "rmse"
+
+
 # ---- c. load_Xy on a real registry CSV --------------------------------------
 
 def test_load_xy_coil2000():

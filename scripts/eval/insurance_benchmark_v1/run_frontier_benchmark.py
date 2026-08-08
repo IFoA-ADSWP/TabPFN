@@ -73,6 +73,11 @@ Usage:
     python scripts/eval/insurance_benchmark_v1/run_frontier_benchmark.py --regression
     python scripts/eval/insurance_benchmark_v1/run_frontier_benchmark.py --regression ausautoBI8999
     python scripts/eval/insurance_benchmark_v1/run_frontier_benchmark.py --data data/raw/some.csv --target TARGET [--drop a,b]
+    python scripts/eval/insurance_benchmark_v1/run_frontier_benchmark.py --pr-auc                # PR-AUC/lift10 robustness: fresh-fit ALL methods, append per-fold rows to
+                                                                                                 #   frontier_pr_auc_results.csv (dataset,seed,method,fold,log_loss,auc,brier,pr_auc,lift10),
+                                                                                                 #   and extend the summary CSVs with mean_pr_auc/se_pr_auc/mean_lift10/se_lift10
+    python scripts/eval/insurance_benchmark_v1/run_frontier_benchmark.py --seed 7 ausprivauto0405 # split-seed stability (default 42; seed != 42 writes
+                                                                                                 #   frontier_results_<ds>_seed<N>.csv/.png so the canonical seed-42 files are not clobbered)
 
 Outputs (same dir as this script), per dataset:
     frontier_results_<dataset>.csv   method | mean <metric> | SE | n_params | on-frontier
@@ -136,8 +141,17 @@ METRIC_LABELS = {  # plot y-axis per metric (metric_fn dispatch)
 }
 N_FOLDS = 5
 SWEEP_CSV = HERE / "home_turf_sweep_results.csv"
+PR_AUC_CSV = HERE / "frontier_pr_auc_results.csv"  # per-fold PR-AUC/lift10 rows (append mode, --pr-auc only)
 REUSED_METHODS = ["cat", "lgbm", "xgb", "tabpfn"]  # log loss reused as-is from the sweep
 FAST_METHODS = ["lr", "logisticglm", "tweedieglm", "poissonglm", "rf"]  # D1 Option B, new compute
+
+# CLI flags, set by main() before the dataset loop:
+#   PR_AUC_MODE: --pr-auc — forces EVERY method to fresh-fit (the sweep CSV has no
+#                predictions, so PR AUC / top-decile lift need real fits) and appends
+#                per-fold rows to PR_AUC_CSV.
+#   SEED:        --seed N — StratifiedKFold(random_state=N), default 42 (unchanged).
+PR_AUC_MODE = False
+SEED = 42
 
 # TabPFN parameter count — settled non-decision (spec §5): constant per dataset, orders of
 # magnitude above the GBDTs, so its precise value never changes frontier membership.
@@ -191,6 +205,59 @@ def metric_fn(ds: dict):
         return float(log_loss(y_true, y_pred))
 
     return cross_entropy
+
+
+def top_decile_lift(y_true: np.ndarray, p1: np.ndarray) -> float:
+    """Lift in the top 10% of scores: (positives in top decile / n_top) / base rate.
+    Ties broken by stable argsort order (fine per spec). NaN if base rate is 0."""
+    n_top = max(1, int(round(len(y_true) * 0.10)))
+    top = np.argsort(-p1, kind="stable")[:n_top]
+    base = float(y_true.mean())
+    if base <= 0:
+        return float("nan")
+    return float(y_true[top].sum()) / n_top / base
+
+
+def fold_scores(metric, y_true: np.ndarray, pp: np.ndarray) -> dict:
+    """All per-fold classification metrics from a 2-column probability matrix."""
+    from sklearn.metrics import average_precision_score, brier_score_loss, roc_auc_score
+
+    p1 = pp[:, 1]
+    return {
+        "log_loss": metric(y_true, pp),
+        "auc": roc_auc_score(y_true, p1),
+        "brier": brier_score_loss(y_true, p1),
+        "pr_auc": average_precision_score(y_true, p1),
+        "lift10": top_decile_lift(y_true, p1),
+    }
+
+
+def row_for(method: str, scores: list[dict]) -> dict:
+    """Summary row (mean ± SE over folds) from a list of fold_scores dicts.
+    PR-AUC/lift10 columns are added only in --pr-auc mode (backward compat:
+    the 9-column summary format is unchanged otherwise)."""
+    a = {k: np.array([s[k] for s in scores], dtype=float)
+         for k in ("log_loss", "auc", "brier", "pr_auc", "lift10")}
+    n = len(a["log_loss"])
+    row = {
+        "method": method,
+        "mean": a["log_loss"].mean(),
+        "se": a["log_loss"].std(ddof=1) / np.sqrt(n),
+        "mean_auc": a["auc"].mean(),
+        "se_auc": a["auc"].std(ddof=1) / np.sqrt(n),
+        "mean_brier": a["brier"].mean(),
+        "se_brier": a["brier"].std(ddof=1) / np.sqrt(n),
+        "_fold_auc": a["auc"],
+        "_fold_brier": a["brier"],
+    }
+    if PR_AUC_MODE:
+        row["mean_pr_auc"] = a["pr_auc"].mean()
+        row["se_pr_auc"] = a["pr_auc"].std(ddof=1) / np.sqrt(n)
+        row["mean_lift10"] = a["lift10"].mean()
+        row["se_lift10"] = a["lift10"].std(ddof=1) / np.sqrt(n)
+        row["_fold_pr_auc"] = a["pr_auc"]
+        row["_fold_lift10"] = a["lift10"]
+    return row
 
 
 def _load_api_key() -> None:
@@ -375,36 +442,60 @@ def run_dataset(ds: dict, out_csv: Path, out_png: Path) -> pd.DataFrame:
     X, y = load_Xy(ds)
     n_cols = X.shape[1]
     metric = metric_fn(ds)  # metric dispatch: log_loss for classification (default)
-    say(f"dataset={ds['name']} shape={X.shape} pos_rate={y.mean():.4f}")
+    say(f"dataset={ds['name']} shape={X.shape} pos_rate={y.mean():.4f} seed={SEED}")
 
-    skf = StratifiedKFold(n_splits=N_FOLDS, shuffle=True, random_state=42)
+    skf = StratifiedKFold(n_splits=N_FOLDS, shuffle=True, random_state=SEED)
     folds = list(skf.split(X, y))
+
+    # Per-fold PR-AUC/lift10 rows for the append-mode CSV (--pr-auc only).
+    pr_fold_rows: list[dict] = []
+
+    def record_fold(method: str, fold: int, s: dict) -> None:
+        if PR_AUC_MODE:
+            pr_fold_rows.append({"dataset": ds["name"], "seed": SEED, "method": method,
+                                 "fold": fold, **s})
 
     # ---- 1. Power: reuse sweep CSV rows for <dataset>@full, default config only ----
     # Datasets with NO sweep rows (norauto) fall back to FRESH CPU fits on the same
     # 5 folds, same pattern as the D1 fast-method loop below. TabPFN is deferred to
     # step 4a so a hosted-API stall never blocks the fast CPU results.
+    # --pr-auc forces fresh power for EVERYTHING: the sweep CSV has no per-fold
+    # predictions, so PR AUC / top-decile lift cannot be computed from reused rows.
     sweep = pd.read_csv(SWEEP_CSV)
     sweep_full = sweep[(sweep.dataset == ds["name"]) & (sweep.n_rows == len(X)) & (sweep.n_estimators.isna())]
-    fresh = sweep_full.empty
+    fresh = sweep_full.empty or PR_AUC_MODE
     rows: list[dict] = []
 
     def reuse_or_fresh(m: str) -> dict:
         r = sweep_full[sweep_full.method == m].sort_values("fold")
-        if len(r) == N_FOLDS:
+        if (not PR_AUC_MODE) and len(r) == N_FOLDS:
             ll = r["log_loss"].to_numpy(dtype=float)
-            return {"method": m, "mean": ll.mean(), "se": ll.std(ddof=1) / np.sqrt(len(ll))}
+            auc = r["roc_auc"].to_numpy(dtype=float)
+            brier = r["brier"].to_numpy(dtype=float)
+            return {
+                "method": m,
+                "mean": ll.mean(),
+                "se": ll.std(ddof=1) / np.sqrt(len(ll)),
+                "mean_auc": auc.mean(),
+                "se_auc": auc.std(ddof=1) / np.sqrt(len(auc)),
+                "mean_brier": brier.mean(),
+                "se_brier": brier.std(ddof=1) / np.sqrt(len(brier)),
+                "_fold_auc": auc,
+                "_fold_brier": brier,
+            }
         assert fresh, f"sweep missing fold rows for {m}"
         maker = {"cat": make_cat, "lgbm": make_lgbm, "xgb": make_xgb}[m]
-        fold_ll = []
+        scores = []
         t1 = time.time()
         for fold, (tr, te) in enumerate(folds):
             model = maker()
             model.fit(X[tr], y[tr])
-            fold_ll.append(metric(y[te], model.predict_proba(X[te])))
-            say(f"  {m} f{fold} ll={fold_ll[-1]:.4f} ({time.time() - t1:.0f}s)")
-        ll = np.array(fold_ll)
-        return {"method": m, "mean": ll.mean(), "se": ll.std(ddof=1) / np.sqrt(len(ll))}
+            pp = model.predict_proba(X[te])
+            s = fold_scores(metric, y[te], pp)
+            scores.append(s)
+            record_fold(m, fold, s)
+            say(f"  {m} f{fold} ll={s['log_loss']:.4f} ({time.time() - t1:.0f}s)")
+        return row_for(m, scores)
 
     for m in ("cat", "lgbm", "xgb"):
         rows.append(reuse_or_fresh(m))
@@ -419,7 +510,7 @@ def run_dataset(ds: dict, out_csv: Path, out_png: Path) -> pd.DataFrame:
     }
     for m in FAST_METHODS:
         maker = d1_makers[m]
-        fold_ll = []
+        scores = []
         t1 = time.time()
         for fold, (tr, te) in enumerate(folds):
             Xtr, Xte, ytr, yte = X[tr], X[te], y[tr], y[te]
@@ -431,10 +522,11 @@ def run_dataset(ds: dict, out_csv: Path, out_png: Path) -> pd.DataFrame:
                 pp = np.column_stack([1 - mu, mu])
             else:
                 pp = model.predict_proba(Xte)
-            fold_ll.append(metric(yte, pp))
-            say(f"  {m} f{fold} ll={fold_ll[-1]:.4f} ({time.time() - t1:.0f}s)")
-        ll = np.array(fold_ll)
-        rows.append({"method": m, "mean": ll.mean(), "se": ll.std(ddof=1) / np.sqrt(len(ll))})
+            s = fold_scores(metric, yte, pp)
+            scores.append(s)
+            record_fold(m, fold, s)
+            say(f"  {m} f{fold} ll={s['log_loss']:.4f} ({time.time() - t1:.0f}s)")
+        rows.append(row_for(m, scores))
 
     # ---- 3. D2: refit GBDTs + RF on fold-0 train purely to count leaves ----
     # (tree structure is seed-insensitive for counting, spec §5 D2 — one fold suffices)
@@ -457,15 +549,27 @@ def run_dataset(ds: dict, out_csv: Path, out_png: Path) -> pd.DataFrame:
     # run — LAST, after every CPU method above has flushed, so a hosted stall never
     # blocks the fast results from the run log ----
     r = sweep_full[sweep_full.method == "tabpfn"].sort_values("fold")
-    if len(r) == N_FOLDS:
+    if (not PR_AUC_MODE) and len(r) == N_FOLDS:
         ll = r["log_loss"].to_numpy(dtype=float)
-        rows.append({"method": "tabpfn", "mean": ll.mean(), "se": ll.std(ddof=1) / np.sqrt(len(ll))})
+        auc = r["roc_auc"].to_numpy(dtype=float)
+        brier = r["brier"].to_numpy(dtype=float)
+        rows.append({
+            "method": "tabpfn",
+            "mean": ll.mean(),
+            "se": ll.std(ddof=1) / np.sqrt(len(ll)),
+            "mean_auc": auc.mean(),
+            "se_auc": auc.std(ddof=1) / np.sqrt(len(auc)),
+            "mean_brier": brier.mean(),
+            "se_brier": brier.std(ddof=1) / np.sqrt(len(brier)),
+            "_fold_auc": auc,
+            "_fold_brier": brier,
+        })
     else:
         assert fresh, "sweep missing fold rows for tabpfn"
         from tabpfn_client import TabPFNClassifier
 
         _load_api_key()  # env or .env candidates, same as the sweep
-        fold_ll = []
+        scores = []
         t1 = time.time()
         for fold, (tr, te) in enumerate(folds):
             model = TabPFNClassifier(model_path="v3_default", random_state=0)  # default n_estimators=None
@@ -484,10 +588,11 @@ def run_dataset(ds: dict, out_csv: Path, out_png: Path) -> pd.DataFrame:
             pp = model.predict_proba(X[te])
             if pp.ndim == 1 or pp.shape[1] == 1:  # single-class fallback (sweep pattern)
                 pp = np.column_stack([1 - pp, pp]) if pp.ndim == 1 else np.column_stack([1 - pp[:, 0], pp[:, 0]])
-            fold_ll.append(metric(y[te], pp))
-            say(f"  tabpfn f{fold} ll={fold_ll[-1]:.4f} ({time.time() - t1:.0f}s)")
-        ll = np.array(fold_ll)
-        rows.append({"method": "tabpfn", "mean": ll.mean(), "se": ll.std(ddof=1) / np.sqrt(len(ll))})
+            s = fold_scores(metric, y[te], pp)
+            scores.append(s)
+            record_fold("tabpfn", fold, s)
+            say(f"  tabpfn f{fold} ll={s['log_loss']:.4f} ({time.time() - t1:.0f}s)")
+        rows.append(row_for("tabpfn", scores))
 
     # ---- 5. n_params for every method ----
     glm_n = n_cols + 1  # post-encoding column count + 1 intercept (harness uses cat.codes)
@@ -505,11 +610,20 @@ def run_dataset(ds: dict, out_csv: Path, out_png: Path) -> pd.DataFrame:
     on_frontier = set(pareto_frontier(rows))
     for r in rows:
         r["on_frontier"] = "yes" if r["method"] in on_frontier else "no"
-    table = pd.DataFrame(rows)[["method", "mean", "se", "n_params", "on_frontier"]].sort_values(
-        "mean", ignore_index=True
-    )
-    table.to_csv(out_csv, index=False)
-    print(table.to_string(index=False, float_format=lambda v: f"{v:.4f}"))
+    cols = ["method", "mean", "se", "mean_auc", "se_auc", "mean_brier", "se_brier"]
+    if PR_AUC_MODE:
+        cols += ["mean_pr_auc", "se_pr_auc", "mean_lift10", "se_lift10"]
+    cols += ["n_params", "on_frontier", "_fold_auc", "_fold_brier"]
+    if PR_AUC_MODE:
+        cols += ["_fold_pr_auc", "_fold_lift10"]
+    table = pd.DataFrame(rows)[cols].sort_values("mean", ignore_index=True)
+
+    # ---- 5b. Persist per-fold PR-AUC/lift10 rows (append mode, --pr-auc only) ----
+    if PR_AUC_MODE:
+        pd.DataFrame(pr_fold_rows).to_csv(
+            PR_AUC_CSV, mode="a", header=not PR_AUC_CSV.exists(), index=False
+        )
+        say(f"  appended {len(pr_fold_rows)} per-fold rows -> {PR_AUC_CSV.name}")
 
     # ---- 6. Plot ----
     import matplotlib
@@ -533,6 +647,9 @@ def run_dataset(ds: dict, out_csv: Path, out_png: Path) -> pd.DataFrame:
 
     # ---- 7. Self-check (repo assert convention) ----
     sanity_check(sweep_full, folds, table, on_frontier)
+    table = table.drop(columns=[c for c in table.columns if c.startswith("_fold")])
+    table.to_csv(out_csv, index=False)
+    print(table.to_string(index=False, float_format=lambda v: f"{v:.4f}"))
     return table
 
 
@@ -544,6 +661,8 @@ def sanity_check(sweep_full: pd.DataFrame, folds: list[tuple[np.ndarray, np.ndar
         n = sweep_full[sweep_full.method == "lgbm"]["fold"].nunique()
         assert n == N_FOLDS, f"expected {N_FOLDS} sweep folds, got {n}"
         assert sweep_full["log_loss"].notna().all(), "sweep reused log-loss has NaNs"
+        assert sweep_full["brier"].notna().all(), "sweep reused brier has NaNs"
+        assert sweep_full["roc_auc"].notna().all(), "sweep reused roc_auc has NaNs"
     # split is a valid 5-fold partition of the full index set with no train/test
     # overlap within a fold (checked for fresh and reused runs alike)
     n_total = sum(len(te) for _, te in folds)
@@ -555,6 +674,22 @@ def sanity_check(sweep_full: pd.DataFrame, folds: list[tuple[np.ndarray, np.ndar
     assert table["method"].nunique() == len(table), "duplicate methods in table"
     # (c) frontier rule returns at least one on-frontier model
     assert len(on_frontier) >= 1, "frontier is empty"
+    # (d) AUC/Brier addendum (spec 2026-08): classification only — regression tables
+    # have no AUC columns. mean_auc in [0.5, 1], brier >= 0, per-fold AUC > 0.4
+    # (legit folds dip below 0.5 — sweep min 0.4196).
+    if "mean_auc" in table.columns:
+        assert table["mean_auc"].between(0.5, 1.0).all(), "mean_auc outside [0.5, 1]"
+        assert (table["mean_brier"] >= 0).all(), "negative mean_brier"
+        assert (table["_fold_auc"].explode() > 0.4).all(), "per-fold AUC <= 0.4"
+        assert (table["_fold_brier"].explode() >= 0).all(), "negative per-fold brier"
+    # (e) PR-AUC/lift10 addendum (--pr-auc robustness runs): pr_auc in [0, 1],
+    # lift10 >= 0, no NaNs in the emitted means.
+    if "mean_pr_auc" in table.columns:
+        assert table["mean_pr_auc"].between(0.0, 1.0).all(), "mean_pr_auc outside [0, 1]"
+        assert (table["mean_lift10"] >= 0).all(), "negative mean_lift10"
+        assert table["mean_pr_auc"].notna().all() and table["mean_lift10"].notna().all(), "NaN in pr_auc/lift10"
+        assert (table["_fold_pr_auc"].explode() >= 0).all(), "negative per-fold pr_auc"
+        assert (table["_fold_lift10"].explode() >= 0).all(), "negative per-fold lift10"
     print(f"SELF-CHECK OK: folds={N_FOLDS}, methods={len(table)}, on-frontier={len(on_frontier)}")
 
 
@@ -709,6 +844,12 @@ def make_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--regression", action="store_true",
                         help="regression mode: continuous/count targets, KFold splits")
+    parser.add_argument("--pr-auc", action="store_true",
+                        help="PR-AUC/lift10 robustness: fresh-fit ALL methods, append per-fold rows "
+                             "to frontier_pr_auc_results.csv (ignored with --data)")
+    parser.add_argument("--seed", type=int, default=42, metavar="N",
+                        help="StratifiedKFold random_state (default 42; seed != 42 writes "
+                             "frontier_results_<ds>_seed<N>.csv/.png so canonical seed-42 files are not clobbered)")
     parser.add_argument("--data", metavar="CSV",
                         help="run a single arbitrary dataset CSV (absolute path, or relative to repo root)")
     parser.add_argument("--target", metavar="COL",
@@ -727,6 +868,7 @@ def select_datasets(args: argparse.Namespace) -> tuple[list[dict], set[str] | No
         # paths as data/raw/-relative (registry behavior), so resolve here
         data = args.data if os.path.isabs(args.data) else str(REPO / args.data)
         ds = dict(name=Path(args.data).stem, file=data, target=args.target,
+                  metric="rmse" if args.regression else "log_loss",
                   drop=[c.strip() for c in args.drop.split(",")] if args.drop else [])
         return [ds], None  # --data wins; filters ignored
     wanted = {f.lower() for f in args.filters} if args.filters else None
@@ -734,19 +876,25 @@ def select_datasets(args: argparse.Namespace) -> tuple[list[dict], set[str] | No
 
 
 def main() -> None:
+    global SEED, PR_AUC_MODE
     t0 = time.time()
     parser = make_parser()
     args = parser.parse_args()
     if args.data is not None and args.target is None:
         parser.error("--target is required when --data is given")
+    SEED = args.seed
+    PR_AUC_MODE = args.pr_auc and args.data is None  # --pr-auc is a registry-run mode
     datasets, wanted = select_datasets(args)
     runner = run_dataset_regression if args.regression else run_dataset
     for ds in datasets:
         name = ds["name"]
         if wanted is not None and name.lower() not in wanted:
             continue
-        out_csv = HERE / f"frontier_results_{name}.csv"
-        out_png = HERE / f"frontier_plot_{name}.png"
+        # Seed != 42 gets suffixed outputs so split-seed runs never clobber the
+        # canonical seed-42 frontier_results_*.csv / plots.
+        suffix = f"_seed{SEED}" if SEED != 42 else ""
+        out_csv = HERE / f"frontier_results_{name}{suffix}.csv"
+        out_png = HERE / f"frontier_plot_{name}{suffix}.png"
         print(f"\n{'=' * 70}\nDATASET {name}\n{'=' * 70}", flush=True)
         runner(ds, out_csv, out_png)
         print(f"[{time.strftime('%H:%M:%S')}] {name} done -> {out_csv}, {out_png}", flush=True)
