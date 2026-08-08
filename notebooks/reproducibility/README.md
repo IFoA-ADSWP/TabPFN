@@ -24,8 +24,12 @@ produced the committed results (no forked code that can drift), then renders the
    (If you built a fresh environment, pin `tabpfn-client` to 0.3.3 and re-read master-report §15
    before trusting comparisons — verdicts are version-sensitive.)
 
-2. **API key:** `TABPFN_API_KEY` as an environment variable or in the repo-root `.env`
-   (scripts fail with a clear error if missing).
+2. **Auth — browser login (easiest):** run the preflight cell of any repro notebook. It
+   detects that no `TABPFN_API_KEY` is configured, opens the Prior Labs login page in your
+   browser, and after sign-in saves the token to the repo-root `.env` (gitignored — no
+   secrets in git) and exports it for the session. The scripts then pick it up via their
+   usual env/`.env` lookup. Alternatively set `TABPFN_API_KEY` as an environment variable
+   or in `.env` manually (scripts fail with a clear error if neither exists).
 
 3. Launch Jupyter **from anywhere** — the notebooks locate the repo root themselves.
 
