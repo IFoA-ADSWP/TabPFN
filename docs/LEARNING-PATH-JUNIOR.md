@@ -162,7 +162,7 @@ One-paragraph mental model (don't live here yet): the repo has two eras — the 
 
 ### Phase 0 final check
 
-Vocabulary — say each in one sentence, no looking: *frequency, severity, lapse, pure premium, exposure, class imbalance, discrimination, calibration, ROC AUC, PR AUC, top-decile lift, Brier, log loss, ECE, isotonic regression, stratified CV, seed, same folds.*
+Vocabulary — say each in one sentence, no looking: *frequency, severity, lapse, pure premium, exposure, class imbalance, discrimination, calibration, ROC AUC, PR AUC, top-decile lift, Brier, log loss, ECE, isotonic regression, stratified CV, seed, same folds, standard error (SE), fold-noise tie.*
 
 The three questions:
 1. Why do we care about PR AUC when positives are ~10% of the data?
@@ -286,12 +286,14 @@ Do:
 - Open `frontier_results_<dataset>.csv`: metric columns (`mean_auc`, `se_auc`, `mean_brier`, `se_brier`), parameter counts, Pareto status
 - **Then** read `docs/analyses/insurance_frontier_benchmark_spec.md` and walk the script's flow (load → 5-fold CV → baselines + hosted TabPFN → metrics → Pareto frontier)
 - Skim `run_tuned_baselines.py` (the "finality" test: tuned GLM/GBDT vs zero-tune TabPFN) and `run_reframe_frequency.py` (your current branch's topic)
-- Read main path Part 2: **S5** (methodology) and **S9** (conclusions scoreboard)
+- **Then the master report** (main path Stage 4.5): read `docs/analyses/tabpfn_vs_gbdt_baselines_finetuning.md` sections **§6** (the label leak), **§11** (imbalance + the 1−AUC blindness story), **§12** (why v1 looked lopsided), **§13** (size sweep), **§14.1–§14.4** (frontier + D3 rule), **§14.11** (AUC rescore), **§14.14** (the reframe you're working on). Skim the rest.
+- Read main path Part 2: **S5** (methodology), **S9** (conclusions), **S10–S12** (metric eras, significance, self-correction case study)
 
 Check:
 - You can describe one frontier run end-to-end in five steps, no code
 - You can explain the Pareto frontier and why parameter counting matters (TabPFN's ~10M pretraining params vs GLM's `n_features + 1`)
 - You know what question the reframe-frequency experiment is testing
+- You can state the current verdict: TabPFN **AUC #1 on all 6 classification datasets** (even against tuned baselines); regression/frequency stays GBDT territory; the GLM family is never dominated
 
 ## Phase 4 — Graduation exercise (Days 12–14)
 

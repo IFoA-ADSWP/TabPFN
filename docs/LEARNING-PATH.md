@@ -109,6 +109,21 @@ flowchart LR
 
 Exit test: you can describe what one frontier benchmark run does end-to-end, and what the current reframe-frequency experiment is testing.
 
+## Stage 4.5 — Master report walkthrough (2–3 h)
+
+The evidence spine of everything above: `docs/analyses/tabpfn_vs_gbdt_baselines_finetuning.md` (§1–§15, ~1600 lines). Read in this order:
+
+1. **§1–§4 + §6** — objective, setup, v1 results, the bemtl97 label leak
+2. **§11–§12** — the imbalance pilot and "why v1 looked lopsided" (the blindness lesson)
+3. **§13 + §14.1–§14.4** — size sweep + the frontier, the D3 rule, what an actuary should take away
+4. **§14.6–§14.10** — extensions: at-scale (norauto), regression phase 2, Spanish motor
+5. **§14.11–§14.14** — the 2026-08 verdict arc: rescore, ranking robustness, finality test, reframe
+6. **§15** — version-drift policy (skim)
+
+Pair each with its evidence CSVs (`scripts/eval/insurance_benchmark_v1/frontier_results_*.csv`, `reframe_frequency_results.csv`). The wiki page `Findings-Overview.md` is the "so what" version (local clone: `TabPFN-work-scott/.wiki-content/Findings-Overview.md`). When you need the arc without the detail: `docs/MASTER-REPORT-DIGEST.md` (one paragraph per addendum).
+
+Exit test: explain what changed between §4 and §14.14 and *why*; name the three most robust results (GLM never dominated; AUC #1 on 6/6 classification; regression stays GBDT).
+
 ## Stage 5 — Skills & reporting workflow (2–3 h)
 
 Goal: how work actually gets done here — runbooks + the evidence chain.
@@ -264,12 +279,42 @@ Exact numbers live in the evidence files listed; these are the conclusions the e
 4. **Fine-tuning is a bounded lever** — works on small data with the right settings, but save/load and regressor stability are real failure modes; the limit study maps the envelope. [evidence: `outputs/current/tables/tabpfn_finetune_trial_results.csv`, `TABPFN_FINE_TUNING_LIMIT_STUDY.md`]
 5. **Imbalance is the dominant regime problem** — PR AUC and focused imbalance pilots exist because rare positives are the norm; log-loss rescoring (`rescore_focused_imbalance_logloss.py`) shows calibration degrades under imbalance and needs watching. [evidence: `focused_imbalance_*.csv`, `docs/analyses/class_imbalance_analysis_summary.md`]
 6. **Frequency reframing (binary/ordinal) is the open question** — the current branch's experiment (§14.14). [evidence: `reframe_frequency_results.csv`, `run_reframe_frequency.py`]
+7. **2026-08 master verdict (the one to know now):** TabPFN is **AUC #1 of 9 methods — and of 14 once tuned baselines are added (§14.13) — on all six classification datasets** (deltas +0.006 to +0.033 over the best GLM; paired-significant 5/6); regression/frequency stays GBDT territory (Poisson deviance at scale: TabPFN ~+33% behind on freMTPL2freq); the **GLM family is never dominated on any frontier**; fine-tuning does not consistently help; reframing counts as classification inverts the frequency verdict. [evidence: master report §14.11–§14.14]
+8. **The imbalance lever harms calibration** — `balance_probabilities=True` inflates mean predicted probability ~5× on a 6% base rate (coil2000 log loss 0.4716 vs 0.2008 default). [master report §11]
 
 ---
 
-## Refinement backlog (to do later, when asked)
+### S10. Metric eras and the 1−AUC blindness lesson
 
-- [ ] Add a worked example: one frontier benchmark run, annotated line by line
-- [ ] Expand Part 2 into a findings digest (what each notebook concluded, one paragraph each) — S9 is the skeleton
-- [ ] Map REPORT_REGISTRY rows to stages (which reports to read where)
-- [ ] Go deeper per subject on request (e.g. S3 TabPFN internals: attention, priors, ensembling; S4: proper scoring rules proof)
+The master report's history is a lesson in how **the metric defines what you can see**:
+
+- v1 scored `1 − ROC AUC` (AUC in error form). ROC AUC is **rank-invariant to monotone transforms** — so `balance_probabilities`, a monotone calibration rescale, was *provably invisible* to the v1 metric (identical to ≤1e-16 on every fold). Testing the imbalance hypothesis on 1−AUC was a measurement dead end.
+- §11.3 introduced the **insurance-native metrics** — log loss + Brier ("what an insurer actually pays on") — and the v1 headline "TabPFN loses" became "loses *partly because of the metric*".
+- Metric eras: 1−AUC (v1) → log loss/Brier (§11.3) → per-fold AUC+Brier (§14.11) → PR AUC + top-decile lift (§14.12) → multiclass set for ordinal reframes (§14.14).
+- Lesson: before trusting a headline, ask what metric produced it and what that metric is blind to.
+
+### S11. Noise, significance, and the beyond-SE frontier rule
+
+- **SE** = std(ddof=1)/√5 across folds. Two models whose means differ by less than their SEs are **fold-noise ties** (bemtl97: LGBM 0.3418 vs TabPFN 0.3428).
+- **D3 rule (how "on the Pareto frontier" is decided):** A is dominated iff some B with strictly fewer parameters has `mean_B + SE_B < mean_A − SE_A`. Within-SE models both stay on the frontier. A point-estimate rule would let fold noise decide membership.
+- **Paired per-fold t-test (df=4) ≫ unpaired z** — norauto PR-AUC: z=1.26 (not significant) vs t=9.02 (p=0.0008). Same folds make comparisons paired.
+- **Seed stability** (seeds 7/42/123) and the **fold-identity check** (a plain LR must reproduce the stored canonical rows exactly) are the repo's reproducibility guarantees.
+- **Null deviance** = the intercept-only floor; a model sitting at it (Spanish freq GLMs at 1.0125 vs null 1.0123) adds nothing.
+
+### S12. The master report as a case study in self-correction
+
+The addendum arc (§4 → §14.14) is the scientific-method lesson, one addendum at a time — each prompted by a question, several *reversing or qualifying* prior verdicts:
+
+| Addendum | Question asked | What changed |
+|---|---|---|
+| §11 | Is it imbalance? | No — the lever actively hurts; metric blindness found |
+| §12 | Why did v1 look lopsided? | Setup artifacts separated from genuine limits; context-ceiling framing later corrected |
+| §13 | Is it size? | 8/9 home-turf wins — size story dead for classification |
+| §14 | Where does TabPFN sit on efficiency? | Frontier: GLM never dominated; TabPFN = 10M-param top-right anchor |
+| §14.11 | Does ranking survive proper metrics? | **Retraction:** ausprivauto0405 "DOMINATED" → calibration tie + suite-best AUC; TabPFN AUC 6/6 |
+| §14.13 | Does tuning dethrone it? | No — still #1 of 14; tuned GBDTs regressed vs their own defaults |
+| §14.14 | Can the weak axis be reframed? | Yes — count→classification inverts the frequency verdict |
+
+**The repo's do-not-re-chase list** (tested and closed): CPU hardware, imbalance handling, domain fine-tuning as configured, `n_estimators` config-lite, RF at defaults, TabFM (OOM + non-commercial weights).
+
+**Version pinning:** every verdict is stamped `v3_default` / tabpfn-client 0.3.3; §15 defines the re-test policy when either drifts. A verdict here is a *timestamped claim*, not a fact.
