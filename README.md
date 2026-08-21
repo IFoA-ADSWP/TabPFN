@@ -1,5 +1,9 @@
 # TabPFN for Actuarial Tasks — Research Repository
 
+> **⚠️ THIS REPOSITORY HAS MOVED** → **[IFoA-ADSWP/tabular-foundation-model](https://github.com/IFoA-ADSWP/tabular-foundation-model)**
+>
+> All issues, pull requests, the wiki, and full git history continue at the new location. This fork of PriorLabs/TabPFN is retained as a read-only archive of the pre-migration state (including original PR diffs). Please open new issues and PRs in the new repository.
+
 **Can a transformer-based foundation model (TabPFN) compete with traditional actuarial models (GLM, CatBoost, XGBoost) on insurance tasks like lapse prediction and claim frequency modeling?**
 
 This repo contains experiments by the **IFoA Actuarial Data Science Working Party (ADSWP)** comparing [TabPFN](https://github.com/PriorLabs/TabPFN) — a pretrained in-context learning model for tabular data — against industry-standard baselines. The primary result is the paper **"There's Life in the Old GLM Yet!"**.
